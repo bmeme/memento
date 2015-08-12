@@ -1,9 +1,15 @@
 #!/usr/bin/perl
-use Memento;
+$file = `which memento`;
+$_ = `ls -l $file`;
+if (/ (\/[\w\/\-]+?memento\.pl)$/) {
+  $dir = $1;
+  $dir =~ s/\/memento.pl$//;
+}
+require "$dir/Memento.pm";
 
 if ($#ARGV > -1) {
   my $memento = {}; bless $memento, "Memento";
-  $command = shift(@ARGV);
+  my $command = shift(@ARGV);
   $memento->$command(@ARGV);
 }
 else {

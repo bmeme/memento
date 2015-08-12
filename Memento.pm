@@ -1,8 +1,8 @@
 #!/usr/bin/perl
+require "$dir/Daemon.pm";
 use feature 'say';
 use JSON::PP;
 use Data::Dumper;
-use Daemon;
 
 package Memento;
 
