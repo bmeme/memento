@@ -4,10 +4,28 @@
 #
 use feature 'say';
 use Cwd;
+use JSON::PP;
+use Data::Dumper;
 
+my $memento = {}; bless $memento, "Memento";
 $command = shift(@ARGV);
-my $obj = bless [] => 'Memento';
-$obj->$command(@ARGV);
+$memento->$command(@ARGV);
+
+sub Memento::redmine {
+  my $key = $ENV{'MMNT_RM_KEY'};
+  my $redmine_url = $ENV{'MMNT_RM_URL'};
+  my $filename = 'response.json';
+  `curl -k -H "Content-Type: application/json" -X GET -H "X-Redmine-API-Key: $key" $redmine_url/issues.json 2>&1> $filename`;
+  my $data;
+  if (open (my $json_stream, $filename))
+  {
+        local $/ = undef;
+        my $json = JSON::PP->new;
+        $data = $json->decode(<$json_stream>);
+        close($json_stream);
+  }
+  print $data->{'total_count'};
+}
 
 sub Memento::status {
   say `git status -s`;
@@ -51,7 +69,6 @@ sub Daemon::write {
   $content = $_[1]; # Content to be written into the file.
   $create = $_[2];	# 1 or 0: Whether or not create the file.
   $method = $_[3];	# > or >> to overwrite or append $content.
-  say $file;
 
   if (!-f $file) {
     if ($create == 1) {
@@ -61,6 +78,9 @@ sub Daemon::write {
     else {
       die ("File $file does not exists");
     }
+  }
+  else {
+    say "Updating file $file";
   }
 
   open(my $fh, $method, $file);
