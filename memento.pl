@@ -27,7 +27,7 @@ else {
        ."|___| |   ||_.: __/|___| |   ||_.: __/|___|   |  |   | \\_. ___/\n"
        ."      |___|   :/         |___|   :/       |___|  |___|   :/\n"
        ."                                                         :\n";
-  print "Version: 0.1-alpha - 2015 - © Adriano Cori.\n";
+  print "Version: 0.2-alpha - 2015 - © Adriano Cori.\n";
 }
 
 sub instantiate {
