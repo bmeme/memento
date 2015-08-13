@@ -1,16 +1,23 @@
 #!/usr/bin/perl
-$file = `which memento`;
+package Memento;
+use strict; use warnings;
+use Data::Dumper;
+
+my $file = `which memento`;
 $_ = `ls -l $file`;
+
+our $root = undef;
 if (/ (\/[\w\/\-]+?memento\.pl)$/) {
-  $dir = $1;
-  $dir =~ s/\/memento.pl$//;
+  $root = $1;
+  $root =~ s/\/memento.pl$//;
 }
-require "$dir/Memento.pm";
 
 if ($#ARGV > -1) {
-  my $memento = {}; bless $memento, "Memento";
-  my $command = shift(@ARGV);
-  $memento->$command(@ARGV);
+  my $type = shift;
+  my $command = shift || "help";
+  if (my $memento = Memento->instantiate($type)) {
+    $memento->$command(@ARGV);
+  }
 }
 else {
   print "._____.___ ._______._____.___ ._______.______  _____._._______\n"
@@ -22,3 +29,17 @@ else {
        ."                                                         :\n";
   print "Version: 0.1-alpha - 2015 - © Adriano Cori.\n";
 }
+
+sub instantiate {
+  my $class = shift;
+  my $type = shift;
+  my $location = "Memento/$type.pm";
+  $class = "Memento::$type";
+
+  if (-f "$root/$location") {
+    require "$root/$location";
+    return $class->new(@_);
+  }
+}
+
+1;
