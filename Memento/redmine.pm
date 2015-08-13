@@ -7,7 +7,6 @@ use feature 'say';
 use JSON::PP;
 our @ISA = qw(Command);
 use strict; use warnings;
-use Data::Dumper;
 use URI;
 
 my $filename = '/tmp/response.json';
@@ -38,7 +37,7 @@ sub query {
   }
 }
 
-######### PRIVATE METHODS #########
+# PRIVATE METHODS ##############################################################
 
 sub _call_api {
   my $class = shift;
