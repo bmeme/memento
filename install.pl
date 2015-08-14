@@ -19,8 +19,9 @@ sub installVendor() {
   my $dir = "$cwd/vendor/$vendor";
 
   if (-d $dir) {
-    chdir $dir;
     # exec install.
+    chdir $dir;
+    say `perl Build.PL`;
     say `./Build`;
     say `./Build test`;
     say `./Build install`;
