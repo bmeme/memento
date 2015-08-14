@@ -2,11 +2,13 @@
 package Memento;
 use strict; use warnings;
 use feature 'say';
+use Getopt::Std;
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
 
 my $file = `which memento`;
 $_ = `ls -l $file`;
 
-our $root = undef;
+our ($root);
 if (/ (\/[\w\/\-]+?memento\.pl)$/) {
   $root = $1;
   $root =~ s/\/memento.pl$//;
@@ -22,7 +24,7 @@ if ($#ARGV > -1) {
   }
 }
 else {
-  say Daemon::read("$root/misc/splash");
+  say splash();
 }
 
 sub instantiate {
@@ -35,6 +37,16 @@ sub instantiate {
     require "$root/$location";
     return $class->new(@_);
   }
+}
+
+sub splash {
+  return Daemon::read("$root/splash");
+}
+
+sub main::VERSION_MESSAGE {
+  my @splash = &splash();
+  "@splash" =~ /(v\d+\.\d+\.\w+)/;
+  say $1;
 }
 
 1;

@@ -1,0 +1,12 @@
+blib
+_build
+Build
+Makefile
+Makefile.PL
+MANIFEST.bak
+MYMETA.yml
+MYMETA.json
+META.yml
+META.json
+pm_to_blib
+Text-Table-*

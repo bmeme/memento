@@ -6,20 +6,29 @@ package Memento::redmine;
 use feature 'say';
 use JSON::PP;
 our @ISA = qw(Command);
-use strict; use warnings;
+use warnings;
 use URI;
+use Data::Dumper;
+use Getopt::Long;
+use Text::Table;
 
-my $filename = '/tmp/response.json';
+my $spool = '/tmp/mmnt_rm_spool.json';
 
 sub issue {
   my $class = shift;
   my $issue = shift;
+  my $open = 0;
+
+  GetOptions(
+    'open!' => \$open
+  ) or die 'Incorrect usage';
+
   my $data = $class->_call_api("issues/$issue");
   if (defined($data)) {
     $class->_render_issue($data->{'issue'}, 1);
   }
 
-  if (Daemon::promptUser("\nDo you want to open this issue in your browser?", "y/n") eq "y") {
+  if ($open || (Daemon::promptUser("\nDo you want to open this issue in your browser?", "y/n") eq "y")) {
     my $uri = $ENV{'MMNT_RM_URL'} . "/issues/$issue";
     Daemon::open_default_browser($uri);
   }
@@ -51,10 +60,10 @@ sub _call_api {
     $uri->query_form($query);
   }
 
-  `curl -k -H "Content-Type: application/json" -X GET -H "X-Redmine-API-Key: $key" $uri 2>&1> $filename` or die("$!\n");
+  `curl -k -H "Content-Type: application/json" -X GET -H "X-Redmine-API-Key: $key" $uri 2>&1> $spool` or die("$!\n");
 
   my $data = undef;
-  if ((-s $filename) && (open (my $json_stream, $filename))) {
+  if ((-s $spool) && (open (my $json_stream, $spool))) {
     local $/ = undef;
     my $json = JSON::PP->new;
     $data = $json->decode(<$json_stream>);
