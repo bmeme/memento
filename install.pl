@@ -13,8 +13,8 @@ foreach my $vendor (@vendors) {
   &installVendor($vendor);
 }
 
-`ln -s $cwd/memento.pl /usr/local/bin/memento` or die "Unable to create memento symlink in /usr/local/bin";
-say "Memento was installed correctly";
+`ln -s $cwd/memento.pl /usr/local/bin/memento`;
+say "Memento installation finished";
 
 sub installVendor() {
   my $vendor = shift;
@@ -55,7 +55,7 @@ sub installVendor() {
     say "Generating symlinks...";
     foreach my $lib_file (@list) {
       say $lib_file;
-      `ln -s vendor/$vendor/lib/$lib_dir/$lib_file $lib_file`;
+      `cp $cwd/vendor/$vendor/lib/$lib_dir/$lib_file .`;
     }
   }
   else {

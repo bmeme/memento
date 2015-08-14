@@ -6,11 +6,10 @@ package Memento::redmine;
 use feature 'say';
 use JSON::PP;
 our @ISA = qw(Command);
-use warnings;
+use strict; use warnings;
 use URI;
 use Data::Dumper;
 use Getopt::Long;
-use Text::Table;
 
 my $spool = '/tmp/mmnt_rm_spool.json';
 
@@ -23,15 +22,18 @@ sub issue {
     'open!' => \$open
   ) or die 'Incorrect usage';
 
-  my $data = $class->_call_api("issues/$issue");
-  if (defined($data)) {
-    $class->_render_issue($data->{'issue'}, 1);
-  }
-
-  if ($open || (Daemon::promptUser("\nDo you want to open this issue in your browser?", "y/n") eq "y")) {
+  if ($open) {
     my $uri = $ENV{'MMNT_RM_URL'} . "/issues/$issue";
     Daemon::open_default_browser($uri);
   }
+  else {
+    my $data = $class->_call_api("issues/$issue", {include => "attachments"});
+    if (defined($data)) {
+      $class->_render_issue($data->{'issue'}, 1);
+    }
+  }
+
+  #(Daemon::promptUser("\nDo you want to open this issue in your browser?", "y/n") eq "y")
 }
 
 sub query {
@@ -43,6 +45,37 @@ sub query {
     my $issue = $data->{'issues'}[$i];
     $class->_render_issue($issue, 0);
     print "\n";
+  }
+}
+
+sub projects {
+  my $class = shift;
+  my $return = shift;
+  my $fetch = 0;
+  my $projects_file = "/tmp/mmnt_rm_prj.json";
+  my $projects;
+
+  GetOptions(
+    'fetch!' => \$fetch
+  ) or die 'Incorrect usage';
+
+  if ((!-f $projects_file) || $fetch) {
+    $projects = $class->_call_api("projects");
+    my $content = encode_json $projects;
+    Daemon::write($projects_file, $content, 1, '>');
+  }
+  else {
+    $projects = Daemon::json_decode_file($projects_file);
+  }
+
+  if ($return) {
+    return $projects;
+  }
+  else {
+    for my $project (@{$projects->{'projects'}}) {
+        say sprintf("| [%s] #%d", $project->{'name'}, $project->{'id'});
+        say sprintf("| - Identifier: %s\n", $project->{'identifier'});
+    }
   }
 }
 
@@ -61,15 +94,7 @@ sub _call_api {
   }
 
   `curl -k -H "Content-Type: application/json" -X GET -H "X-Redmine-API-Key: $key" $uri 2>&1> $spool` or die("$!\n");
-
-  my $data = undef;
-  if ((-s $spool) && (open (my $json_stream, $spool))) {
-    local $/ = undef;
-    my $json = JSON::PP->new;
-    $data = $json->decode(<$json_stream>);
-    close($json_stream);
-  }
-  return $data;
+  return Daemon::json_decode_file($spool);
 };
 
 sub _render_issue {
@@ -83,7 +108,16 @@ sub _render_issue {
   if ($full) {
     say sprintf("| - Created by: %s on %s", $issue->{'author'}->{'name'}, $issue->{'created_on'});
     say sprintf("| - Assigned to: %s\n", $issue->{'assigned_to'}->{'name'});
+
+    my @rows = ();
+    for my $item (@{$issue->{'attachments'}}) {
+        my $name = $item->{description} ? $item->{description} : $item->{filename};
+        push(@rows, [($name, $item->{content_url})]);
+    }
+
+    say "##### Description #####";
     say $issue->{'description'};
+    say "#######################";
   }
 }
 

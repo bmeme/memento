@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use feature 'say';
 package Daemon;
+use JSON::PP;
 
 sub write {
   if (($#_ + 1) != 4) {
@@ -40,6 +41,18 @@ sub read {
   @lines = <INFO>;		# Read it into an array
   close(INFO);			  # Close the file
   return @lines;			# Print the array
+}
+
+sub json_decode_file {
+  my $file = shift;
+  my $data = undef;
+  if ((-s $file) && (open (my $json_stream, $file))) {
+    local $/ = undef;
+    my $json = JSON::PP->new->utf8;
+    $data = $json->decode(<$json_stream>);
+    close($json_stream);
+  }
+  return $data;
 }
 
 sub open_default_browser {
