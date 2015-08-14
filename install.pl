@@ -13,6 +13,9 @@ foreach my $vendor (@vendors) {
   &installVendor($vendor);
 }
 
+`ln -s $cwd/memento.pl /usr/local/bin/memento` or die "Unable to create memento symlink in /usr/local/bin";
+say "Memento was installed correctly";
+
 sub installVendor() {
   my $vendor = shift;
   print "[$vendor] installing vendor...\n";
