@@ -1,7 +1,10 @@
-#!/usr/bin/perl
+#!/Applications/MAMP/Library/bin/perl
 use feature 'say';
 package Daemon;
+use Cwd;
 use JSON::PP;
+use Text::Aligner;
+use Text::Table;
 
 sub write {
   if (($#_ + 1) != 4) {
@@ -16,14 +19,14 @@ sub write {
   if (!-f $file) {
     if ($create == 1) {
       $method = '>';
-      say "Creating file $file";
+      # say "Creating file $file";
     }
     else {
       die("File $file does not exists");
     }
   }
   else {
-    say "Updating file $file";
+    # say "Updating file $file";
   }
 
   open(my $fh, $method, $file);
@@ -88,6 +91,67 @@ sub promptUser {
    } else {
       return $_;
    }
+}
+
+sub json2table {
+  my $title = shift;
+  my $items = shift || ();
+  my @exclude = shift || [];
+  my @header = ();
+  my @rows = ();
+  my $i = 0;
+
+  for my $item (@{$items}) {
+    if ($i == 0) {
+      for my $key (sort keys %{$item}) {
+        # @todo rework, including string values of HASH items.
+        if (ref($item->{$key}) ne 'HASH' && !in_array(@exclude, $key)) {
+          push(@header, uc $key);
+        }
+      }
+    }
+    $i = 1;
+
+    my @row = ();
+    for my $key (@header) {
+      push(@row, $item->{lc $key});
+    }
+    push(@rows, [@row]);
+  }
+
+  my $table = Text::Table->new(@header);
+  $table->load(@rows);
+
+  use Term::ANSIColor;
+  &printLabel($title);
+  say colored(['black on_white'], $table);
+}
+
+sub printLabel {
+  my $label = shift;
+  my $color = shift || "white on_black";
+  my $padding = " " x ((length $label) + 2);
+
+  use Term::ANSIColor;
+  say colored([$color], "$padding\n $label \n$padding");
+}
+
+sub in_array {
+  my ($arr,$search_for) = @_;
+  my %items = map {$_ => 1} @$arr;
+  return (exists($items{$search_for}))?1:0;
+}
+
+sub storage {
+  chdir;
+  my $home = cwd;
+  my $storage = "$home/.memento";
+
+  if (!-d $storage) {
+    mkdir($storage) or die "Cannot create .memento dir in your home directory: $!\n";
+  }
+
+  return $storage;
 }
 
 1;

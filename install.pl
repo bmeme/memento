@@ -1,65 +1,40 @@
-#!/usr/bin/perl
+#!/Applications/MAMP/Library/bin/perl
 use strict; use warnings;
 use feature 'say';
 use Cwd;
 
 our $cwd = cwd;
+my $cpan_path = `which cpan`;
+
+if (!$cpan_path) {
+  say "Please install cpan command line tool in order to proceed with the installation.";
+  say "http://www.cpan.org/modules/INSTALL.html\n";
+  die "Installation aborted.\n";
+}
+
 my @vendors = (
-  'Text-Aligner',
-  'Text-Table'
+  'Class::MOP',
+  'Text::Aligner',
+  'Text::Table',
+  'Text::Trim'
 );
 
 foreach my $vendor (@vendors) {
-  &installVendor($vendor);
-}
-
-`ln -s $cwd/memento.pl /usr/local/bin/memento`;
-say "Memento installation finished";
-
-sub installVendor() {
-  my $vendor = shift;
   print "[$vendor] installing vendor...\n";
-  my $dir = "$cwd/vendor/$vendor";
-
-  if (-d $dir) {
-    # exec install.
-    chdir $dir;
-    say `perl Build.PL`;
-    say `./Build`;
-    say `./Build test`;
-    say `./Build install`;
-
-    # generate vendor lib directory.
-    my $lib = "$dir/lib";
-    chdir $lib;
-
-    opendir(D, "$lib") || die "Can't open directory $lib: $!\n";
-    my @list = readdir(D);
-    closedir(D);
-
-    my $lib_dir = $list[2] || die "Empty lib directory: $!\n";
-    if (!-d "$cwd/$lib_dir") {
-      print "Lib dir $lib_dir not found: creating directory...";
-      mkdir("$cwd/$lib_dir") or die "error: $!\n";
-      say "done!";
-    }
-
-    # create symlinks.
-    $lib = "$lib/$lib_dir";
-    chdir $lib;
-    opendir(D, "$lib") || die "Can't open directory $lib: $!\n";
-    @list = grep /\.pm?$/, readdir(D);
-    closedir(D);
-
-    chdir "$cwd/$lib_dir";
-    say "Generating symlinks...";
-    foreach my $lib_file (@list) {
-      say $lib_file;
-      `cp $cwd/vendor/$vendor/lib/$lib_dir/$lib_file .`;
-    }
-  }
-  else {
-    say "Could not install vendor $vendor: $!";
-    die "Installation aborted. Please verify memento code is up to date and retry.\n";
-  }
+  say `cpan -i -f $vendor`;
+  say "Reading module description...";
+  say `cpan -D $vendor`;
 }
+
+chdir;
+my $home = cwd;
+my $storage = "$home/.memento";
+if (!-d $storage) {
+  mkdir($storage) or die "Cannot create .memento dir in your home directory: $!\n";
+}
+
+if (!-f "/usr/local/bin/memento") {
+  `ln -s $cwd/memento.pl /usr/local/bin/memento`;
+}
+
+say "Memento installation finished";

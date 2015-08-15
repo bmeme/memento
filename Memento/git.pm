@@ -1,8 +1,9 @@
-#!/usr/bin/perl
+#!/Applications/MAMP/Library/bin/perl
 require "$root/Daemon.pm";
 require "$root/Command.pm";
 
 package Memento::git;
+
 use feature 'say';
 our @ISA = qw(Command);
 use strict; use warnings;
