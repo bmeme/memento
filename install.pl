@@ -14,14 +14,16 @@ if (!$cpan_path) {
 
 my @vendors = (
   'Class::MOP',
+  'Switch',
   'Text::Aligner',
   'Text::Table',
-  'Text::Trim'
+  'Text::Trim',
+  'WWW::Curl'
 );
 
 foreach my $vendor (@vendors) {
   print "[$vendor] installing vendor...\n";
-  say `cpan -i -f $vendor`;
+  say `cpan -i $vendor`;
   say "Reading module description...";
   say `cpan -D $vendor`;
 }

@@ -11,9 +11,33 @@ use Getopt::Long;
 use Text::Trim;
 use Data::Dumper;
 
+sub clear {
+  my $class = shift;
+  Daemon::write($class->{storage}, 'memento', 1, '>');
+}
+
+sub exec {
+  my $class = shift;
+  my $i = shift;
+  my @list = $class->_get_list();
+
+  if (defined $list[$i]) {
+    system($list[$i]);
+  }
+}
+
 sub list {
   my $class = shift;
-  print $class->_get_list();
+  my @list = $class->_get_list();
+  for (my $i = 0; $i <= $#list; $i++) {
+    my $item = "[$i] $list[$i]";
+    if ($i == ($#list + 1)) {
+      say $item;
+    }
+    else {
+      print $item;
+    }
+  }
 }
 
 sub last {
@@ -37,7 +61,7 @@ sub last {
 sub _get_list {
   my $class = shift;
   if (!-f $class->{storage}) {
-    Daemon::write($class->{storage}, 'memento', 1, '>');
+    $class->clear();
   }
   return `cat $class->{storage}`;
 }

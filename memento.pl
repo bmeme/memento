@@ -15,6 +15,7 @@ if (/ (\/[\w\/\-]+?memento\.pl)$/) {
 }
 
 require "$root/Daemon.pm";
+getopts('v');
 
 if ($#ARGV > -1) {
   my $type = shift;

@@ -7,6 +7,7 @@ package Command;
 use strict; use warnings;
 use feature 'say';
 use Class::MOP;
+use JSON::PP;
 use Text::Trim;
 use Data::Dumper;
 
@@ -18,7 +19,8 @@ sub new {
     type => $type,
     command => $command,
     base_command => "memento $type $command",
-    storage => Daemon::storage() . "/$type"
+    storage => Daemon::storage() . "/$type",
+    config => Daemon::storage() . "/" . $type . "_cfg"
   };
   return bless $self, $class;
 }
@@ -55,6 +57,23 @@ sub _pre {
 
 sub _done {
   # nothing to do by default;
+}
+
+sub _def_config {
+  my $class = shift;
+  return {};
+}
+
+sub _get_config {
+  my $class = shift;
+  my $config = (-f $class->{config}) ? Daemon::json_decode_file($class->{config}) : $class->_def_config();
+  return $config;
+}
+
+sub _save_config {
+  my $class = shift;
+  my $config = shift;
+  Daemon::write($class->{config}, encode_json $config, '1', '>');
 }
 
 sub _log_history {

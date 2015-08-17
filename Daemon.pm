@@ -3,8 +3,12 @@ use feature 'say';
 package Daemon;
 use Cwd;
 use JSON::PP;
+use Term::ANSIColor;
 use Text::Aligner;
 use Text::Table;
+use HTTP::Response;
+use WWW::Curl::Easy;
+use Data::Dumper;
 
 sub write {
   if (($#_ + 1) != 4) {
@@ -51,7 +55,7 @@ sub json_decode_file {
   my $data = undef;
   if ((-s $file) && (open (my $json_stream, $file))) {
     local $/ = undef;
-    my $json = JSON::PP->new->utf8;
+    my $json = JSON::PP->new->allow_nonref;
     $data = $json->decode(<$json_stream>);
     close($json_stream);
   }
@@ -93,7 +97,7 @@ sub promptUser {
    }
 }
 
-sub json2table {
+sub array2table {
   my $title = shift;
   my $items = shift || ();
   my @exclude = shift || [];
@@ -104,9 +108,11 @@ sub json2table {
   for my $item (@{$items}) {
     if ($i == 0) {
       for my $key (sort keys %{$item}) {
-        # @todo rework, including string values of HASH items.
-        if (ref($item->{$key}) ne 'HASH' && !in_array(@exclude, $key)) {
-          push(@header, uc $key);
+        if (!in_array(@exclude, $key)) {
+          my $ref = ref($item->{$key});
+          if (($ref ne 'HASH') || $item->{$key}->{name}) {
+            push(@header, uc $key);
+          }
         }
       }
     }
@@ -114,26 +120,25 @@ sub json2table {
 
     my @row = ();
     for my $key (@header) {
-      push(@row, $item->{lc $key});
+      my $ref = ref($item->{lc $key});
+      my $value = (($ref eq 'HASH') && $item->{lc $key}->{name}) ? $item->{lc $key}->{name} : $item->{lc $key};
+      push(@row, $value);
     }
     push(@rows, [@row]);
   }
 
-  my $table = Text::Table->new(@header);
-  $table->load(@rows);
-
-  use Term::ANSIColor;
-  &printLabel($title);
-  say colored(['black on_white'], $table);
+  if (@rows) {
+    my $table = Text::Table->new(@header);
+    $table->load(@rows);
+    &printLabel($title);
+    say colored(['black on_bright_white'], $table);
+  }
 }
 
 sub printLabel {
   my $label = shift;
-  my $color = shift || "white on_black";
-  my $padding = " " x ((length $label) + 2);
-
-  use Term::ANSIColor;
-  say colored([$color], "$padding\n $label \n$padding");
+  my $color = shift || "bold white on_rgb015";
+  say colored([$color], uc " $label ");
 }
 
 sub in_array {
@@ -152,6 +157,40 @@ sub storage {
   }
 
   return $storage;
+}
+
+sub http_request {
+  my $uri = shift;
+  my @header = shift;
+  my %options = shift;
+  my $curl = WWW::Curl::Easy->new;
+
+  $curl->setopt(CURLOPT_HEADER,1);
+  $curl->setopt(CURLOPT_URL, $uri);
+  $curl->setopt(CURLOPT_HTTPHEADER, @header);
+  $curl->setopt(CURLOPT_SSL_VERIFYPEER, 0);
+  $curl->setopt(CURLOPT_TIMEOUT, 3);
+
+  if (%options) {
+    for my $key (keys %options) {
+      $curl->setopt($key, $options{$key});
+    }
+  }
+
+  my $response;
+  $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA, \$response);
+
+  my $retcode = $curl->perform;
+  my $content;
+  if ($retcode == 0) {
+    $response = HTTP::Response->parse($response);
+    $content = $response->decoded_content;
+  }
+  else {
+    die sprintf('HTTP request error %d (%s): %s', $retcode, $curl->strerror($retcode), $curl->errbuf);
+  }
+
+  return $content;
 }
 
 1;
