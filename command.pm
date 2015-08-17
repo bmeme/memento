@@ -66,14 +66,23 @@ sub _def_config {
 
 sub _get_config {
   my $class = shift;
-  my $config = (-f $class->{config}) ? Daemon::json_decode_file($class->{config}) : $class->_def_config();
+  my $config;
+
+  if (-f $class->{config}) {
+    $config = Daemon::json_decode_file($class->{config});
+  }
+  else {
+    $config = $class->_def_config();
+    $class->_save_config($config);
+  }
+
   return $config;
 }
 
 sub _save_config {
   my $class = shift;
   my $config = shift;
-  Daemon::write($class->{config}, encode_json $config, '1', '>');
+  Daemon::write($class->{config}, JSON::PP->new->utf8->pretty->encode($config), '1', '>');
 }
 
 sub _log_history {

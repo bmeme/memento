@@ -16,16 +16,15 @@ my @vendors = (
   'Class::MOP',
   'Switch',
   'Text::Aligner',
+  'Text::ASCIITable',
   'Text::Table',
   'Text::Trim',
   'WWW::Curl'
 );
 
 foreach my $vendor (@vendors) {
-  print "[$vendor] installing vendor...\n";
+  print "[$vendor] Installing vendor...\n";
   say `cpan -i $vendor`;
-  say "Reading module description...";
-  say `cpan -D $vendor`;
 }
 
 chdir;

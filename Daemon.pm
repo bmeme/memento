@@ -5,6 +5,7 @@ use Cwd;
 use JSON::PP;
 use Term::ANSIColor;
 use Text::Aligner;
+use Text::ASCIITable;
 use Text::Table;
 use HTTP::Response;
 use WWW::Curl::Easy;
@@ -23,14 +24,10 @@ sub write {
   if (!-f $file) {
     if ($create == 1) {
       $method = '>';
-      # say "Creating file $file";
     }
     else {
       die("File $file does not exists");
     }
-  }
-  else {
-    # say "Updating file $file";
   }
 
   open(my $fh, $method, $file);
@@ -101,6 +98,7 @@ sub array2table {
   my $title = shift;
   my $items = shift || ();
   my @exclude = shift || [];
+  my $colored = shift || 0;
   my @header = ();
   my @rows = ();
   my $i = 0;
@@ -128,10 +126,20 @@ sub array2table {
   }
 
   if (@rows) {
-    my $table = Text::Table->new(@header);
-    $table->load(@rows);
-    &printLabel($title);
-    say colored(['black on_bright_white'], $table);
+    if ($colored) {
+      my $table = Text::Table->new(@header);
+      $table->load(@rows);
+      &printLabel($title);
+      say colored(['black on_bright_white'], $table);
+    }
+    else {
+      $t = Text::ASCIITable->new({ headingText => $title });
+      $t->setCols(@header);
+      for my $row (@rows) {
+        $t->addRow($row);
+      }
+      say $t;
+    }
   }
 }
 

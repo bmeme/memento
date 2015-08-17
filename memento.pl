@@ -2,6 +2,7 @@
 package Memento;
 use strict; use warnings;
 use feature 'say';
+use Data::Dumper;
 use Getopt::Std;
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
@@ -15,7 +16,7 @@ if (/ (\/[\w\/\-]+?memento\.pl)$/) {
 }
 
 require "$root/Daemon.pm";
-getopts('v');
+getopts('vh');
 
 if ($#ARGV > -1) {
   my $type = shift;
@@ -25,9 +26,34 @@ if ($#ARGV > -1) {
     $memento->$command(@ARGV);
     $memento->_done(@ARGV);
   }
+  else {
+    my $history = Memento->instantiate('history', 'bookmarks');
+    my $bookmarks = $history->_get_config()->{bookmarks};
+    for my $bookmark (@{$bookmarks}) {
+      if ($bookmark->{name} eq $type) {
+        system($bookmark->{command});
+      }
+    }
+  }
 }
 else {
-  say splash();
+  my @list;
+  my $i = 0;
+  my $commands_dir = "$root/Memento";
+
+  opendir(DIR, $commands_dir) || die "Can't open directory $commands_dir: $!";
+  @list = grep /\.pm$/, readdir(DIR);
+  closedir DIR;
+
+  for my $command (sort @list) {
+    $command =~ s/\.pm$//;
+    if ($i == ($#list + 1)) {
+      print $command;
+    }
+    else {
+      say $command;
+    }
+  }
 }
 
 sub instantiate {
@@ -48,9 +74,7 @@ sub splash {
 }
 
 sub main::VERSION_MESSAGE {
-  my @splash = &splash();
-  "@splash" =~ /(v\d+\.\d+\.\w+)/;
-  say $1;
+  say &splash();
 }
 
 1;
