@@ -184,12 +184,18 @@ sub _call_api {
   my $offset = '0';
   my $limit = '25';
   my $sort = '';
+  my $page = '';
 
   GetOptions(
     'offset=s' => \$offset,
     'limit=s' => \$limit,
-    'sort=s' => \$sort
+    'sort=s' => \$sort,
+    'page=s' => \$page
   ) or die 'Incorrect usage';
+
+  if ($page) {
+    $offset = $limit * $page;
+  }
 
   my %querystring = %{$query};
   $querystring{'offset'} = $offset;
@@ -204,12 +210,16 @@ sub _call_api {
   my $content = decode_json $response;
 
   if ($content->{'total_count'} && ($content->{'total_count'} > $content->{'limit'})) {
+    my $current = ($content->{'offset'} > $content->{'limit'}) ? floor($content->{'offset'} / $content->{'limit'}): 1;
+    my $items = $content->{'limit'} * $current;
     %pager = (
-      'current' => ($content->{'offset'} > $content->{'limit'}) ? floor($content->{'offset'} / $content->{'limit'}): 1,
+      'current' => $current,
       'total' => ceil($content->{'total_count'} / $content->{'limit'}),
       'quantity' => $content->{'limit'},
+      'items' => $items < $content->{'total_count'} ? $items : $content->{'total_count'},
       'total_items' => $content->{'total_count'},
-      'offset' => $content->{'offset'}
+      'offset' => $content->{'offset'},
+      'class' => $class
     );
   }
 
@@ -218,7 +228,31 @@ sub _call_api {
 
 sub _render_pager {
   if (%pager) {
-    say "Page $pager{current} of $pager{total} [$pager{offset}/$pager{total_items}]";
+    say "Page $pager{current} of $pager{total} [$pager{items}/$pager{total_items}]";
+
+    if ($pager{total} > 1) {
+      my $direction = Daemon::promptUser('Prev or Next?', 'p/n');
+      my $page = $pager{'current'};
+      switch ($direction) {
+        case 'n' {
+          $page = ($pager{'current'} < $pager{'total'}) ? $page + 1 : $page;
+        }
+        case 'p' {
+          $page = ($pager{'current'} > 1) ? $page - 1 : $page;
+        }
+      }
+
+      if ($page != $pager{'current'}) {
+        my $command = `memento history last`;
+        chomp($command);
+
+        if ($command =~ /\-{2}page/) {
+          $command =~ s/\-{2}page[=\"'\s]+(\w+)[\"'\s]?//;
+        }
+
+        system("$command --page $page");
+      }
+    }
   }
 }
 

@@ -15,6 +15,7 @@ if (!$cpan_path) {
 my @vendors = (
   'Class::MOP',
   'Switch',
+  'Term::ProgressBar',
   'Text::Aligner',
   'Text::ASCIITable',
   'Text::Table',
@@ -22,9 +23,11 @@ my @vendors = (
   'WWW::Curl'
 );
 
+say "Installing vendors:";
 foreach my $vendor (@vendors) {
-  print "[$vendor] Installing vendor...\n";
-  say `cpan -i $vendor`;
+  print "[$vendor] checking...\r";
+  `cpan -i $vendor`;
+  print "[$vendor] checking...ok!\n";
 }
 
 chdir;
@@ -38,4 +41,4 @@ if (!-f "/usr/local/bin/memento") {
   `ln -s $cwd/memento.pl /usr/local/bin/memento`;
 }
 
-say "Memento installation finished";
+say "Memento installation finished.";
