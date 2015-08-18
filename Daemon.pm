@@ -1,4 +1,4 @@
-#!/Applications/MAMP/Library/bin/perl
+#!/usr/bin/env perl
 use feature 'say';
 package Daemon;
 use Cwd;

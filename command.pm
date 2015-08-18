@@ -1,4 +1,4 @@
-#!/Applications/MAMP/Library/bin/perl
+#!/usr/bin/env perl
 require "$root/Daemon.pm";
 require "$root/Memento/history.pm";
 

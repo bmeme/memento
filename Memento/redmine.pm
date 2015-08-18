@@ -1,4 +1,4 @@
-#!/Applications/MAMP/Library/bin/perl
+#!/usr/bin/env perl
 require "$root/Daemon.pm";
 require "$root/Command.pm";
 
@@ -184,7 +184,7 @@ sub _call_api {
   my $offset = '0';
   my $limit = '25';
   my $sort = '';
-  my $page = '';
+  my $page = 1;
 
   GetOptions(
     'offset=s' => \$offset,
@@ -194,7 +194,7 @@ sub _call_api {
   ) or die 'Incorrect usage';
 
   if ($page) {
-    $offset = $limit * $page;
+    $offset = $limit * ($page - 1);
   }
 
   my %querystring = %{$query};
@@ -210,7 +210,7 @@ sub _call_api {
   my $content = decode_json $response;
 
   if ($content->{'total_count'} && ($content->{'total_count'} > $content->{'limit'})) {
-    my $current = ($content->{'offset'} > $content->{'limit'}) ? floor($content->{'offset'} / $content->{'limit'}): 1;
+    my $current = ($content->{'offset'} > $content->{'limit'}) ? floor($content->{'offset'} / $content->{'limit'}): $page;
     my $items = $content->{'limit'} * $current;
     %pager = (
       'current' => $current,
@@ -249,7 +249,6 @@ sub _render_pager {
         if ($command =~ /\-{2}page/) {
           $command =~ s/\-{2}page[=\"'\s]+(\w+)[\"'\s]?//;
         }
-
         system("$command --page $page");
       }
     }

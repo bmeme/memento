@@ -1,4 +1,4 @@
-#!/Applications/MAMP/Library/bin/perl
+#!/usr/bin/env perl
 package Memento;
 use strict; use warnings;
 use feature 'say';

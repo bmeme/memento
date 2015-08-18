@@ -1,4 +1,4 @@
-#!/Applications/MAMP/Library/bin/perl
+#!/usr/bin/env perl
 use strict; use warnings;
 use feature 'say';
 use Cwd;
@@ -25,9 +25,9 @@ my @vendors = (
 
 say "Installing vendors:";
 foreach my $vendor (@vendors) {
-  print "[$vendor] checking...\r";
+  print "[$vendor] installing...\r";
   `cpan -i $vendor`;
-  print "[$vendor] checking...ok!\n";
+  print "[$vendor] ...installed!\n";
 }
 
 chdir;
