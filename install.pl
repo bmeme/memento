@@ -3,7 +3,7 @@ use strict; use warnings;
 use feature 'say';
 use Cwd;
 
-our $cwd = cwd;
+our $cwd = getcwd();
 my $cpan_path = `which cpan`;
 
 if (!$cpan_path) {
@@ -14,6 +14,7 @@ if (!$cpan_path) {
 
 my @vendors = (
   'Class::MOP',
+  'Hash::Merge',
   'Switch',
   'Term::ProgressBar',
   'Text::Aligner',

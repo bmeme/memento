@@ -20,8 +20,15 @@ sub new {
     command => $command,
     base_command => "memento $type $command",
     storage => Daemon::storage() . "/$type",
-    config => Daemon::storage() . "/" . $type . "_cfg"
+    config => Daemon::storage() . "/" . $type . "_cfg",
   };
+
+  if ($class->_dependencies()) {
+    for my $dependency (@{$class->_dependencies()}) {
+      $self->{$dependency} = Memento->instantiate($dependency, '');
+    }
+  }
+
   return bless $self, $class;
 }
 
@@ -87,6 +94,10 @@ sub _save_config {
 
 sub _log_history {
   return 1;
+}
+
+sub _dependencies {
+  return [];
 }
 
 1;

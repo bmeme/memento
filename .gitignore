@@ -1,6 +1,1 @@
 .idea
-Text
-vendor/*/_build
-vendor/*/blib
-vendor/*/Build
-vendor/*/MYMETA.*

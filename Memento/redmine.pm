@@ -48,7 +48,7 @@ sub config {
       say 'Redmine API configurations have been saved';
     }
     case 'list' {
-      Daemon::array2table("Redmine Configurations", $config->{api});
+      say Daemon::array2table("Redmine Configurations", $config->{api});
 
       if ($config->{default}) {
         say "Default: $config->{default}";
@@ -91,7 +91,7 @@ sub config {
 
 sub issue {
   my $class = shift;
-  my $issue = shift || die "Missing issue number.\n";
+  my $id = shift || die "Missing issue id.\n";
   my $open = 0;
 
   GetOptions(
@@ -101,13 +101,13 @@ sub issue {
   if ($open) {
     my $config = $class->_get_config();
     my $settings = $class->_config_load($config->{default});
-    my $uri = $settings->{url} . "/issues/$issue";
+    my $uri = $settings->{url} . "/issues/$id";
     Daemon::open_default_browser($uri);
   }
   else {
-    my $data = $class->_call_api("issues/$issue", {include => "attachments"});
-    if (defined($data)) {
-      $class->_render_issue($data->{'issue'});
+    my $issue = $class->_get_issue($id);
+    if (defined($issue)) {
+      $class->_render_issue($issue);
     }
   }
 }
@@ -115,7 +115,7 @@ sub issue {
 sub queries {
   my $class = shift;
   my $data = $class->_call_api("queries");
-  Daemon::array2table("Queries", $data->{'queries'});
+  say Daemon::array2table("Queries", $data->{'queries'});
 }
 
 sub query {
@@ -123,13 +123,13 @@ sub query {
   my $query_id = shift;
   $query_id = ($query_id && !($query_id =~ /^\-{2}/)) ? {query_id => $query_id} : {};
   my $data = $class->_call_api("issues", $query_id);
-  Daemon::array2table("Query", $data->{'issues'}, ['description', 'created_on', 'custom_fields']);
+  say Daemon::array2table("Query", $data->{'issues'}, {exclude => ['description', 'created_on', 'custom_fields']});
 }
 
 sub projects {
   my $class = shift;
   my $data = $class->_call_api("projects");
-  Daemon::array2table("Projects", $data->{'projects'}, ['description', 'created_on', 'updated_on', 'custom_fields']);
+  say Daemon::array2table("Projects", $data->{'projects'}, {exclude => ['description', 'created_on', 'updated_on', 'custom_fields']});
 }
 
 # OVERRIDDEN METHODS ###########################################################
@@ -147,6 +147,13 @@ sub _def_config {
 }
 
 # PRIVATE METHODS ##############################################################
+
+sub _get_issue() {
+  my $class = shift;
+  my $id = shift or die "Missing issue id to load";
+  my $data = $class->_call_api("issues/$id", {include => "attachments"});
+  return $data->{issue};
+}
 
 sub _config_load {
   my $class = shift;
@@ -266,7 +273,7 @@ sub _render_issue {
   say sprintf("|- Created by: %s on %s", $issue->{'author'}->{'name'}, $issue->{'created_on'});
   say sprintf("|- Assigned to: %s\n", $issue->{'assigned_to'}->{'name'}) if defined $issue->{'assigned_to'};
 
-  Daemon::array2table("Attachments", $issue->{'attachments'}, ['content_type', 'created_on', 'id']);
+  say Daemon::array2table("Attachments", $issue->{'attachments'}, {exclude => ['content_type', 'created_on', 'id']});
   Daemon::printLabel("Description");
   say encode('utf8', $issue->{'description'});
 }

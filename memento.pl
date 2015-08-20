@@ -6,10 +6,11 @@ use Data::Dumper;
 use Getopt::Std;
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
+our ($root, @args);
+
 my $file = `which memento`;
 $_ = `ls -l $file`;
 
-our ($root);
 if (/ (\/[\w\/\-]+?memento\.pl)$/) {
   $root = $1;
   $root =~ s/\/memento.pl$//;
@@ -18,6 +19,7 @@ if (/ (\/[\w\/\-]+?memento\.pl)$/) {
 require "$root/Daemon.pm";
 getopts('vh');
 
+@args = @ARGV;
 if ($#ARGV > -1) {
   my $type = shift;
   my $command = shift || "help";
@@ -27,11 +29,12 @@ if ($#ARGV > -1) {
     $memento->_done(@ARGV);
   }
   else {
+    shift @args;
     my $history = Memento->instantiate('history', 'bookmarks');
     my $bookmarks = $history->_get_config()->{bookmarks};
     for my $bookmark (@{$bookmarks}) {
       if ($bookmark->{name} eq $type) {
-        system($bookmark->{command});
+        system($bookmark->{command} . " @args");
       }
     }
   }

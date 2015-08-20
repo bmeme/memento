@@ -7,6 +7,7 @@ use Term::ANSIColor;
 use Text::Aligner;
 use Text::ASCIITable;
 use Text::Table;
+use Hash::Merge qw( merge );
 use HTTP::Response;
 use WWW::Curl::Easy;
 use Data::Dumper;
@@ -97,8 +98,15 @@ sub promptUser {
 sub array2table {
   my $title = shift;
   my $items = shift || ();
-  my @exclude = shift || [];
-  my $colored = shift || 0;
+  my $options = shift;
+  my $default = {
+    exclude => [],
+    allow_nested => 1,
+    extract_nested_key => 'name',
+    colored => 0
+  };
+  $options = merge($default, $options);
+
   my @header = ();
   my @rows = ();
   my $i = 0;
@@ -106,9 +114,9 @@ sub array2table {
   for my $item (@{$items}) {
     if ($i == 0) {
       for my $key (sort keys %{$item}) {
-        if (!in_array(@exclude, $key)) {
+        if (!in_array($options->{exclude}, $key)) {
           my $ref = ref($item->{$key});
-          if (($ref ne 'HASH') || $item->{$key}->{name}) {
+          if (($ref ne 'HASH') || $options->{allow_nested}) {
             push(@header, uc $key);
           }
         }
@@ -119,26 +127,42 @@ sub array2table {
     my @row = ();
     for my $key (@header) {
       my $ref = ref($item->{lc $key});
-      my $value = (($ref eq 'HASH') && $item->{lc $key}->{name}) ? $item->{lc $key}->{name} : $item->{lc $key};
+      my $value;
+
+      if (($ref eq 'HASH')) {
+        if ($options->{allow_nested}) {
+          if ($options->{full_nested}) {
+            $value = array2table(0, [$item->{lc $key}]);
+          }
+          else {
+            $value = $item->{lc $key}->{$options->{extract_nested_key}};
+          }
+        }
+      }
+      else {
+        $value = $item->{lc $key};
+      }
+
       push(@row, $value);
     }
     push(@rows, [@row]);
   }
 
   if (@rows) {
-    if ($colored) {
+    if ($options->{colored}) {
       my $table = Text::Table->new(@header);
       $table->load(@rows);
       &printLabel($title);
-      say colored(['black on_bright_white'], $table);
+      return colored(['black on_bright_white'], $table);
     }
     else {
-      $t = Text::ASCIITable->new({ headingText => $title });
+      my $args = $title ? { headingText => $title } : {};
+      $t = Text::ASCIITable->new($args);
       $t->setCols(@header);
       for my $row (@rows) {
         $t->addRow($row);
       }
-      say $t;
+      return $t;
     }
   }
 }

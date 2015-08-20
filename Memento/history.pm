@@ -95,7 +95,7 @@ sub bookmark {
 sub bookmarks {
   my $class = shift;
   my $config = $class->_get_config();
-  Daemon::array2table("Bookmarks", $config->{bookmarks});
+  say Daemon::array2table("Bookmarks", $config->{bookmarks});
 }
 
 sub unbookmark {
