@@ -51,10 +51,10 @@ else {
   for my $command (sort @list) {
     $command =~ s/\.pm$//;
     if ($i == ($#list + 1)) {
-      print $command;
+      print "- $command";
     }
     else {
-      say $command;
+      say "- $command";
     }
   }
 }
