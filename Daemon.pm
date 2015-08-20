@@ -174,9 +174,16 @@ sub printLabel {
 }
 
 sub in_array {
-  my ($arr,$search_for) = @_;
+  my ($arr, $search_for) = @_;
   my %items = map {$_ => 1} @$arr;
-  return (exists($items{$search_for}))?1:0;
+  return (exists($items{$search_for})) ? 1 : 0;
+}
+
+sub print_list {
+  my $array = shift;
+  foreach my $item (@{$array}) {
+    say "- $item";
+  }
 }
 
 sub storage {

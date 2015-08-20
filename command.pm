@@ -41,7 +41,7 @@ sub help {
     my @methods = sort $meta->get_method_list;
     for my $method (@methods) {
       if ($method =~ /^[a-z]/i) {
-        say $method;
+        say "- $method";
       }
     }
   }

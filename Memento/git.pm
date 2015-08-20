@@ -35,6 +35,7 @@ sub branch {
     my $issue = $class->{redmine}->_get_issue($id);
     $branch = trim $config->{branch}->{pattern};
     $branch =~ s/:(\w+):/$issue->{$1}/g;
+    $branch =~ s/:(\w+)-(\w+):/$issue->{$1}->{$2}/;
     $branch = "$branch";
   }
   else {
@@ -47,16 +48,29 @@ sub branch {
 
 sub config {
   my $class = shift;
-  my $op = shift || 'list';
-  #my @branches = `git branch`;
+  my $op = shift;
+  my $branch_list = trim `git branch`;
+  $branch_list =~ s/\* //;
+  my @branches = split(' ', $branch_list);
+
+  my $operations = ['init', 'list', 'delete'];
+  while (!$op || !Daemon::in_array($operations, $op)) {
+    Daemon::print_list($operations);
+    $op = Daemon::promptUser("Enter the operation name to be executed");
+  }
 
   switch ($op) {
     case 'init' {
       say "Please answer the following questions (press enter to confirm defaults):";
-      my $source = Daemon::promptUser('Which branch must be used as Source when creating a new branch?', 'master');
-      my $redmine = Daemon::promptUser('Do you want to enable Redmine support?', 'y') eq 'y' ? 1 : 0;
-      my $pattern = Daemon::promptUser('Please specify your branch naming convention (if you answered yes in the previous question you can use issue properties as tokens):', '#:id:_:subject:');
 
+      my $source;
+      while (!$source || !Daemon::in_array([@branches], $source)) {
+        Daemon::print_list([@branches]);
+        $source = Daemon::promptUser('Which branch must be used as Source when creating a new branch?', 'master');
+      }
+
+      my $redmine = Daemon::promptUser('Do you want to enable Redmine support?', 'y') eq 'y' ? 1 : 0;
+      my $pattern = $redmine ? Daemon::promptUser('Please specify your branch naming convention (you can use issue properties as tokens)', ':tracker-name:/#:id:-:subject:') : '';
       my $config = {
         branch => {
           source => $source,
@@ -68,21 +82,20 @@ sub config {
       say Daemon::array2table('Memento Git configurations', [$config], {full_nested => 1});
 
       if (Daemon::promptUser('Do you confirm these configurations?', 'y') eq 'y') {
+        $class->_delete_config();
         system("git config memento.branch.source " . $config->{branch}->{source});
         system("git config memento.branch.pattern " . $config->{branch}->{pattern});
         system("git config memento.redmine " . $config->{redmine});
         say "\nYour Memento Git configurations have been saved:";
-        system("memento git config");
+        system("memento git config list");
       }
     }
     case 'list' {
       say `git config -l | grep memento`;
     }
     case 'delete' {
-      system("git config --unset memento.branch.source");
-      system("git config --unset memento.branch.pattern");
-      system("git config --unset memento.redmine");
-      system("memento git config");
+      $class->_delete_config();
+      say "Your Memento Git configurations have been deleted.";
     }
   }
 }
@@ -143,18 +156,16 @@ sub _check_branch_name {
   my $branch = shift or die "Missing branch to check.\n";
 
   $branch = lc $branch;
-  $branch =~ s/^feature\///;
-  $branch =~ s/\W+/_/g;
+  $branch =~ s/[^\w\/\#\-]+/_/g;
   $branch =~ s/^\w{1,2}_|_\w{1,2}_|_\w{1,2}$/_/g;
   $branch =~ s/^_|_$//g;
-  $branch = "feature/$branch";
   return $branch;
 }
 
 sub _get_config {
   my $class = shift;
   my $config;
-  my @conf = trim `memento git config`;
+  my @conf = trim `memento git config list`;
 
   if ($#conf > 0) {
     my $source = `git config memento.branch.source`;
@@ -169,6 +180,13 @@ sub _get_config {
       redmine => $redmine
     };
   }
+}
+
+sub _delete_config {
+  my $class = shift;
+  system("git config --unset memento.branch.source");
+  system("git config --unset memento.branch.pattern");
+  system("git config --unset memento.redmine");
 }
 
 sub _token_replace {
