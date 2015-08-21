@@ -20,6 +20,7 @@ sub branch {
   my $class = shift;
   my $config = $class->_get_config();
   my $branch;
+  my @branches = $class->_get_branches();
 
   if (!$config) {
     die "No Memento git config has been found. Please run 'memento git init' before start creating branches using Memento.\n"
@@ -30,8 +31,12 @@ sub branch {
     'source=s' => \$source
   ) or die 'Incorrect usage';
 
+  if (!Daemon::in_array([@branches], $source)) {
+    die "You have specified an invalid source branch: $source\n";
+  }
+
   if ($config->{redmine}) {
-    my $id = Daemon::prompt("Enter Redmine issue id") or die "Missing Redmine issue id\n";
+    my $id = Daemon::prompt("Enter Redmine issue id");
     my $issue = $class->{redmine}->_get_issue($id);
     $branch = trim $config->{branch}->{pattern};
     $branch =~ s/:(\w+):/$issue->{$1}/g;
@@ -39,7 +44,7 @@ sub branch {
     $branch = "$branch";
   }
   else {
-    $branch = Daemon::prompt("Enter the branch name") or die "Missing branch name, procedure aborted.\n";
+    $branch = Daemon::prompt("Enter the branch name");
   }
 
   $branch = $class->_check_branch_name($branch);
@@ -49,12 +54,10 @@ sub branch {
 sub config {
   my $class = shift;
   my $op = shift;
-  my $branch_list = trim `git branch`;
-  $branch_list =~ s/\* //;
-  my @branches = split(' ', $branch_list);
+  my @branches = $class->_get_branches();
 
   if (!$op) {
-    $op = Daemon::prompt("Enter the operation name to be executed", undef, ['init', 'list', 'delete']);
+    $op = Daemon::prompt("Choose an operation", undef, ['init', 'list', 'delete']);
   }
 
   switch ($op) {
@@ -63,7 +66,7 @@ sub config {
 
       my $source = Daemon::prompt('Which branch must be used as Source when creating a new branch?', 'master', [@branches]);
       my $redmine = Daemon::prompt('Do you want to enable Redmine support?', 'y') eq 'y' ? 1 : 0;
-      my $pattern = $redmine ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/#:id:-:subject:') : '';
+      my $pattern = $redmine ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/:id:-:subject:') : '';
       my $config = {
         branch => {
           source => $source,
@@ -189,6 +192,13 @@ sub _token_replace {
    my $t = String::Interpolate->new($args);
    $t->($pat);
    return "$t";
+}
+
+sub _get_branches {
+  my $class = shift;
+  my $branch_list = trim `git branch`;
+  $branch_list =~ s/\* //;
+  return split(' ', $branch_list);
 }
 
 1;

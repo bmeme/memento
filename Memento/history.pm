@@ -18,7 +18,7 @@ sub clear {
 
 sub exec {
   my $class = shift;
-  my $id = shift or die "Insert the history ID of the command to be executed.\n";
+  my $id = shift || Daemon::prompt('Insert the history ID of the command to be executed');
   my @list = $class->_get_list();
 
   if (defined $list[$id]) {
@@ -100,7 +100,12 @@ sub bookmarks {
 
 sub unbookmark {
   my $class = shift;
-  my $name = shift or die "Enter the name of the bookmark to delete\n";
+  my $name = shift;
+
+  if (!$name) {
+    $name = Daemon::prompt("Enter the name of the bookmark to delete");
+  }
+
   my $config = $class->_get_config();
   my $deleted = 0;
   my $i = 0;

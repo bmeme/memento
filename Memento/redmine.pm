@@ -25,7 +25,7 @@ sub config {
   my $config = $class->_get_config();
 
   if (!$op) {
-    $op = Daemon::prompt("Enter the operation name to be executed", undef, ['add', 'delete', 'list', 'switch']);
+    $op = Daemon::prompt("Choose an operation", undef, ['add', 'delete', 'list', 'switch']);
   }
 
   switch ($op) {
@@ -52,7 +52,7 @@ sub config {
       say 'Redmine API configurations have been saved';
     }
     case 'delete' {
-      my $id = $_[0] or die "Missing API id to delete\n";
+      my $id = $_[0] || Daemon::prompt("Enter the API id to delete");
       my $updated = 0;
       my $i = 0;
       for my $item (@{$config->{api}}) {
@@ -67,6 +67,9 @@ sub config {
         $class->_save_config($config);
         say 'Redmine API configurations have been deleted';
       }
+      else {
+        die "Redmine API id not found: $id\n";
+      }
     }
     case 'list' {
       say Daemon::array2table("Redmine Configurations", $config->{api});
@@ -76,7 +79,7 @@ sub config {
       }
     }
     case 'switch' {
-      my $id = $_[0] or die "Missing API id to switch\n";
+      my $id = $_[0] || Daemon::prompt("Enter the API id to switch into");
       my $found = 0;
       for my $item (@{$config->{api}}) {
         if ($item->{id} eq $id) {
@@ -89,6 +92,9 @@ sub config {
         $class->_save_config($config);
         say "Redmine API switched to $id";
       }
+      else {
+        die "Redmine API id not found: $id\n";
+      }
     }
   }
 }
@@ -99,7 +105,7 @@ sub issue {
   my $open = 0;
 
   if (!$id) {
-    $id = Daemon::prompt('Enter issue ID');
+    $id = Daemon::prompt('Enter the issue ID');
   }
 
   GetOptions(

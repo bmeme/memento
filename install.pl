@@ -52,7 +52,7 @@ foreach my $vendor (@vendors) {
       if (-f $full_path) {
         foreach my $patch (@list) {
           say "Applying patch $patch at $full_path...";
-          system("patch -s -N $full_path $patches_dir/$patch");
+          system("patch -sN $full_path $patches_dir/$patch");
         }
       }
     }
