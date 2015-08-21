@@ -43,6 +43,7 @@ else {
   my @list;
   my $i = 0;
   my $commands_dir = "$root/Memento";
+  my @commands;
 
   opendir(DIR, $commands_dir) || die "Can't open directory $commands_dir: $!";
   @list = grep /\.pm$/, readdir(DIR);
@@ -50,13 +51,10 @@ else {
 
   for my $command (sort @list) {
     $command =~ s/\.pm$//;
-    if ($i == ($#list + 1)) {
-      print "- $command";
-    }
-    else {
-      say "- $command";
-    }
+    push (@commands, $command);
   }
+  my $command = Daemon::prompt("Enter the command name to be executed", undef, [@commands]);
+  system("memento $command");
 }
 
 sub instantiate {

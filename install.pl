@@ -13,11 +13,12 @@ if (!$cpan_path) {
   die "Installation aborted.\n";
 }
 
+say "Installing vendors:";
 my @vendors = (
   'Class::MOP',
   'Hash::Merge',
   'Switch',
-  'Term::Complete',
+  'FLORA/Term-Complete-1.402.tar.gz',
   'Term::ProgressBar',
   'Text::Aligner',
   'Text::ASCIITable',
@@ -26,17 +27,15 @@ my @vendors = (
   'WWW::Curl'
 );
 
-say "Installing vendors:";
 foreach my $vendor (@vendors) {
-  #@TODO this could be done better... T_T
-  my $span = (length $vendor > 13) ? "\t" : "\t\t";
-  print "[$vendor]" . $span . "[-]\r";
-  #`cpan -i $vendor`;
-  print "[$vendor]" . $span . "[√]\n";
+  print "[-] $vendor";
+  `cpan -i $vendor`;
+  print "\r[√] $vendor\n";
 }
 
 say "\nApplying patches:";
 foreach my $vendor (@vendors) {
+  $vendor =~ s/^[A-Z]+\/(\w+)\-(\w+)(.*)/$1::$2/;
   my $patches_dir = "$cwd/Patches/$vendor";
   if (-d $patches_dir) {
     say "[$vendor]";
@@ -52,10 +51,8 @@ foreach my $vendor (@vendors) {
       my $full_path = "$path/$file";
       if (-f $full_path) {
         foreach my $patch (@list) {
-          print "Applying patch $patch for $full_path ... ";
-          chdir $full_path;
-          system("patch -p1 < $patches_dir/$patch");
-          say "patched!";
+          say "Applying patch $patch at $full_path...";
+          system("patch -s -N $full_path $patches_dir/$patch");
         }
       }
     }
@@ -66,11 +63,13 @@ chdir;
 my $home = cwd;
 my $storage = "$home/.memento";
 if (!-d $storage) {
+  say "\nCreating ~/.memento folder";
   mkdir($storage) or die "Cannot create .memento dir in your home directory: $!\n";
 }
 
 if (!-f "/usr/local/bin/memento") {
+  say "\nCreating memento symlink";
   `ln -s $cwd/memento.pl /usr/local/bin/memento`;
 }
 
-say "Memento installation finished.";
+say "\nMemento installation finished.";

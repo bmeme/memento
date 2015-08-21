@@ -1,5 +1,5 @@
 diff --git a/Complete.pm b/Complete.pm
-index 601e495..5b083f1 100644
+index 601e495..514daa8 100644
 --- a/Complete.pm
 +++ b/Complete.pm
 @@ -66,9 +66,10 @@ Wayne Thompson
@@ -14,16 +14,25 @@ index 601e495..5b083f1 100644
      $complete = "\004";
      $kill     = "\025";
      $erase1 =   "\177";
-@@ -117,6 +118,12 @@ sub Complete {
-         print($prompt, $return);
-         while (($_ = getc(STDIN)) ne "\r") {
-             CASE: {
+@@ -144,7 +145,7 @@ sub Complete {
+                 $_ eq $kill && do {
+                     if ($r) {
+                         $r	= 0;
+-			$return	= "";
++                        $return	= "";
+                         print("\r\n");
+                         redo LOOP;
+                     }
+@@ -168,6 +169,12 @@ sub Complete {
+                     print;
+                     last CASE;
+                 };
++                
 +                # (^C) die and close all
 +                $_ eq $die && do {
 +                    system $tty_restore;
 +                    die "\r\n";
 +                };
-+                
-                 # (TAB) attempt completion
-                 $_ eq "\t" && do {
-                     @match = grep(/^\Q$return/, @cmp_lst);
+             }
+         }
+     }
