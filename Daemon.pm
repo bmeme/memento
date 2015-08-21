@@ -1,9 +1,11 @@
 #!/usr/bin/env perl
-use feature 'say';
 package Daemon;
+
+use feature 'say';
 use Cwd;
 use JSON::PP;
 use Term::ANSIColor;
+use Term::Complete;
 use Text::Aligner;
 use Text::ASCIITable;
 use Text::Table;
@@ -74,25 +76,51 @@ sub open_default_browser {
   }
 }
 
-sub promptUser {
-   my ($promptString, $defaultValue) = @_;
+sub prompt {
+  my $question = shift;
+  my $defaultValue = shift;
+  my @options = shift;
+  my $answer = undef;
+  my $printed_list = 0;
 
-   if ($defaultValue) {
-      print $promptString, "[", $defaultValue, "]: ";
-   } else {
-      print $promptString, ": ";
-   }
+  do {
+    if ($defaultValue) {
+      print $question, "[", $defaultValue, "]: ";
+    }
+    else {
+      print $question, ": ";
+    }
 
-   $| = 1;               # force a flush after our print
-   $_ = <STDIN>;         # get the input from STDIN (presumably the keyboard)
+    if (@options[0] && !$printed_list) {
+      print "\n";
+      print_list(@options);
+      $printed_list = 1;
+      print "» ";
+    }
+    $| = 1;        # force a flush after our print
 
-   chomp;
+    if (@options[0]) {
+      $_ = Complete('', @options);
+    }
+    else {
+      $_ = <STDIN>;  # get the input from STDIN
+      chomp;
+    }
 
-   if ("$defaultValue") {
-      return $_ ? $_ : $defaultValue;    # return $_ if it has a value
-   } else {
-      return $_;
-   }
+    if ("$defaultValue") {
+      $answer = $_ ? $_ : $defaultValue;    # return $_ if it has a value
+    }
+    else {
+      $answer = $_;
+    }
+  }
+  while (!$answer || !length $answer || (@options[0] && !in_array(@options, $answer)));
+
+  if ($printed_list) {
+    print "\n";
+  }
+
+  return $answer;
 }
 
 sub array2table {

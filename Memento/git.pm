@@ -31,7 +31,7 @@ sub branch {
   ) or die 'Incorrect usage';
 
   if ($config->{redmine}) {
-    my $id = Daemon::promptUser("Enter Redmine issue id") or die "Missing Redmine issue id\n";
+    my $id = Daemon::prompt("Enter Redmine issue id") or die "Missing Redmine issue id\n";
     my $issue = $class->{redmine}->_get_issue($id);
     $branch = trim $config->{branch}->{pattern};
     $branch =~ s/:(\w+):/$issue->{$1}/g;
@@ -39,7 +39,7 @@ sub branch {
     $branch = "$branch";
   }
   else {
-    $branch = Daemon::promptUser("Enter the branch name") or die "Missing branch name, procedure aborted.\n";
+    $branch = Daemon::prompt("Enter the branch name") or die "Missing branch name, procedure aborted.\n";
   }
 
   $branch = $class->_check_branch_name($branch);
@@ -53,24 +53,17 @@ sub config {
   $branch_list =~ s/\* //;
   my @branches = split(' ', $branch_list);
 
-  my $operations = ['init', 'list', 'delete'];
-  while (!$op || !Daemon::in_array($operations, $op)) {
-    Daemon::print_list($operations);
-    $op = Daemon::promptUser("Enter the operation name to be executed");
+  if (!$op) {
+    $op = Daemon::prompt("Enter the operation name to be executed", undef, ['init', 'list', 'delete']);
   }
 
   switch ($op) {
     case 'init' {
       say "Please answer the following questions (press enter to confirm defaults):";
 
-      my $source;
-      while (!$source || !Daemon::in_array([@branches], $source)) {
-        Daemon::print_list([@branches]);
-        $source = Daemon::promptUser('Which branch must be used as Source when creating a new branch?', 'master');
-      }
-
-      my $redmine = Daemon::promptUser('Do you want to enable Redmine support?', 'y') eq 'y' ? 1 : 0;
-      my $pattern = $redmine ? Daemon::promptUser('Please specify your branch naming convention (you can use issue properties as tokens)', ':tracker-name:/#:id:-:subject:') : '';
+      my $source = Daemon::prompt('Which branch must be used as Source when creating a new branch?', 'master', [@branches]);
+      my $redmine = Daemon::prompt('Do you want to enable Redmine support?', 'y') eq 'y' ? 1 : 0;
+      my $pattern = $redmine ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/#:id:-:subject:') : '';
       my $config = {
         branch => {
           source => $source,
@@ -81,7 +74,7 @@ sub config {
 
       say Daemon::array2table('Memento Git configurations', [$config], {full_nested => 1});
 
-      if (Daemon::promptUser('Do you confirm these configurations?', 'y') eq 'y') {
+      if (Daemon::prompt('Do you confirm these configurations?', 'y') eq 'y') {
         $class->_delete_config();
         system("git config memento.branch.source " . $config->{branch}->{source});
         system("git config memento.branch.pattern " . $config->{branch}->{pattern});
@@ -156,9 +149,10 @@ sub _check_branch_name {
   my $branch = shift or die "Missing branch to check.\n";
 
   $branch = lc $branch;
-  $branch =~ s/[^\w\/\#\-]+/_/g;
-  $branch =~ s/^\w{1,2}_|_\w{1,2}_|_\w{1,2}$/_/g;
-  $branch =~ s/^_|_$//g;
+  $branch =~ s/[^\w\/\#\-]+/_/g; #converts anything different from the pattern.
+  $branch =~ s/_+\-+_*/_/g;      #removes "_-_".
+  $branch =~ s/^\w{1,2}_|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
+  $branch =~ s/^_|_$//g;         #removes trailing and leading "_".
   return $branch;
 }
 

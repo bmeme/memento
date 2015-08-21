@@ -39,11 +39,14 @@ sub help {
     $class_name = $1;
     my $meta = Class::MOP::Class->initialize($class_name);
     my @methods = sort $meta->get_method_list;
+    my @commands = ();
     for my $method (@methods) {
       if ($method =~ /^[a-z]/i) {
-        say "- $method";
+        push (@commands, $method);
       }
     }
+    my $command = Daemon::prompt("Choose a command", undef, [@commands]);
+    system("memento $class->{type} $command");
   }
 }
 

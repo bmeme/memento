@@ -64,13 +64,13 @@ sub bookmark {
   my $command;
   my @list = $class->_get_list();
 
-  if (Daemon::promptUser("Do you want to bookmark your last command?", "y") eq 'y') {
+  if (Daemon::prompt("Do you want to bookmark your last command?", "y") eq 'y') {
     $command = $class->_get_last();
   }
   else {
     say $class->list();
     do {
-      $id = Daemon::promptUser("Insert the history ID of the command to be saved as a preset");
+      $id = Daemon::prompt("Insert the history ID of the command to be saved as a preset");
       $command = $list[$id];
     }
     while (!defined $list[$id]);
@@ -78,7 +78,7 @@ sub bookmark {
   chomp($command);
 
   do {
-    $name = Daemon::promptUser("Provide a machine_name to bookmark this command");
+    $name = Daemon::prompt("Provide a machine_name to bookmark this command");
   }
   while ($name !~ /^\w+$/);
 

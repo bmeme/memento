@@ -1,0 +1,29 @@
+diff --git a/Complete.pm b/Complete.pm
+index 601e495..5b083f1 100644
+--- a/Complete.pm
++++ b/Complete.pm
+@@ -66,9 +66,10 @@ Wayne Thompson
+ 
+ =cut
+ 
+-our($complete, $kill, $erase1, $erase2, $tty_raw_noecho, $tty_restore, $stty, $tty_safe_restore);
++our($die, $complete, $kill, $erase1, $erase2, $tty_raw_noecho, $tty_restore, $stty, $tty_safe_restore);
+ our($tty_saved_state) = '';
+ CONFIG: {
++    $die      = "\003";
+     $complete = "\004";
+     $kill     = "\025";
+     $erase1 =   "\177";
+@@ -117,6 +118,12 @@ sub Complete {
+         print($prompt, $return);
+         while (($_ = getc(STDIN)) ne "\r") {
+             CASE: {
++                # (^C) die and close all
++                $_ eq $die && do {
++                    system $tty_restore;
++                    die "\r\n";
++                };
++                
+                 # (TAB) attempt completion
+                 $_ eq "\t" && do {
+                     @match = grep(/^\Q$return/, @cmp_lst);

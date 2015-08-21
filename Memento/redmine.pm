@@ -21,8 +21,12 @@ our (%pager);
 
 sub config {
   my $class = shift;
-  my $op = shift || 'list';
+  my $op = shift;
   my $config = $class->_get_config();
+
+  if (!$op) {
+    $op = Daemon::prompt("Enter the operation name to be executed", undef, ['add', 'delete', 'list', 'switch']);
+  }
 
   switch ($op) {
     case 'add' {
@@ -30,14 +34,14 @@ sub config {
       do {
         say "Please provide your Redmine info and remember that all values are mandatory";
         $conf = {
-          id => Daemon::promptUser('Configuration id'),
-          key => Daemon::promptUser('Redmine API Key'),
-          url => Daemon::promptUser('Redmine URL')
+          id => Daemon::prompt('Configuration id'),
+          key => Daemon::prompt('Redmine API Key'),
+          url => Daemon::prompt('Redmine URL')
         };
       }
       while (!$conf->{id} || !$conf->{key} || !$conf->{url});
 
-      my $is_default = (Daemon::promptUser('Set this configuration as your default one?', 'y') eq 'y');
+      my $is_default = (Daemon::prompt('Set this configuration as your default one?', 'y') eq 'y');
 
       push(@{$config->{api}}, $conf);
       if ($is_default) {
@@ -46,13 +50,6 @@ sub config {
 
       $class->_save_config($config);
       say 'Redmine API configurations have been saved';
-    }
-    case 'list' {
-      say Daemon::array2table("Redmine Configurations", $config->{api});
-
-      if ($config->{default}) {
-        say "Default: $config->{default}";
-      }
     }
     case 'delete' {
       my $id = $_[0] or die "Missing API id to delete\n";
@@ -69,6 +66,13 @@ sub config {
       if ($updated) {
         $class->_save_config($config);
         say 'Redmine API configurations have been deleted';
+      }
+    }
+    case 'list' {
+      say Daemon::array2table("Redmine Configurations", $config->{api});
+
+      if ($config->{default}) {
+        say "Default: $config->{default}";
       }
     }
     case 'switch' {
@@ -91,8 +95,12 @@ sub config {
 
 sub issue {
   my $class = shift;
-  my $id = shift || die "Missing issue id.\n";
+  my $id = shift;
   my $open = 0;
+
+  if (!$id) {
+    $id = Daemon::prompt('Enter issue ID');
+  }
 
   GetOptions(
     'open!' => \$open
@@ -238,7 +246,7 @@ sub _render_pager {
     say "Page $pager{current} of $pager{total} [$pager{items}/$pager{total_items}]";
 
     if ($pager{total} > 1) {
-      my $direction = Daemon::promptUser('Prev or Next?', 'p/n');
+      my $direction = Daemon::prompt('Prev or Next?', 'p/n');
       my $page = $pager{'current'};
       switch ($direction) {
         case 'n' {
@@ -273,7 +281,11 @@ sub _render_issue {
   say sprintf("|- Created by: %s on %s", $issue->{'author'}->{'name'}, $issue->{'created_on'});
   say sprintf("|- Assigned to: %s\n", $issue->{'assigned_to'}->{'name'}) if defined $issue->{'assigned_to'};
 
-  say Daemon::array2table("Attachments", $issue->{'attachments'}, {exclude => ['content_type', 'created_on', 'id']});
+  my $attachments = Daemon::array2table("Attachments", $issue->{'attachments'}, {exclude => ['content_type', 'created_on', 'id']});
+  if ($attachments) {
+    say $attachments;
+  }
+
   Daemon::printLabel("Description");
   say encode('utf8', $issue->{'description'});
 }
