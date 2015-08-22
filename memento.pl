@@ -257,8 +257,6 @@ will be used to build the new branch, following the configured branch pattern.
 
 Manages Memento Git configurations providing the following options:
 
-=over 2
-
 =item I<init>
 
 Initialize your git repository storing configurations that will be used for
