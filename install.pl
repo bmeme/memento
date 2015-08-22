@@ -59,6 +59,13 @@ foreach my $vendor (@vendors) {
   }
 }
 
+print "\nGenerating Memento man page: ";
+my $man_dir = $cpan_path;
+chomp($man_dir);
+$man_dir =~ s/\/bin\/cpan$//;
+my $man = `pod2man -s 1 -c Memento memento.pl > $man_dir/share/man/man7/memento.7`;
+say "ok!";
+
 chdir;
 my $home = cwd;
 my $storage = "$home/.memento";
