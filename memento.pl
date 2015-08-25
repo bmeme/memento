@@ -88,11 +88,11 @@ __END__
 
 =head1 NAME
 
-B<meme>nto
+memento
 
 =head1 VERSION
 
-version 0.3.1
+version 0.3.2
 
 =head1 SYNOPSIS
 
@@ -103,8 +103,8 @@ The following single-character options are accepted:
 
 =head1 DESCRIPTION
 
-B<memento> is a step by step command line tool.
-Basically it provides three types of commands:
+B<memento> is a modular step by step command line tool.
+By default it provides three types of commands:
 
   - git
   - history
@@ -294,11 +294,7 @@ Adriano Cori <adriano.cori@bmeme.com>
 
 Copyright (c) 2015 Adriano Cori. All rights reserved.
 This program is free software; you can redistribute
-it and/or modify it under the terms of the ISC license.
-
-(This program had been licensed under the same terms as Perl itself up to
-version 1.118 released on 2011, and was relicensed by permission of its
-originator).
+it and/or modify it under the terms of the GPL2 license.
 
 The full text of the license can be found in the
 LICENSE file included with this module.
@@ -309,10 +305,10 @@ Bonsaimeme S.r.l. <http://www.bmeme.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2105 by Adriano Cori.
+This software is Copyright (c) 2105 by Adriano Cori and Bonsaimeme S.r.l.
 
 This is free software, licensed under:
 
-  The MIT (X11) License
+  The GPL2 License
 
 =cut
