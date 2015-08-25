@@ -88,11 +88,11 @@ __END__
 
 =head1 NAME
 
-Memento
+B<meme>nto
 
 =head1 VERSION
 
-version 0.3.0
+version 0.3.1
 
 =head1 SYNOPSIS
 
