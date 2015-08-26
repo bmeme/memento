@@ -29,7 +29,7 @@ my @vendors = (
 
 foreach my $vendor (@vendors) {
   print "[-] $vendor";
-  `cpan -i $vendor`;
+  `cpan -i -f $vendor`;
   print "\r[√] $vendor\n";
 }
 
