@@ -26,6 +26,7 @@ sub branch {
     die "No Memento git config has been found. Please run 'memento git init' before start creating branches using Memento.\n"
   }
   my $source = $config->{branch}->{source};
+  chomp($source);
 
   GetOptions(
     'source=s' => \$source

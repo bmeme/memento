@@ -17,10 +17,12 @@ say "Installing vendors:";
 my @vendors = (
   'Class::MOP',
   'Hash::Merge',
+  'HTTP::Response',
   'Switch',
   'FLORA/Term-Complete-1.402.tar.gz',
   'Term::ProgressBar',
   'Text::Aligner',
+  'Term::ANSIColor',
   'Text::ASCIITable',
   'Text::Table',
   'Text::Trim',

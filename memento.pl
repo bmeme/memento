@@ -11,9 +11,9 @@ our ($root, @args);
 my $file = `which memento`;
 $_ = `ls -l $file`;
 
-if (/ (\/[\w\/\-]+?memento\.pl)$/) {
+if (/ (\/[\w\/\-\.]+?memento\.pl)$/) {
   $root = $1;
-  $root =~ s/\/memento.pl$//;
+  $root =~ s/\/memento\.pl$//;
 }
 
 require "$root/Daemon.pm";
