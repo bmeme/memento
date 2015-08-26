@@ -8,12 +8,15 @@ $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
 our ($root, @args);
 
-my $file = `which memento`;
-$_ = `ls -l $file`;
+my $memento_link = `which memento`;
+chomp($memento_link);
 
-if (/ (\/[\w\/\-\.]+?memento\.pl)$/) {
-  $root = $1;
-  $root =~ s/\/memento\.pl$//;
+if (length($memento_link)) {
+  $root = readlink($memento_link);
+  $root =~ s/memento\.pl$//;
+}
+else {
+  die "Memento was not installed correctly, please try again.\n";
 }
 
 require "$root/Daemon.pm";

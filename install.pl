@@ -13,16 +13,16 @@ if (!$cpan_path) {
   die "Installation aborted.\n";
 }
 
-say "Installing vendors:";
+say ">> Installing vendors:";
 my @vendors = (
   'Class::MOP',
   'Hash::Merge',
   'HTTP::Response',
   'Switch',
   'FLORA/Term-Complete-1.402.tar.gz',
+  'Term::ANSIColor',
   'Term::ProgressBar',
   'Text::Aligner',
-  'Term::ANSIColor',
   'Text::ASCIITable',
   'Text::Table',
   'Text::Trim',
@@ -30,12 +30,11 @@ my @vendors = (
 );
 
 foreach my $vendor (@vendors) {
-  say "Installing $vendor";
-  system("cpan -i -f $vendor");
-  say "$vendor Installed\n";
+  say "\n>> Installing [$vendor]";
+  system("cpan -i $vendor");
 }
 
-say "\nApplying patches:";
+say "\n>> Applying patches:";
 foreach my $vendor (@vendors) {
   $vendor =~ s/^[A-Z]+\/(\w+)\-(\w+)(.*)/$1::$2/;
   my $patches_dir = "$cwd/Patches/$vendor";
@@ -61,7 +60,7 @@ foreach my $vendor (@vendors) {
   }
 }
 
-print "\nGenerating Memento man page: ";
+print "\n>> Generating Memento man page: ";
 my $man_dir = $cpan_path;
 chomp($man_dir);
 $man_dir =~ s/\/bin\/cpan$//;
@@ -72,12 +71,12 @@ chdir;
 my $home = cwd;
 my $storage = "$home/.memento";
 if (!-d $storage) {
-  say "\nCreating ~/.memento folder";
+  say "\n>> Creating ~/.memento folder";
   mkdir($storage) or die "Cannot create .memento dir in your home directory: $!\n";
 }
 
 if (!-f "/usr/local/bin/memento") {
-  say "\nCreating memento symlink";
+  say "\n>> Creating memento symlink";
   `ln -s $cwd/memento.pl /usr/local/bin/memento`;
 }
 
