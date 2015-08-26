@@ -92,7 +92,7 @@ memento
 
 =head1 VERSION
 
-version 0.3.2
+version 0.3.3
 
 =head1 SYNOPSIS
 
@@ -210,14 +210,15 @@ Lists all Redmine configurations.
 =item I<switch [redmine_api_id]>
 
 Sets a Redmine instance as the default one. All queries will be executed to the
-default one.
+default one. Otherwise, you can change on the fly the active Redmine instance by
+using the B<--api-id> option, for each memento redmine command.
 
 =back
 
 =item I<issue [redmine_issue_id [--open]]>
 
 Shows the details of an issue. If the B<--open> boolean option has been provided,
-the issue sill not be rendered, but opened into your default web browser.
+the issue will not be rendered, but opened into your default web browser.
 
 =item I<projects>
 
@@ -255,7 +256,7 @@ will be used to build the new branch, following the configured branch pattern.
 
 =item I<config>
 
-Manages Memento Git configurations providing the following options:
+Manages Memento Git configurations providing the following operations:
 
 =item I<init>
 

@@ -198,21 +198,24 @@ sub _call_api {
     die "Please configure (switch to) a default Redmine Api configuration\n";
   }
 
-  my $settings = $class->_config_load($config->{default});
-  my $key = $settings->{key};
-  my $redmine_url = $settings->{url};
-  my $uri = URI->new("$redmine_url/$path.json");
+  my $api_id = $config->{default};
   my $offset = '0';
   my $limit = '25';
   my $sort = '';
   my $page = 1;
 
   GetOptions(
+    'api-id=s' => \$api_id,
     'offset=s' => \$offset,
     'limit=s' => \$limit,
     'sort=s' => \$sort,
     'page=s' => \$page
   ) or die 'Incorrect usage';
+
+  my $settings = $class->_config_load($api_id);
+  my $key = $settings->{key};
+  my $redmine_url = $settings->{url};
+  my $uri = URI->new("$redmine_url/$path.json");
 
   if ($page) {
     $offset = $limit * ($page - 1);

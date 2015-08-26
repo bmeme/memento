@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.3.2
+    version 0.3.3
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -95,11 +95,13 @@ REDMINE
 
       *switch [redmine_api_id]*
         Sets a Redmine instance as the default one. All queries will be
-        executed to the default one.
+        executed to the default one. Otherwise, you can change on the fly
+        the active Redmine instance by using the --api-id option, for each
+        memento redmine command.
 
     *issue [redmine_issue_id [--open]]*
       Shows the details of an issue. If the --open boolean option has been
-      provided, the issue sill not be rendered, but opened into your default
+      provided, the issue will not be rendered, but opened into your default
       web browser.
 
     *projects*
@@ -129,7 +131,7 @@ GIT
       branch, following the configured branch pattern.
 
     *config*
-      Manages Memento Git configurations providing the following options:
+      Manages Memento Git configurations providing the following operations:
 
     *init*
       Initialize your git repository storing configurations that will be

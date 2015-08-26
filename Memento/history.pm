@@ -8,8 +8,57 @@ use feature 'say';
 our @ISA = qw(Command);
 use strict; use warnings;
 use Getopt::Long;
+use Switch;
 use Text::Trim;
 use Data::Dumper;
+
+sub bookmark {
+  my $class = shift;
+  my $mode = shift || Daemon::prompt("Choose a bookmark modality", 'history', ['history', 'last', 'manual']);
+  my $config = $class->_get_config();
+  my $id;
+  my $name;
+  my $command;
+  my @list = $class->_get_list();
+
+  switch ($mode) {
+    case 'history' {
+      say $class->list();
+      do {
+        $id = Daemon::prompt("Insert the history ID of the command to bookmark");
+        $command = $list[$id];
+      }
+      while (!defined $list[$id]);
+    }
+    case 'last' {
+      $command = $class->_get_last();
+    }
+    case 'manual' {
+      $command = Daemon::prompt("Write the command to bookmark");
+    }
+  }
+  chomp($command);
+
+  do {
+    $name = Daemon::prompt("Provide a machine_name to bookmark this command");
+  }
+  while ($name !~ /^[\w!\-]+$/);
+
+  my $bookmark = {
+    name => $name,
+    command => $command
+  };
+
+  push (@{$config->{bookmarks}}, $bookmark);
+  $class->_save_config($config);
+  $class->bookmarks();
+}
+
+sub bookmarks {
+  my $class = shift;
+  my $config = $class->_get_config();
+  say Daemon::array2table("Bookmarks", $config->{bookmarks});
+}
 
 sub clear {
   my $class = shift;
@@ -24,19 +73,8 @@ sub exec {
   if (defined $list[$id]) {
     system($list[$id]);
   }
-}
-
-sub list {
-  my $class = shift;
-  my @list = $class->_get_list();
-  for (my $i = 0; $i <= $#list; $i++) {
-    my $item = "[$i] $list[$i]";
-    if ($i == ($#list + 1)) {
-      say $item;
-    }
-    else {
-      print $item;
-    }
+  else {
+    die "Command not found in history for id $id.\n";
   }
 }
 
@@ -56,46 +94,18 @@ sub last {
   }
 }
 
-sub bookmark {
+sub list {
   my $class = shift;
-  my $config = $class->_get_config();
-  my $id;
-  my $name;
-  my $command;
   my @list = $class->_get_list();
-
-  if (Daemon::prompt("Do you want to bookmark your last command?", "y") eq 'y') {
-    $command = $class->_get_last();
-  }
-  else {
-    say $class->list();
-    do {
-      $id = Daemon::prompt("Insert the history ID of the command to be saved as a preset");
-      $command = $list[$id];
+  for (my $i = 0; $i <= $#list; $i++) {
+    my $item = "[$i] $list[$i]";
+    if ($i == ($#list + 1)) {
+      say $item;
     }
-    while (!defined $list[$id]);
+    else {
+      print $item;
+    }
   }
-  chomp($command);
-
-  do {
-    $name = Daemon::prompt("Provide a machine_name to bookmark this command");
-  }
-  while ($name !~ /^\w+$/);
-
-  my $bookmark = {
-    name => $name,
-    command => $command
-  };
-
-  push (@{$config->{bookmarks}}, $bookmark);
-  $class->_save_config($config);
-  $class->bookmarks();
-}
-
-sub bookmarks {
-  my $class = shift;
-  my $config = $class->_get_config();
-  say Daemon::array2table("Bookmarks", $config->{bookmarks});
 }
 
 sub unbookmark {
