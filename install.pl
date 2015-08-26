@@ -28,9 +28,9 @@ my @vendors = (
 );
 
 foreach my $vendor (@vendors) {
-  print "[-] $vendor";
-  `cpan -i -f $vendor`;
-  print "\r[√] $vendor\n";
+  say "Installing $vendor";
+  system("cpan -i -f $vendor");
+  say "$vendor Installed\n";
 }
 
 say "\nApplying patches:";
