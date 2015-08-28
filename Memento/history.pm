@@ -14,12 +14,17 @@ use Data::Dumper;
 
 sub bookmark {
   my $class = shift;
-  my $mode = shift || Daemon::prompt("Choose a bookmark modality", 'history', ['history', 'last', 'manual']);
+  my $mode = shift;
   my $config = $class->_get_config();
   my $id;
   my $name;
-  my $command;
+  my $command = '';
   my @list = $class->_get_list();
+  my $modes = ['history', 'last', 'manual'];
+
+  if (!$mode || !Daemon::in_array($modes, $mode)) {
+    $mode = Daemon::prompt("Choose a bookmark modality", 'history', $modes);
+  }
 
   switch ($mode) {
     case 'history' {
@@ -143,6 +148,23 @@ sub _def_config {
   return {
     bookmarks => []
   };
+}
+
+sub _on_pre_execution {
+  my $class = shift;
+  my $subject = shift;
+  my $action = shift;
+
+  if ($subject->_log_history()) {
+    my $arg = shift || '';
+    my $clean_command = trim "$subject->{base_command} $arg";
+    my $full_command = trim "$subject->{base_command} $arg @_";
+    my $history = Memento->instantiate('history', 'list');
+
+    if ($full_command ne $history->_get_last()) {
+      Daemon::write($history->{storage}, $full_command, 1, '>>');
+    }
+  }
 }
 
 # PRIVATE METHODS ##############################################################

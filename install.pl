@@ -16,6 +16,9 @@ if (!$cpan_path) {
 say ">> Installing vendors:";
 my @vendors = (
   'Class::MOP',
+  'Class::Observable',
+  'DateTime',
+  'DateTime::Format::Strptime',
   'Hash::Merge',
   'HTTP::Response',
   'Switch',

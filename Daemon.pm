@@ -131,7 +131,6 @@ sub array2table {
     exclude => [],
     allow_nested => 1,
     extract_nested_key => 'name',
-    colored => 0
   };
   $options = merge($default, $options);
 

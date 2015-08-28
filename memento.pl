@@ -6,7 +6,7 @@ use Data::Dumper;
 use Getopt::Std;
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
-our ($root, @args);
+our ($root, @args, $instances);
 
 my $memento_link = `which memento`;
 chomp($memento_link);
@@ -22,27 +22,81 @@ else {
 require "$root/Daemon.pm";
 getopts('vh');
 
+my @commands = &commands();
 @args = @ARGV;
+
 if ($#ARGV > -1) {
   my $type = shift;
   my $command = shift || "help";
+
   if (my $memento = Memento->instantiate($type, $command)) {
+    # Add observers in order to allow interactions with other tools.
+    for my $tool (@commands) {
+      if ($tool ne $type) {
+        require "$root/Memento/$tool.pm";
+        $memento->add_observer("Memento::$tool");
+      }
+    }
+
+    # allow interaction with other tools before command execution.
+    $memento->notify_observers('pre_execution', @ARGV);
+
+    # let the tool prepares itself before the command execution.
     $memento->_pre(@ARGV);
+    # execute the tool command.
     $memento->$command(@ARGV);
+    # let the tool executes its closing operations after command execution.
     $memento->_done(@ARGV);
+
+    # allow interaction with other tools after command execution.
+    $memento->notify_observers('post_execution', @ARGV);
   }
   else {
     shift @args;
     my $history = Memento->instantiate('history', 'bookmarks');
     my $bookmarks = $history->_get_config()->{bookmarks};
+    my $found = 0;
     for my $bookmark (@{$bookmarks}) {
       if ($bookmark->{name} eq $type) {
+        $found = 1;
         system($bookmark->{command} . " @args");
       }
+    }
+
+    if (!$found) {
+      say "Trying to use an invalid tool.\n";
+      system("memento");
     }
   }
 }
 else {
+  my $command = Daemon::prompt("Choose a tool", undef, [@commands]);
+  system("memento $command");
+}
+
+sub instantiate {
+  my $class = shift;
+  my $type = shift;
+  my $command = shift;
+  my $location = "Memento/$type.pm";
+  $class = "Memento::$type";
+  my $instance;
+
+  if (defined $instances->{$type}) {
+    $instance = $instances->{$type};
+  }
+  else {
+    if (-f "$root/$location") {
+      require "$root/$location";
+      $instance = $class->new(@_, $type, $command);
+      $instances->{$type} = $instance;
+    }
+  }
+
+  return $instance;
+}
+
+sub commands {
   my @list;
   my $i = 0;
   my $commands_dir = "$root/Memento";
@@ -56,21 +110,8 @@ else {
     $command =~ s/\.pm$//;
     push (@commands, $command);
   }
-  my $command = Daemon::prompt("Choose a tool", undef, [@commands]);
-  system("memento $command");
-}
 
-sub instantiate {
-  my $class = shift;
-  my $type = shift;
-  my $command = shift;
-  my $location = "Memento/$type.pm";
-  $class = "Memento::$type";
-
-  if (-f "$root/$location") {
-    require "$root/$location";
-    return $class->new(@_, $type, $command);
-  }
+  return @commands;
 }
 
 sub splash {
@@ -95,7 +136,7 @@ memento
 
 =head1 VERSION
 
-version 0.3.3
+version 0.4.2
 
 =head1 SYNOPSIS
 
@@ -107,11 +148,12 @@ The following single-character options are accepted:
 =head1 DESCRIPTION
 
 B<memento> is a modular step by step command line tool.
-By default it provides three types of commands:
+By default it provides the following commands:
 
   - git
   - history
   - redmine
+  - schema
 
 Memento, for each command, provides by default a fallback helper if a
 required argument is missing. For example you can get your last executed
@@ -273,6 +315,26 @@ Lists all Memento Git configurations.
 =item I<delete>
 
 Delete all Memento Git configurations affecting your current repository.
+
+=back
+
+
+=head1 SCHEMA
+
+I<memento schema> is the automatic update manager for Memento codebase.
+
+It provides the following operations:
+
+=over 2
+
+=item I<check>
+
+Check, for code updates automatically, with the frequency specified via config.
+
+=item I<config>
+
+Manages Memento schema configurations, allowing user to enable/disable automatic
+updates or to set frequency of update check.
 
 =back
 

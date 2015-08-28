@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.3.3
+    version 0.4.2
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -12,11 +12,12 @@ SYNOPSIS
 
 DESCRIPTION
     memento is a modular step by step command line tool. By default it
-    provides three types of commands:
+    provides the following commands:
 
       - git
       - history
       - redmine
+      - schema
 
     Memento, for each command, provides by default a fallback helper if a
     required argument is missing. For example you can get your last executed
@@ -143,6 +144,19 @@ GIT
     *delete*
       Delete all Memento Git configurations affecting your current
       repository.
+
+SCHEMA
+    *memento schema* is the automatic update manager for Memento codebase.
+
+    It provides the following operations:
+
+    *check*
+      Check, for code updates automatically, with the frequency specified
+      via config.
+
+    *config*
+      Manages Memento schema configurations, allowing user to enable/disable
+      automatic updates or to set frequency of update check.
 
 USAGE
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]

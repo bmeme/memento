@@ -7,6 +7,7 @@ package Command;
 use strict; use warnings;
 use feature 'say';
 use Class::MOP;
+use base qw( Class::Observable );
 use JSON::PP;
 use Text::Trim;
 use Data::Dumper;
@@ -50,23 +51,26 @@ sub help {
   }
 }
 
-sub _pre {
+sub update {
   my $class = shift;
+  my $tool = $class;
+  $tool =~ s/^Memento\:\://;
+  $class = Memento->instantiate($tool, '');
 
-  if ($class->_log_history()) {
-    my $arg = shift || '';
-    my $clean_command = trim "$class->{base_command} $arg";
-    my $full_command = trim "$class->{base_command} $arg @_";
-    my $history = Memento->instantiate('history', 'list');
+  my ($item, $action) = @_;
+  my $event = "_on_$action";
 
-    if ($full_command ne $history->_get_last()) {
-      Daemon::write($history->{storage}, $full_command, 1, '>>');
-    }
+  if ($class->can($event)) {
+    $class->$event(@_);
   }
 }
 
+sub _pre {
+  # nothing to do by default.
+}
+
 sub _done {
-  # nothing to do by default;
+  # nothing to do by default.
 }
 
 sub _def_config {

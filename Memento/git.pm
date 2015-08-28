@@ -141,8 +141,6 @@ sub _dependencies {
 }
 
 sub _pre {
-  my $class = shift;
-  $class->SUPER::_pre();
   chdir $cwd;
 }
 
