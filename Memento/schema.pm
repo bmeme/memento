@@ -19,15 +19,13 @@ use Data::Dumper;
 sub check {
   my $class = shift;
   my $config = $class->_get_config();
+  my $git = Memento->instantiate('git', '');
 
   chdir $root;
-  my $sha = `git rev-parse HEAD`;
-  my $branch = `git rev-parse --abbrev-ref HEAD`;
-  chomp($sha);
-  chomp($branch);
-
+  my $sha = $git->_get_commit_sha();
+  my $branch = $git->_get_current_branch();
   my $uri = "https://api.github.com/repos/bmeme/memento/branches/$branch";
-  my $response = Daemon::http_request($uri, [
+  my $response = Daemon::http_request('GET', $uri, {}, [
     "Content-Type: application/json; charset=UTF-8",
     "Accept: application/vnd.github.v3+json",
     "User-Agent: memento"
@@ -35,9 +33,11 @@ sub check {
 
   my $content = decode_json $response;
   if ($content->{commit}->{sha} ne $sha) {
+    say Memento::splash();
     say "There is an available update:";
+
     my $excluded = ['comment_count', 'committer', 'tree', 'url'];
-    say Daemon::array2table("Update details", [$content->{commit}->{commit}], {exclude => $excluded, colored => 1, full_nested => 1});
+    say Daemon::array2table("Update details", [$content->{commit}->{commit}], {exclude => $excluded, full_nested => 1});
     my $confirm = Daemon::prompt("Do you want to run code updates?", undef, ['yes', 'no']);
 
     if ($confirm eq 'yes') {
@@ -66,7 +66,8 @@ sub config {
       $config->{auto_check} = ($auto eq 'yes') ? 1 : 0;
 
       if ($config->{auto_check}) {
-        $config->{check_frequency} = Daemon::prompt("Please specify, in days, the update check frequency", 1)
+        my $frequency = $config->{check_frequency} ? $config->{check_frequency} : 1;
+        $config->{check_frequency} = Daemon::prompt("Please specify, in days, the update check frequency", $frequency);
       }
 
       $class->_save_config($config);
@@ -87,6 +88,8 @@ sub _def_config {
     check_frequency => 1
   };
 }
+
+# EVENT LISTENERS ##############################################################
 
 sub _on_post_execution {
   my $class = Memento->instantiate('schema');

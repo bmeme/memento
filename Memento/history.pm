@@ -150,6 +150,8 @@ sub _def_config {
   };
 }
 
+# EVENT LISTENERS ##############################################################
+
 sub _on_pre_execution {
   my $class = shift;
   my $subject = shift;

@@ -30,6 +30,11 @@ if ($#ARGV > -1) {
   my $command = shift || "help";
 
   if (my $memento = Memento->instantiate($type, $command)) {
+    if (!$memento->can($command)) {
+      say "Trying to use an invalid command.";
+      $command = "help";
+    }
+
     # Add observers in order to allow interactions with other tools.
     for my $tool (@commands) {
       if ($tool ne $type) {
@@ -39,7 +44,7 @@ if ($#ARGV > -1) {
     }
 
     # allow interaction with other tools before command execution.
-    $memento->notify_observers('pre_execution', @ARGV);
+    $memento->_on('pre_execution', @ARGV);
 
     # let the tool prepares itself before the command execution.
     $memento->_pre(@ARGV);
@@ -49,7 +54,7 @@ if ($#ARGV > -1) {
     $memento->_done(@ARGV);
 
     # allow interaction with other tools after command execution.
-    $memento->notify_observers('post_execution', @ARGV);
+    $memento->_on('post_execution', @ARGV);
   }
   else {
     shift @args;
@@ -136,7 +141,7 @@ memento
 
 =head1 VERSION
 
-version 0.4.2
+version 0.4.5
 
 =head1 SYNOPSIS
 
@@ -285,23 +290,18 @@ the custom query.
 =head1 GIT
 
 I<memento git> is a configurable tool with the main purpose to help developers
-creating branch, following git-flow-like (but divergent) flows. This is not a
+creating branches, following git-flow-like (but divergent) flows. This is not a
 wrapper around git core features, but just something like an extension.
 
 I<memento git> provides the following operations:
 
 =over 2
 
-=item I<branch [--source]>
-
-Creates a new branch starting from the configured source branch. Use B<--source>
-option to override the default one. If during the configuration operation, the
-Redmine support was enabled, you will be asked to insert a Redmine Issue Id. It
-will be used to build the new branch, following the configured branch pattern.
-
 =item I<config>
 
 Manages Memento Git configurations providing the following operations:
+
+=over 2
 
 =item I<init>
 
@@ -317,6 +317,22 @@ Lists all Memento Git configurations.
 Delete all Memento Git configurations affecting your current repository.
 
 =back
+
+=item I<root>
+
+Utitlity command used to show the repository root.
+
+=item I<start [--source]>
+
+Creates a new branch starting from the configured source branch. Use B<--source>
+option to override the default one. If during the configuration operation, the
+Redmine support was enabled, you will be asked to insert a Redmine Issue Id. It
+will be used to build the new branch, following the configured branch pattern.
+Via the I<workflow> tool, is possible to create a rule for updating issue status
+and done ratio on branch creation and automatically assigning it to current user.
+
+=back
+
 
 
 =head1 SCHEMA
@@ -337,6 +353,23 @@ Manages Memento schema configurations, allowing user to enable/disable automatic
 updates or to set frequency of update check.
 
 =back
+
+
+
+=head1 WORKFLOW
+
+I<memento workflow> is the dedicated tool for workflows management.
+
+It provides the following operations:
+
+=over 2
+
+=item I<rules>
+
+Add, delete and list workflow rules in order to create event driven automations.
+
+=back
+
 
 
 =head1 USAGE

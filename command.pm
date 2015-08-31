@@ -1,13 +1,12 @@
 #!/usr/bin/env perl
 require "$root/Daemon.pm";
-require "$root/Memento/history.pm";
 
 package Command;
 
 use strict; use warnings;
 use feature 'say';
 use Class::MOP;
-use base qw( Class::Observable );
+use base qw(Class::Observable);
 use JSON::PP;
 use Text::Trim;
 use Data::Dumper;
@@ -41,11 +40,13 @@ sub help {
     my $meta = Class::MOP::Class->initialize($class_name);
     my @methods = sort $meta->get_method_list;
     my @commands = ();
+
     for my $method (@methods) {
-      if ($method =~ /^[a-z]/i) {
+      if ($method =~ /^[a-z]/i && ($method ne 'update')) {
         push (@commands, $method);
       }
     }
+
     my $command = Daemon::prompt("Choose a command", undef, [@commands]);
     system("memento $class->{type} $command");
   }
@@ -57,11 +58,36 @@ sub update {
   $tool =~ s/^Memento\:\://;
   $class = Memento->instantiate($tool, '');
 
-  my ($item, $action) = @_;
-  my $event = "_on_$action";
-
+  my ($item, $event) = @_;
   if ($class->can($event)) {
     $class->$event(@_);
+  }
+}
+
+sub _events {
+  return [];
+}
+
+sub _conditions {
+  return [];
+}
+
+sub _actions {
+  return [];
+}
+
+sub _on {
+  my $class = shift;
+  my $event = shift;
+  my @params = @_;
+  my $events = ['pre_execution', 'post_execution'];
+
+  foreach my $class_event (@{$class->_events()}) {
+    push (@{$events}, $class_event->{name});
+  }
+
+  if (Daemon::in_array($events, $event)) {
+    $class->notify_observers("_on_$event", @params);
   }
 }
 

@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.4.2
+    version 0.4.5
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -118,32 +118,38 @@ REDMINE
 
 GIT
     *memento git* is a configurable tool with the main purpose to help
-    developers creating branch, following git-flow-like (but divergent)
+    developers creating branches, following git-flow-like (but divergent)
     flows. This is not a wrapper around git core features, but just
     something like an extension.
 
     *memento git* provides the following operations:
 
-    *branch [--source]*
+    *config*
+      Manages Memento Git configurations providing the following operations:
+
+      *init*
+        Initialize your git repository storing configurations that will be
+        used for branches creation.
+
+      *list*
+        Lists all Memento Git configurations.
+
+      *delete*
+        Delete all Memento Git configurations affecting your current
+        repository.
+
+    *root*
+      Utitlity command used to show the repository root.
+
+    *start [--source]*
       Creates a new branch starting from the configured source branch. Use
       --source option to override the default one. If during the
       configuration operation, the Redmine support was enabled, you will be
       asked to insert a Redmine Issue Id. It will be used to build the new
-      branch, following the configured branch pattern.
-
-    *config*
-      Manages Memento Git configurations providing the following operations:
-
-    *init*
-      Initialize your git repository storing configurations that will be
-      used for branches creation.
-
-    *list*
-      Lists all Memento Git configurations.
-
-    *delete*
-      Delete all Memento Git configurations affecting your current
-      repository.
+      branch, following the configured branch pattern. Via the *workflow*
+      tool, is possible to create a rule for updating issue status and done
+      ratio on branch creation and automatically assigning it to current
+      user.
 
 SCHEMA
     *memento schema* is the automatic update manager for Memento codebase.
@@ -157,6 +163,15 @@ SCHEMA
     *config*
       Manages Memento schema configurations, allowing user to enable/disable
       automatic updates or to set frequency of update check.
+
+WORKFLOW
+    *memento workflow* is the dedicated tool for workflows management.
+
+    It provides the following operations:
+
+    *rules*
+      Add, delete and list workflow rules in order to create event driven
+      automations.
 
 USAGE
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]

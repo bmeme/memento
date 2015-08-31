@@ -16,42 +16,6 @@ use Data::Dumper;
 our ($cwd);
 $cwd = getcwd();
 
-sub branch {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my $branch;
-  my @branches = $class->_get_branches();
-
-  if (!$config) {
-    die "No Memento git config has been found. Please run 'memento git init' before start creating branches using Memento.\n"
-  }
-  my $source = $config->{branch}->{source};
-  chomp($source);
-
-  GetOptions(
-    'source=s' => \$source
-  ) or die 'Incorrect usage';
-
-  if (!Daemon::in_array([@branches], $source)) {
-    die "You have specified an invalid source branch: $source\n";
-  }
-
-  if ($config->{redmine}) {
-    my $id = Daemon::prompt("Enter Redmine issue id");
-    my $issue = $class->{redmine}->_get_issue($id);
-    $branch = trim $config->{branch}->{pattern};
-    $branch =~ s/:(\w+):/$issue->{$1}/g;
-    $branch =~ s/:(\w+)-(\w+):/$issue->{$1}->{$2}/;
-    $branch = "$branch";
-  }
-  else {
-    $branch = Daemon::prompt("Enter the branch name");
-  }
-
-  $branch = $class->_check_branch_name($branch);
-  system("git checkout -b $branch $source");
-}
-
 sub config {
   my $class = shift;
   my $op = shift;
@@ -79,7 +43,11 @@ sub config {
       say Daemon::array2table('Memento Git configurations', [$config], {full_nested => 1});
 
       if (Daemon::prompt('Do you confirm these configurations?', 'y') eq 'y') {
-        $class->_delete_config();
+        my $orig_config = $class->_get_config();
+        if ($orig_config) {
+          $class->_delete_config();
+        }
+
         system("git config memento.branch.source " . $config->{branch}->{source});
         system("git config memento.branch.pattern " . $config->{branch}->{pattern});
         system("git config memento.redmine " . $config->{redmine});
@@ -97,25 +65,6 @@ sub config {
   }
 }
 
-sub ignore {
-  my $class = shift;
-  my $ignore = shift;
-  $class->root(1);
-  Daemon::write(".gitignore", $ignore, 1, '>>');
-  say "$ignore added to .gitignore";
-}
-
-sub remove {
-  my $class = shift;
-  my $file = shift;
-  if (!-e $file) {
-    die("Trying to remove not existing file: $file");
-  }
-  $class->root(1);
-  `git reset $file`;
-  $class->status();
-}
-
 sub root {
   my $class = shift;
   my $goto = shift || 0;
@@ -130,8 +79,57 @@ sub root {
   }
 }
 
-sub status {
-  say `git status -s`;
+sub start {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my $branch;
+  my @branches = $class->_get_branches();
+
+  if (!$config) {
+    die "No Memento git config has been found. Please run 'memento git config init' before start creating branches using Memento.\n"
+  }
+  my $source = $config->{branch}->{source};
+  chomp($source);
+
+  GetOptions(
+    'source=s' => \$source
+  ) or die 'Incorrect usage';
+
+  if (!Daemon::in_array([@branches], $source)) {
+    die "You have specified an invalid source branch: $source\n";
+  }
+
+  my $issue;
+
+  if ($config->{redmine}) {
+    my $id = Daemon::prompt("Enter Redmine issue id");
+    $issue = $class->{redmine}->_get_issue($id);
+    $branch = trim $config->{branch}->{pattern};
+    $branch =~ s/:(\w+):/$issue->{$1}/g;
+    $branch =~ s/:(\w+)-(\w+):/$issue->{$1}->{$2}/;
+    $branch = "$branch";
+  }
+  else {
+    $branch = Daemon::prompt("Enter the branch name");
+  }
+
+  $branch = $class->_check_branch_name($branch);
+
+  if (Daemon::in_array([@branches], $branch)) {
+    # Checkout to existing branch.
+    system("git checkout $branch");
+  }
+  else {
+    # Create a new branch from the specified source.
+    system("git checkout -b $branch $source");
+
+    # Set upstream for the new branch if a remote origin exists.
+    if ($class->_get_origin() && !$class->_get_tracked_branch()) {
+      system("git push --set-upstream origin $branch");
+    }
+
+    $class->_on('git_branch_creation', {branch => $branch, issue => $issue});
+  }
 }
 
 # OVERRIDDEN METHODS ###########################################################
@@ -142,6 +140,20 @@ sub _dependencies {
 
 sub _pre {
   chdir $cwd;
+}
+
+# EVENT LISTENERS ##############################################################
+
+sub _events {
+  return [
+    {
+      name => 'git_branch_creation',
+      arguments => [
+        'branch',
+        'issue'
+      ]
+    }
+  ];
 }
 
 # PRIVATE METHODS ##############################################################
@@ -182,15 +194,9 @@ sub _delete_config {
   my $class = shift;
   system("git config --unset memento.branch.source");
   system("git config --unset memento.branch.pattern");
+  system("git config --remove-section memento.branch");
   system("git config --unset memento.redmine");
-}
-
-sub _token_replace {
-   my ($pat, $args) = @_;
-   die Dumper($pat, $args);
-   my $t = String::Interpolate->new($args);
-   $t->($pat);
-   return "$t";
+  system("git config --remove-section memento");
 }
 
 sub _get_branches {
@@ -198,6 +204,32 @@ sub _get_branches {
   my $branch_list = trim `git branch`;
   $branch_list =~ s/\* //;
   return split(' ', $branch_list);
+}
+
+sub _get_current_branch {
+  my $branch = `git rev-parse --abbrev-ref HEAD`;
+  chomp($branch);
+  return $branch;
+}
+
+sub _get_commit_sha {
+  my $sha = `git rev-parse HEAD`;
+  chomp($sha);
+  return $sha;
+}
+
+sub _get_origin {
+  my $origin = `git config --get remote.origin.url`;
+  chomp($origin);
+  return $origin;
+}
+
+sub _get_tracked_branch {
+  my $class = shift;
+  my $branch = $class->_get_current_branch();
+  my $tracked_branch = `git rev-parse --abbrev-ref $branch\@{upstream}`;
+  chomp($tracked_branch);
+  return $tracked_branch;
 }
 
 1;

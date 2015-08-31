@@ -8,11 +8,11 @@ use feature 'say';
 use JSON::PP;
 our @ISA = qw(Command);
 use strict; use warnings;
-use URI;
 use Data::Dumper;
 use Encode qw(encode);
 use Getopt::Long;
 use Switch;
+use Term::ProgressBar;
 use Text::Aligner;
 use Text::Table;
 use POSIX qw(ceil floor);
@@ -121,7 +121,7 @@ sub issue {
   else {
     my $issue = $class->_get_issue($id);
     if (defined($issue)) {
-      $class->_render_issue($issue);
+      $class->_render_issue($issue, 1);
     }
   }
 }
@@ -146,6 +146,12 @@ sub projects {
   say Daemon::array2table("Projects", $data->{'projects'}, {exclude => ['description', 'created_on', 'updated_on', 'custom_fields']});
 }
 
+sub user {
+  my $class = shift;
+  my $user = $class->_get_current_user();
+  say Daemon::array2table("My Redmine Account", [$user]);
+}
+
 # OVERRIDDEN METHODS ###########################################################
 
 sub _done {
@@ -160,13 +166,122 @@ sub _def_config {
   };
 }
 
+# RULES ########################################################################
+
+sub _conditions {
+  return [
+    {
+      tool => 'redmine',
+      name => 'redmine_check_default_api',
+      callback => '_check_default_api',
+      params => [
+        {
+          name => 'redmine_api_id',
+          label => 'Redmine API ID'
+        }
+      ]
+    }
+  ];
+}
+
+sub _check_default_api {
+  my $class = shift;
+  my $params = shift;
+  my $config = $class->_get_config();
+  return ($config->{default} eq $params->{redmine_api_id});
+}
+
+sub _actions {
+  return [
+    {
+      tool => 'redmine',
+      name => 'redmine_change_issue_status',
+      callback => '_change_issue_status',
+      arguments => [
+        'issue'
+      ],
+      params => [
+        {
+          name => 'done_ratio',
+          label => 'Done ratio',
+          options => '_get_done_ratio'
+        },
+        {
+          name => 'status',
+          label => 'Issue status',
+          options => '_get_issue_statuses'
+        }
+      ]
+    }
+  ];
+}
+
+sub _change_issue_status {
+  my $class = shift;
+  my $arguments = shift;
+  my $params = shift;
+
+  if ($arguments->{issue}) {
+    my $issue = $arguments->{issue};
+    my $statuses = $class->_get_issue_statuses(1);
+
+    foreach my $status (@{$statuses}) {
+      if ($status->{name} eq $params->{status}) {
+        $params->{status} = $status->{id};
+      }
+    }
+
+    my $user = $class->_get_current_user();
+    my $data = {
+      issue => {
+        assigned_to_id => $user->{id},
+        status_id => $params->{status},
+        done_ratio => $params->{done_ratio}
+      }
+    };
+    $class->_call_api("issues/" . $issue->{id}, $data, 'PUT');
+
+    print "\n";
+    $class->_render_issue($class->_get_issue($issue->{id}));
+  }
+}
+
 # PRIVATE METHODS ##############################################################
 
-sub _get_issue() {
+sub _get_done_ratio {
+  my $class = shift;
+  return [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+}
+
+sub _get_issue {
   my $class = shift;
   my $id = shift or die "Missing issue id to load";
   my $data = $class->_call_api("issues/$id", {include => "attachments"});
   return $data->{issue};
+}
+
+sub _get_issue_statuses {
+  my $class = shift;
+  my $full = shift;
+  my $data = $class->_call_api("issue_statuses");
+  my $statuses = [];
+
+  foreach my $status (@{$data->{issue_statuses}}) {
+    if ($full) {
+      push(@{$statuses}, $status);
+    }
+    else {
+      push(@{$statuses}, $status->{name});
+    }
+  }
+
+  return $statuses;
+}
+
+sub _get_current_user {
+  my $class = shift;
+  my $data = $class->_call_api("users/current");
+  return $data->{'user'};
 }
 
 sub _config_load {
@@ -186,6 +301,7 @@ sub _call_api {
   my $class = shift;
   my $path = shift;
   my $query = shift || {};
+  my $method = shift || 'GET';
   my $config = $class->_get_config();
 
   if (!$config) {
@@ -199,41 +315,41 @@ sub _call_api {
   }
 
   my $api_id = $config->{default};
-  my $offset = '0';
-  my $limit = '25';
-  my $sort = '';
-  my $page = 1;
-
-  GetOptions(
-    'api-id=s' => \$api_id,
-    'offset=s' => \$offset,
-    'limit=s' => \$limit,
-    'sort=s' => \$sort,
-    'page=s' => \$page
-  ) or die 'Incorrect usage';
-
   my $settings = $class->_config_load($api_id);
   my $key = $settings->{key};
   my $redmine_url = $settings->{url};
-  my $uri = URI->new("$redmine_url/$path.json");
+  my $uri = "$redmine_url/$path.json";
+  my $page = 1;
 
-  if ($page) {
-    $offset = $limit * ($page - 1);
+  if ($method eq 'GET') {
+    my $offset = '0';
+    my $limit = '25';
+    my $sort = '';
+
+    GetOptions(
+      'api-id=s' => \$api_id,
+      'offset=s' => \$offset,
+      'limit=s' => \$limit,
+      'sort=s' => \$sort,
+      'page=s' => \$page
+    ) or die 'Incorrect usage';
+
+    if ($page) {
+      $offset = $limit * ($page - 1);
+    }
+
+    $query->{offset} = $offset;
+    $query->{limit} = $limit;
+    $query->{sort} = $sort;
   }
 
-  my %querystring = %{$query};
-  $querystring{'offset'} = $offset;
-  $querystring{'limit'} = $limit;
-  $querystring{'sort'} = $sort;
-  $uri->query_form(%querystring);
-
-  my $response = Daemon::http_request($uri, [
+  my $response = Daemon::http_request($method, $uri, $query, [
     "Content-Type: application/json; charset=UTF-8",
     "X-Redmine-API-Key: $key"
   ]);
-  my $content = decode_json $response;
+  my $content = ($method eq 'GET') ? decode_json $response : $response;
 
-  if ($content->{'total_count'} && ($content->{'total_count'} > $content->{'limit'})) {
+  if (($method eq 'GET') && $content->{'total_count'} && ($content->{'total_count'} > $content->{'limit'})) {
     my $current = ($content->{'offset'} > $content->{'limit'}) ? floor($content->{'offset'} / $content->{'limit'}): $page;
     my $items = $content->{'limit'} * $current;
     %pager = (
@@ -270,10 +386,22 @@ sub _render_pager {
         my $command = `memento history last`;
         chomp($command);
 
-        if ($command =~ /\-{2}page/) {
-          $command =~ s/\-{2}page[=\"'\s]+(\w+)[\"'\s]?//;
+        # handle --limit
+        my $limit = '';
+        if ($command =~ /\-{2}limit[=\"'\s]?(\w+)?[\"'\s]?/) {
+          $limit = " --limit $1";
+          $command =~ s/\-{2}limit[=\"'\s]?(\w+)?[\"'\s]?//;
         }
-        system("$command --page $page");
+
+        # unset --offset.
+        $command =~ s/\-{2}offset[=\"'\s]?(\w+)?[\"'\s]?//;
+
+        # unset --page.
+        if ($command =~ /\-{2}page/) {
+          $command =~ s/\-{2}page[=\"'\s]?(\w+)?[\"'\s]?//;
+        }
+
+        system("$command --page $page $limit");
       }
     }
   }
@@ -282,6 +410,7 @@ sub _render_pager {
 sub _render_issue {
   my $class = shift;
   my $issue = shift;
+  my $full = shift;
   my $title = sprintf("[%s] #%d - %s", $issue->{'project'}->{'name'}, $issue->{'id'}, $issue->{'subject'});
   my $bg_color = ($issue->{'done_ratio'} == 100) ? "green" : (($issue->{'done_ratio'} > 0) ? "yellow" : "red");
 
@@ -290,13 +419,15 @@ sub _render_issue {
   say sprintf("|- Created by: %s on %s", $issue->{'author'}->{'name'}, $issue->{'created_on'});
   say sprintf("|- Assigned to: %s\n", $issue->{'assigned_to'}->{'name'}) if defined $issue->{'assigned_to'};
 
-  my $attachments = Daemon::array2table("Attachments", $issue->{'attachments'}, {exclude => ['content_type', 'created_on', 'id']});
-  if ($attachments) {
-    say $attachments;
-  }
+  if ($full) {
+    my $attachments = Daemon::array2table("Attachments", $issue->{'attachments'}, {exclude => ['content_type', 'created_on', 'id']});
+    if ($attachments) {
+      say $attachments;
+    }
 
-  Daemon::printLabel("Description");
-  say encode('utf8', $issue->{'description'});
+    Daemon::printLabel("Description");
+    say encode('utf8', $issue->{'description'});
+  }
 }
 
 1;

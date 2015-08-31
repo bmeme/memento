@@ -4,6 +4,7 @@ package Daemon;
 use feature 'say';
 use Cwd;
 use JSON::PP;
+use Switch;
 use Term::ANSIColor;
 use Term::Complete;
 use Text::Aligner;
@@ -11,6 +12,7 @@ use Text::ASCIITable;
 use Text::Table;
 use Hash::Merge qw( merge );
 use HTTP::Response;
+use URI;
 use WWW::Curl::Easy;
 use Data::Dumper;
 
@@ -136,34 +138,37 @@ sub array2table {
 
   my @header = ();
   my @rows = ();
-  my $i = 0;
+  my $header_row = 1;
 
   for my $item (@{$items}) {
-    if ($i == 0) {
+    if ($header_row) {
       for my $key (sort keys %{$item}) {
         if (!in_array($options->{exclude}, $key)) {
           my $ref = ref($item->{$key});
-          if (($ref ne 'HASH') || $options->{allow_nested}) {
+          if (($ref ne 'ARRAY') || ($ref ne 'HASH') || $options->{allow_nested}) {
             push(@header, uc $key);
           }
         }
       }
     }
-    $i = 1;
+    $header_row = 0;
 
     my @row = ();
     for my $key (@header) {
       my $ref = ref($item->{lc $key});
       my $value;
 
-      if (($ref eq 'HASH')) {
-        if ($options->{allow_nested}) {
+      if ((($ref eq 'HASH') || ($ref eq 'ARRAY')) && $options->{allow_nested}) {
+        if ($ref eq 'HASH') {
           if ($options->{full_nested}) {
             $value = array2table(0, [$item->{lc $key}]);
           }
           else {
             $value = $item->{lc $key}->{$options->{extract_nested_key}};
           }
+        }
+        else {
+          $value = array2table(0, $item->{lc $key});
         }
       }
       else {
@@ -192,6 +197,8 @@ sub array2table {
       return $t;
     }
   }
+
+  return '';
 }
 
 sub printLabel {
@@ -226,16 +233,42 @@ sub storage {
 }
 
 sub http_request {
+  my $method = shift || 'GET';
   my $uri = shift;
+  my $data = shift || {};
   my @header = shift;
   my %options = shift;
   my $curl = WWW::Curl::Easy->new;
+
+  $method = uc $method;
+  if (!in_array(['GET', 'POST', 'PUT', 'DELETE'], $method)) {
+    die "Invalid HTTP Method supplied: $method\n";
+  }
+
+  $uri = URI->new($uri);
+  $curl->setopt(CURLOPT_CUSTOMREQUEST, $method);
+
+  switch ($method) {
+    case 'GET' {
+      my %querystring = %{$data};
+      $uri->query_form(%querystring);
+    }
+    case 'PUT' {
+      $curl->setopt(CURLOPT_POSTFIELDS, encode_json $data);
+    }
+    case 'POST' {
+      $curl->setopt(CURLOPT_POSTFIELDS, encode_json $data);
+    }
+    case 'DELETE' {
+
+    }
+  }
 
   $curl->setopt(CURLOPT_HEADER,1);
   $curl->setopt(CURLOPT_URL, $uri);
   $curl->setopt(CURLOPT_HTTPHEADER, @header);
   $curl->setopt(CURLOPT_SSL_VERIFYPEER, 0);
-  $curl->setopt(CURLOPT_TIMEOUT, 3);
+  $curl->setopt(CURLOPT_TIMEOUT, 5);
 
   if (%options) {
     for my $key (keys %options) {
@@ -257,6 +290,18 @@ sub http_request {
   }
 
   return $content;
+}
+
+sub machine_name {
+  my $name = shift;
+
+  $name = lc $name;
+  $name =~ s/[^\w\/\#\-]+/_/g; #converts anything different from the pattern.
+  $name =~ s/_+\-+_*/_/g;      #removes "_-_".
+  $name =~ s/^\w{1,2}_|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
+  $name =~ s/^_|_$//g;         #removes trailing and leading "_".
+
+  return $name;
 }
 
 1;
