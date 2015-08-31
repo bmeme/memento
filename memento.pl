@@ -159,6 +159,7 @@ By default it provides the following commands:
   - history
   - redmine
   - schema
+  - workflow
 
 Memento, for each command, provides by default a fallback helper if a
 required argument is missing. For example you can get your last executed
