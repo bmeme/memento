@@ -125,6 +125,27 @@ sub _save_config {
   Daemon::write($class->{config}, JSON::PP->new->utf8->pretty->encode($config), '1', '>');
 }
 
+sub _get_storage {
+  my $class = shift;
+  my $storage;
+
+  if (-f $class->{storage}) {
+    $storage = Daemon::json_decode_file($class->{storage});
+  }
+  else {
+    $storage = {};
+    $class->_save_storage($storage);
+  }
+
+  return $storage;
+}
+
+sub _save_storage {
+  my $class = shift;
+  my $storage = shift;
+  Daemon::write($class->{storage}, JSON::PP->new->utf8->pretty->encode($storage), '1', '>');
+}
+
 sub _log_history {
   return 1;
 }

@@ -29,12 +29,17 @@ sub config {
     case 'init' {
       say "Please answer the following questions (press enter to confirm defaults):";
 
-      my $source = Daemon::prompt('Which branch must be used as Source when creating a new branch?', 'master', [@branches]);
+      my $source = Daemon::prompt('Specify source branch for "memento git start"', $class->_get_current_branch(), [@branches]);
+      my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $source, [@branches]);
+      my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'yes', ['yes', 'no']) eq 'yes' ? 1 : 0;
       my $redmine = Daemon::prompt('Do you want to enable Redmine support?', 'y') eq 'y' ? 1 : 0;
-      my $pattern = $redmine ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/:id:-:subject:') : '';
+      my $pattern = $redmine ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/:id:-:subject:') : 0;
+
       my $config = {
         branch => {
           source => $source,
+          destination => $destination,
+          delete => $delete,
           pattern => $pattern
         },
         redmine => $redmine
@@ -49,8 +54,11 @@ sub config {
         }
 
         system("git config memento.branch.source " . $config->{branch}->{source});
+        system("git config memento.branch.destination " . $config->{branch}->{destination});
+        system("git config memento.branch.delete " . $config->{branch}->{delete});
         system("git config memento.branch.pattern " . $config->{branch}->{pattern});
         system("git config memento.redmine " . $config->{redmine});
+
         say "\nYour Memento Git configurations have been saved:";
         system("memento git config list");
       }
@@ -86,7 +94,7 @@ sub start {
   my @branches = $class->_get_branches();
 
   if (!$config) {
-    die "No Memento git config has been found. Please run 'memento git config init' before start creating branches using Memento.\n"
+    die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
   }
   my $source = $config->{branch}->{source};
   chomp($source);
@@ -124,13 +132,60 @@ sub start {
     system("git checkout -b $branch $source");
 
     # Set upstream for the new branch if a remote origin exists.
-    if ($class->_get_origin() && !$class->_get_tracked_branch()) {
+    if ($class->_get_origin_url() && !$class->_get_tracked_branch()) {
       system("git push --set-upstream origin $branch");
     }
 
-    $class->_on('git_branch_creation', {branch => $branch, issue => $issue});
+    $class->_on('git_flow_start', {branch => $branch, issue => $issue});
   }
 }
+
+sub finish {
+  my $class = shift;
+  my $config = $class->_get_config();
+
+  if (!$config) {
+    die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
+  }
+
+  my $destination = $config->{branch}->{destination};
+  my $delete = $config->{branch}->{delete};
+  my $branch = $class->_get_current_branch();
+  my $remote = $class->_get_remote();
+  my $issue;
+
+  my $safe = 0;
+  GetOptions(
+    'safe!' => \$safe
+  ) or die 'Incorrect usage';
+
+  if ($safe) {
+    my @branches = $class->_get_branches();
+    my $delete_default = $delete ? 'yes' : 'no';
+
+    $destination = Daemon::prompt('Specify destination branch for merge', $destination, [@branches]);
+    $delete = Daemon::prompt("Do you want to delete branch '$branch' after merge?", $delete_default, ['yes', 'no']) eq 'yes' ? 1 : 0;
+  }
+
+  if ($config->{redmine}) {
+    my $rm_storage = $class->{redmine}->_get_storage();
+    if ($rm_storage->{issues}->{$branch}->{issue_id}) {
+      $issue = $class->{redmine}->_get_issue($rm_storage->{issues}->{$branch}->{issue_id});
+    }
+  }
+
+  if ($destination && ($destination ne $branch)) {
+    system("git push $remote $branch") if ($remote);
+    system("git checkout $destination");
+    system("git pull $remote $destination") if ($remote);
+    system("git merge $branch");
+    system("git push $remote $destination") if ($remote);
+    system("git branch -d $branch") if ($delete);
+
+    $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
+  }
+}
+
 
 # OVERRIDDEN METHODS ###########################################################
 
@@ -147,7 +202,14 @@ sub _pre {
 sub _events {
   return [
     {
-      name => 'git_branch_creation',
+      name => 'git_flow_start',
+      arguments => [
+        'branch',
+        'issue'
+      ]
+    },
+    {
+      name => 'git_flow_finish',
       arguments => [
         'branch',
         'issue'
@@ -177,12 +239,22 @@ sub _get_config {
 
   if ($#conf > 0) {
     my $source = `git config memento.branch.source`;
+    my $destination = `git config memento.branch.destination`;
+    my $delete = `git config memento.branch.delete`;
     my $pattern = `git config memento.branch.pattern`;
     my $redmine = `git config memento.redmine`;
+
+    chomp($source);
+    chomp($destination);
+    chomp($delete);
+    chomp($pattern);
+    chomp($redmine);
 
     $config = {
       branch => {
         source => $source,
+        destination => $destination,
+        delete => $delete,
         pattern => $pattern
       },
       redmine => $redmine
@@ -218,7 +290,15 @@ sub _get_commit_sha {
   return $sha;
 }
 
-sub _get_origin {
+sub _get_remote {
+  my $class = shift;
+  my $branch = $class->_get_current_branch();
+  my $remote = `git config --get branch.$branch.remote`;
+  chomp($remote);
+  return $remote;
+}
+
+sub _get_origin_url {
   my $origin = `git config --get remote.origin.url`;
   chomp($origin);
   return $origin;

@@ -43,6 +43,7 @@ sub check {
     if ($confirm eq 'yes') {
       system("git reset --hard HEAD");
       system("git pull origin $branch");
+      system("./install.pl");
     }
   }
 

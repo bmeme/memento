@@ -166,6 +166,25 @@ sub _def_config {
   };
 }
 
+# EVENT LISTENERS ##############################################################
+
+sub _on_git_flow_start {
+  my $class = shift;
+  my $subject = shift;
+  my $event = shift;
+  my $params = shift;
+  my $storage = $class->_get_storage();
+  my $config = $class->_get_config();
+
+  if ($params->{issue}) {
+    $storage->{issues}->{$params->{branch}} = {
+      issue_id => $params->{issue}->{id},
+      redmine_api_id => $config->{default}
+    };
+    $class->_save_storage($storage);
+  }
+}
+
 # RULES ########################################################################
 
 sub _conditions {
@@ -239,6 +258,11 @@ sub _change_issue_status {
         done_ratio => $params->{done_ratio}
       }
     };
+
+    if (Daemon::prompt("Do you want to add a comment to the issue?", 'no', ['yes', 'no']) eq 'yes') {
+      $data->{issue}->{notes} = Daemon::prompt("Enter comment text");
+    }
+
     $class->_call_api("issues/" . $issue->{id}, $data, 'PUT');
 
     print "\n";

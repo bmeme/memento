@@ -117,6 +117,10 @@ REDMINE
       Renders a table containing info about all available Redmine issue
       extracted from the custom query.
 
+    *user*
+      Renders a table containing info about current user referring to the
+      active api.
+
 GIT
     *memento git* is a configurable tool with the main purpose to help
     developers creating branches, following git-flow-like (but divergent)
@@ -149,8 +153,17 @@ GIT
       asked to insert a Redmine Issue Id. It will be used to build the new
       branch, following the configured branch pattern. Via the *workflow*
       tool, is possible to create a rule for updating issue status and done
-      ratio on branch creation and automatically assigning it to current
-      user.
+      ratio on git flow start, automatically assigning it to current user,
+      and optionally add a comment.
+
+    *finish [--safe]*
+      Use this command to merge current branch into the configure
+      destination branch. Current branch will also be deleted if the delete
+      configuration has been set. If you are not familiar with this command,
+      use the --safe option to avoid unwanted behaviors (you will be asked
+      to confirm destination and deletion options). Via the *workflow* tool,
+      is possible to create a rule for updating issue status and done ratio
+      on git flow finish and optionally add a comment.
 
 SCHEMA
     *memento schema* is the automatic update manager for Memento codebase.
