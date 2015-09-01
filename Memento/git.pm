@@ -133,7 +133,8 @@ sub start {
 
     # Set upstream for the new branch if a remote origin exists.
     if ($class->_get_origin_url() && !$class->_get_tracked_branch()) {
-      system("git push --set-upstream origin $branch");
+      `git push --set-upstream origin $branch`;
+      say "Configured upstream for branch '$branch'";
     }
 
     $class->_on('git_flow_start', {branch => $branch, issue => $issue});
