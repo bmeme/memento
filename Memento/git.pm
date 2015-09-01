@@ -31,8 +31,9 @@ sub config {
 
       my $source = Daemon::prompt('Specify source branch for "memento git start"', $class->_get_current_branch(), [@branches]);
       my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $source, [@branches]);
-      my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'yes', ['yes', 'no']) eq 'yes' ? 1 : 0;
-      my $redmine = Daemon::prompt('Do you want to enable Redmine support?', 'y') eq 'y' ? 1 : 0;
+      my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'local+remote']);
+      $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
+      my $redmine = Daemon::prompt('Do you want to enable Redmine support?', 'yes', ['yes', 'no']) eq 'yes' ? 1 : 0;
       my $pattern = $redmine ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/:id:-:subject:') : 0;
 
       my $config = {
@@ -162,10 +163,11 @@ sub finish {
 
   if ($safe) {
     my @branches = $class->_get_branches();
-    my $delete_default = $delete ? 'yes' : 'no';
+    my $delete_default = $delete ? $delete : 'no';
 
     $destination = Daemon::prompt('Specify destination branch for merge', $destination, [@branches]);
-    $delete = Daemon::prompt("Do you want to delete branch '$branch' after merge?", $delete_default, ['yes', 'no']) eq 'yes' ? 1 : 0;
+    $delete = Daemon::prompt("Do you want to delete branch '$branch' after merge?", $delete_default, ['no', 'local', 'local+remote']);
+    $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
   }
 
   if ($config->{redmine}) {
@@ -181,7 +183,8 @@ sub finish {
     system("git pull $remote $destination") if ($remote);
     system("git merge $branch");
     system("git push $remote $destination") if ($remote);
-    system("git branch -d $branch") if ($delete);
+    system("git branch -D $branch") if ($delete);
+    system("git push $remote :$branch") if ($remote && ($delete == 2));
 
     $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
   }
