@@ -163,7 +163,8 @@ sub finish {
 
   if ($safe) {
     my @branches = $class->_get_branches();
-    my $delete_default = $delete ? $delete : 'no';
+    my $delete_modes = ['no', 'local', 'local+remote'];
+    my $delete_default = $delete ? @{$delete_modes}[$delete] : 'no';
 
     $destination = Daemon::prompt('Specify destination branch for merge', $destination, [@branches]);
     $delete = Daemon::prompt("Do you want to delete branch '$branch' after merge?", $delete_default, ['no', 'local', 'local+remote']);
@@ -187,6 +188,9 @@ sub finish {
     system("git push $remote :$branch") if ($remote && ($delete == 2));
 
     $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
+  }
+  else {
+    die "Current branch and destination branch are the same. Cannot proceed.\n";
   }
 }
 
