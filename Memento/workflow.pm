@@ -23,7 +23,7 @@ sub rules {
   switch ($op) {
     case 'add' {
       # Handle Event.
-      my $all_events = $class->_get_all_events();
+      $class->_get_all_events(\my $all_events);
       my $avail_events = [];
       my %events_list;
 
@@ -33,10 +33,12 @@ sub rules {
       }
 
       my $event_name = Daemon::prompt("Choose an event", undef, $avail_events);
+      my $event = $events_list{$event_name};
 
       # Handle Conditions.
       my $conditions = [];
-      my $avail_conditions = $class->_get_allowed_event_interaction(@{$class->_get_all_conditions()}, $events_list{$event_name}, \my %conditions_list);
+      $class->_get_all_conditions(\my $all_conditions);
+      my $avail_conditions = $class->_get_allowed_event_interaction('conditions', {interactions => $all_conditions, event => $event}, \my %conditions_list);
 
       while (Daemon::prompt("Do you need to add a condition?", 'no', ['yes', 'no']) eq 'yes') {
         my $condition_name = Daemon::prompt('Choose a condition', undef, $avail_conditions);
@@ -49,7 +51,7 @@ sub rules {
 
         if ($condition->{params}) {
           foreach my $param (@{$condition->{params}}) {
-            my $tool = Memento->instantiate($condition->{tool}, '');
+            my $tool = MemenTool->instantiate($condition->{tool}, '');
             my $options_callback = $param->{options};
             my $options = $options_callback ? $tool->$options_callback() : undef;
             $condition_rule->{params}->{$param->{name}} = Daemon::prompt("Enter $param->{label}", undef, $options);
@@ -61,8 +63,8 @@ sub rules {
 
       # Handle Actions.
       my $actions = [];
-      my $avail_actions = $class->_get_allowed_event_interaction(@{$class->_get_all_actions()}, $events_list{$event_name}, \my %actions_list);
-
+      $class->_get_all_actions(\my $all_actions);
+      my $avail_actions = $class->_get_allowed_event_interaction('events', {interactions => $all_actions, event => $event}, \my %actions_list);
       do {
         my $action_name = Daemon::prompt("Choose an action", undef, $avail_actions);
         my $action = $actions_list{$action_name};
@@ -74,9 +76,9 @@ sub rules {
 
         if ($action->{params}) {
           foreach my $param (@{$action->{params}}) {
-            my $tool = Memento->instantiate($action->{tool}, '');
+            my $tool = MemenTool->instantiate($action->{tool}, '');
             my $options_callback = $param->{options};
-            my $options = $options_callback ? $tool->$options_callback() : [];
+            my $options = $options_callback ? $tool->$options_callback() : undef;
             $action_rule->{params}->{$param->{name}} = Daemon::prompt("Enter $param->{label}", undef, $options);
           }
         }
@@ -102,7 +104,7 @@ sub rules {
       say 'Workflow Rule configurations have been saved';
     }
     case 'list' {
-      say Daemon::array2table("Workflow Rules", $config->{rules});
+      say Daemon::array2table("Workflow Rules", $config->{rules}, {full_nested => 1});
     }
     case 'delete' {
       my $rules;
@@ -137,13 +139,13 @@ sub update {
   my $class = shift;
   my $tool_name = $class;
   $tool_name =~ s/^Memento\:\://;
-  $class = Memento->instantiate($tool_name, '');
+  $class = MemenTool->instantiate($tool_name, '');
 
   my $item = shift;
   my $event = shift;
   my $config = $class->_get_config();
   my $rules = $config->{rules};
-  my @arguments = @_;
+  my @arguments = $_[0][0] || [];
 
   foreach my $rule (@{$rules}) {
     # Checks event.
@@ -152,7 +154,7 @@ sub update {
       # Checks conditions
       my $count_valid = 0;
       foreach my $condition (@{$rule->{conditions}}) {
-        my $tool = Memento->instantiate($condition->{tool}, '');
+        my $tool = MemenTool->instantiate($condition->{tool}, '');
         my $callback = $condition->{callback};
         my $params = $condition->{params} ? $condition->{params} : {};
 
@@ -164,12 +166,12 @@ sub update {
       # Executes actions
       if ($count_valid == scalar(@{$rule->{conditions}})) {
         foreach my $action (@{$rule->{actions}}) {
-          my $tool = Memento->instantiate($action->{tool}, '');
+          my $tool = MemenTool->instantiate($action->{tool}, '');
           my $callback = $action->{callback};
           my $params = $action->{params} ? $action->{params} : {};
 
           if ($tool->can($callback)) {
-            $tool->$callback(@arguments, $params);
+            $tool->$callback($arguments[0], $params);
           }
         }
       }
@@ -180,12 +182,13 @@ sub update {
 # PRIVATE METHODS ##############################################################
 
 sub _get_all_events {
-  my @commands = Memento->commands();
-  my $events = [];
+  my $class = shift;
+  my $events = shift;
+  my @commands = MemenTool->commands();
   foreach my $tool (@commands) {
-    $tool = Memento->instantiate($tool, '');
+    $tool = MemenTool->instantiate($tool, '');
     foreach my $event (@{$tool->_events()}) {
-      push(@{$events}, $event);
+      push(@{${$events}}, $event);
     }
   }
 
@@ -193,12 +196,13 @@ sub _get_all_events {
 }
 
 sub _get_all_conditions {
-  my @commands = Memento->commands();
-  my $conditions = [];
+  my $class = shift;
+  my $conditions = shift;
+  my @commands = MemenTool->commands();
   foreach my $tool (@commands) {
-    $tool = Memento->instantiate($tool, '');
+    $tool = MemenTool->instantiate($tool, '');
     foreach my $condition (@{$tool->_conditions()}) {
-      push(@{$conditions}, $condition);
+      push(@{${$conditions}}, $condition);
     }
   }
 
@@ -206,12 +210,13 @@ sub _get_all_conditions {
 }
 
 sub _get_all_actions {
-  my @commands = Memento->commands();
-  my $actions = [];
+  my $class = shift;
+  my $actions = shift;
+  my @commands = MemenTool->commands();
   foreach my $tool (@commands) {
-    $tool = Memento->instantiate($tool, '');
+    $tool = MemenTool->instantiate($tool, '');
     foreach my $action (@{$tool->_actions()}) {
-      push(@{$actions}, $action);
+      push(@{${$actions}}, $action);
     }
   }
 
@@ -220,9 +225,12 @@ sub _get_all_actions {
 
 sub _get_allowed_event_interaction {
   my $class = shift;
-  my @interactions = shift;
-  my $event = shift;
+  my $type = shift;
+  my $params = shift;
   my $interactions_list = shift;
+
+  my @interactions = @{$params->{interactions}};
+  my $event = $params->{event};
   my $avail_interactions = [];
 
   foreach my $interaction (@interactions) {
@@ -239,7 +247,7 @@ sub _get_allowed_event_interaction {
         }
       }
 
-      if ($avail_args == scalar(@{$interaction->{arguments}})) {
+      if ($avail_args >= scalar(@{$interaction->{arguments}})) {
         push(@{$avail_interactions}, $interaction->{name});
       }
     }

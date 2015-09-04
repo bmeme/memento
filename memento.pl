@@ -6,59 +6,52 @@ use Data::Dumper;
 use Getopt::Std;
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
-our ($root, @args, $instances);
+our ($root, @args);
 
 my $memento_link = `which memento`;
 chomp($memento_link);
 
 if (length($memento_link)) {
   $root = readlink($memento_link);
-  $root =~ s/memento\.pl$//;
+  $root =~ s/\/memento\.pl$//;
 }
 else {
   die "Memento was not installed correctly, please try again.\n";
 }
 
 require "$root/Daemon.pm";
+require "$root/tool.pm";
 getopts('vh');
 
-my @commands = &commands();
+my @commands = MemenTool->commands();
 @args = @ARGV;
 
 if ($#ARGV > -1) {
   my $type = shift;
   my $command = shift || "help";
 
-  if (my $memento = Memento->instantiate($type, $command)) {
-    if (!$memento->can($command)) {
+  if (my $tool = MemenTool->instantiate($type, $command)) {
+    if (!$tool->can($command)) {
       say "Trying to use an invalid command.";
       $command = "help";
     }
 
-    # Add observers in order to allow interactions with other tools.
-    for my $tool (@commands) {
-      if ($tool ne $type) {
-        require "$root/Memento/$tool.pm";
-        $memento->add_observer("Memento::$tool");
-      }
-    }
-
     # allow interaction with other tools before command execution.
-    $memento->_on('pre_execution', @ARGV);
+    $tool->_on('pre_execution', @ARGV);
 
     # let the tool prepares itself before the command execution.
-    $memento->_pre(@ARGV);
+    $tool->_pre(@ARGV);
     # execute the tool command.
-    $memento->$command(@ARGV);
+    $tool->$command(@ARGV);
     # let the tool executes its closing operations after command execution.
-    $memento->_done(@ARGV);
+    $tool->_done(@ARGV);
 
     # allow interaction with other tools after command execution.
-    $memento->_on('post_execution', @ARGV);
+    $tool->_on('post_execution', @ARGV);
   }
   else {
     shift @args;
-    my $history = Memento->instantiate('history', 'bookmarks');
+    my $history = MemenTool->instantiate('history', 'bookmarks');
     my $bookmarks = $history->_get_config()->{bookmarks};
     my $found = 0;
     for my $bookmark (@{$bookmarks}) {
@@ -79,52 +72,16 @@ else {
   system("memento $command");
 }
 
-sub instantiate {
-  my $class = shift;
-  my $type = shift;
-  my $command = shift;
-  my $location = "Memento/$type.pm";
-  $class = "Memento::$type";
-  my $instance;
-
-  if (defined $instances->{$type}) {
-    $instance = $instances->{$type};
-  }
-  else {
-    if (-f "$root/$location") {
-      require "$root/$location";
-      $instance = $class->new(@_, $type, $command);
-      $instances->{$type} = $instance;
-    }
-  }
-
-  return $instance;
-}
-
-sub commands {
-  my @list;
-  my $i = 0;
-  my $commands_dir = "$root/Memento";
-  my @commands;
-
-  opendir(DIR, $commands_dir) || die "Can't open directory $commands_dir: $!";
-  @list = grep /\.pm$/, readdir(DIR);
-  closedir DIR;
-
-  for my $command (sort @list) {
-    $command =~ s/\.pm$//;
-    push (@commands, $command);
-  }
-
-  return @commands;
+sub main::VERSION_MESSAGE {
+  say &splash();
 }
 
 sub splash {
   return Daemon::read("$root/splash");
 }
 
-sub main::VERSION_MESSAGE {
-  say &splash();
+sub root {
+  return $root;
 }
 
 1;
@@ -141,7 +98,7 @@ memento
 
 =head1 VERSION
 
-version 0.4.5
+version 0.5.1
 
 =head1 SYNOPSIS
 
@@ -311,7 +268,7 @@ Manages Memento Git configurations providing the following operations:
 =item I<init>
 
 Initialize your git repository storing configurations that will be used for
-branches creation.
+branches creation, project name configuration and git hooks management.
 
 =item I<list>
 

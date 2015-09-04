@@ -2,6 +2,7 @@
 use strict; use warnings;
 use feature 'say';
 use Cwd;
+use File::HomeDir;
 use Data::Dumper;
 
 our $cwd = getcwd();
@@ -19,6 +20,8 @@ my @vendors = (
   'Class::Observable',
   'DateTime',
   'DateTime::Format::Strptime',
+  'File::HomeDir',
+  'Git::Hooks',
   'Hash::Merge',
   'HTTP::Response',
   'Switch',
@@ -70,8 +73,7 @@ $man_dir =~ s/\/bin\/cpan$//;
 my $man = `pod2man -s 1 -c Memento memento.pl > $man_dir/share/man/man7/memento.7`;
 say "ok!";
 
-chdir;
-my $home = cwd;
+my $home = File::HomeDir->my_home;;
 my $storage = "$home/.memento";
 if (!-d $storage) {
   say "\n>> Creating ~/.memento folder";

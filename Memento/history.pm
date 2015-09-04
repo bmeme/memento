@@ -161,7 +161,7 @@ sub _on_pre_execution {
     my $arg = shift || '';
     my $clean_command = trim "$subject->{base_command} $arg";
     my $full_command = trim "$subject->{base_command} $arg @_";
-    my $history = Memento->instantiate('history', 'list');
+    my $history = MemenTool->instantiate('history', 'list');
 
     if ($full_command ne $history->_get_last()) {
       Daemon::write($history->{storage}, $full_command, 1, '>>');

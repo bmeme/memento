@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.4.5
+    version 0.5.1
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -134,7 +134,8 @@ GIT
 
       *init*
         Initialize your git repository storing configurations that will be
-        used for branches creation.
+        used for branches creation, project name configuration and git hooks
+        management.
 
       *list*
         Lists all Memento Git configurations.

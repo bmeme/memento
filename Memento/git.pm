@@ -8,6 +8,7 @@ use feature 'say';
 our @ISA = qw(Command);
 use strict; use warnings;
 use Cwd;
+use File::Copy qw(copy);
 use Getopt::Long;
 use Switch;
 use Text::Trim;
@@ -27,38 +28,78 @@ sub config {
 
   switch ($op) {
     case 'init' {
-      say "Please answer the following questions (press enter to confirm defaults):";
+      my $orig_config = $class->_get_config();
+      say "Please answer the following questions (press enter to confirm defaults)\n";
 
+      Daemon::printLabel("Project");
+      my $p_name = Daemon::prompt("Set/confirm current project name", $orig_config->{project});
+
+      say "";
+      Daemon::printLabel("Branch configurations");
       my $source = Daemon::prompt('Specify source branch for "memento git start"', $class->_get_current_branch(), [@branches]);
       my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $source, [@branches]);
-      my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'local+remote']);
+      my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'remote+local']);
       $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
       my $redmine = Daemon::prompt('Do you want to enable Redmine support?', 'yes', ['yes', 'no']) eq 'yes' ? 1 : 0;
       my $pattern = $redmine ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/:id:-:subject:') : 0;
 
+      say "";
+      Daemon::printLabel("Git Hooks");
+      my $commit_validation = 0;
+      if (Daemon::prompt("Do you want to set a validation for your commit messages?", 'no', ['yes', 'no']) eq 'yes') {
+        $commit_validation = Daemon::prompt('Enter regex to be used as commit validation (without leading and trailing slashes)');
+        $commit_validation =~ s/\\/\\\\/g;
+      }
+
+      my $pre_commit = (Daemon::prompt("Do you want to enable 'pre commit' events for this project?", 'no', ['yes', 'no']) eq 'yes') ? 1 : 0;
+
+      my $post_commit_notify = 0;
+      if ($redmine && (Daemon::prompt("Do you want to enable Redmine notifications after each commit?", 'no', ['yes', 'no']) eq 'yes')) {
+        $post_commit_notify = 1;
+      }
+
       my $config = {
+        project => $p_name,
         branch => {
           source => $source,
           destination => $destination,
           delete => $delete,
           pattern => $pattern
         },
+        hooks => {
+          commit_msg => $commit_validation,
+          pre_commit => $pre_commit,
+          post_commit => $post_commit_notify
+        },
         redmine => $redmine
       };
 
       say Daemon::array2table('Memento Git configurations', [$config], {full_nested => 1});
 
-      if (Daemon::prompt('Do you confirm these configurations?', 'y') eq 'y') {
-        my $orig_config = $class->_get_config();
+      if (Daemon::prompt('Do you confirm these configurations?', 'yes', ['yes', 'no']) eq 'yes') {
         if ($orig_config) {
           $class->_delete_config();
         }
+        $class->root(1);
+
+        Daemon::write('.git/description', $p_name, 1, '>');
 
         system("git config memento.branch.source " . $config->{branch}->{source});
         system("git config memento.branch.destination " . $config->{branch}->{destination});
         system("git config memento.branch.delete " . $config->{branch}->{delete});
         system("git config memento.branch.pattern " . $config->{branch}->{pattern});
+        system("git config memento.hooks.commit-msg " . $config->{hooks}->{commit_msg});
+        system("git config memento.hooks.pre-commit " . $config->{hooks}->{pre_commit});
+        system("git config memento.hooks.post-commit " . $config->{hooks}->{post_commit});
         system("git config memento.redmine " . $config->{redmine});
+
+        # Enable Git Hooks.
+        my $git_hooks = MemenTool->root() . "/misc/git-hooks.pl";
+        my $git_hooks_dir = getcwd() . "/.git/hooks";
+
+        system("ln -s $git_hooks $git_hooks_dir/commit-msg")  if (!-f "$git_hooks_dir/commit-msg");
+        system("ln -s $git_hooks $git_hooks_dir/pre-commit") if (!-f "$git_hooks_dir/pre-commit");
+        system("ln -s $git_hooks $git_hooks_dir/post-commit") if (!-f "$git_hooks_dir/post-commit");
 
         say "\nYour Memento Git configurations have been saved:";
         system("memento git config list");
@@ -84,7 +125,7 @@ sub root {
     chdir $p_root;
   }
   else {
-    say $p_root;
+    return $p_root;
   }
 }
 
@@ -113,6 +154,16 @@ sub start {
   if ($config->{redmine}) {
     my $id = Daemon::prompt("Enter Redmine issue id");
     $issue = $class->{redmine}->_get_issue($id);
+    if (!$issue) {
+      die "You have specified an invalid issue id.";
+    }
+
+    say "You are going to create a new branch for the following issue:\n";
+    $class->{redmine}->_render_issue($issue);
+    if (Daemon::prompt("Do you confirm?", 'yes', ['yes', 'no']) eq 'no') {
+      die "Aborting...\n";
+    }
+
     $branch = trim $config->{branch}->{pattern};
     $branch =~ s/:(\w+):/$issue->{$1}/g;
     $branch =~ s/:(\w+)-(\w+):/$issue->{$1}->{$2}/;
@@ -154,7 +205,6 @@ sub finish {
   my $delete = $config->{branch}->{delete};
   my $branch = $class->_get_current_branch();
   my $remote = $class->_get_remote();
-  my $issue;
 
   my $safe = 0;
   GetOptions(
@@ -167,15 +217,8 @@ sub finish {
     my $delete_default = $delete ? @{$delete_modes}[$delete] : 'no';
 
     $destination = Daemon::prompt('Specify destination branch for merge', $destination, [@branches]);
-    $delete = Daemon::prompt("Do you want to delete branch '$branch' after merge?", $delete_default, ['no', 'local', 'local+remote']);
+    $delete = Daemon::prompt("Do you want to delete branch '$branch' after merge?", $delete_default, ['no', 'local', 'remote+local']);
     $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
-  }
-
-  if ($config->{redmine}) {
-    my $rm_storage = $class->{redmine}->_get_storage();
-    if ($rm_storage->{issues}->{$branch}->{issue_id}) {
-      $issue = $class->{redmine}->_get_issue($rm_storage->{issues}->{$branch}->{issue_id});
-    }
   }
 
   if ($destination && ($destination ne $branch)) {
@@ -187,7 +230,7 @@ sub finish {
     system("git branch -D $branch") if ($delete);
     system("git push $remote :$branch") if ($remote && ($delete == 2));
 
-    $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
+    $class->_on('git_flow_finish', {branch => $branch, issue => $class->_get_issue()});
   }
   else {
     die "Current branch and destination branch are the same. Cannot proceed.\n";
@@ -207,6 +250,24 @@ sub _pre {
 
 # EVENT LISTENERS ##############################################################
 
+sub _on_git_commit_msg {
+  my $class = shift;
+  my $subject = shift;
+  my $event = shift;
+  my $params = shift;
+  my $config = $class->_get_config();
+
+  if (${$params}->{success} && $config->{hooks}->{commit_msg}) {
+    my $validation = $config->{hooks}->{commit_msg};
+    if (${$params}->{message} !~ /$validation/) {
+      push(@{${$params}->{errors}}, "Please respect the commit criteria: /$validation/");
+      ${$params}->{success} = 0;
+    }
+  }
+}
+
+# RULES ########################################################################
+
 sub _events {
   return [
     {
@@ -222,8 +283,93 @@ sub _events {
         'branch',
         'issue'
       ]
+    },
+    {
+     name => 'git_commit_msg',
+     arguments => [
+       'success',
+       'errors',
+       'commit_message',
+       'branch'
+     ]
+    },
+    {
+      name => 'git_pre_commit',
+      arguments => [
+       'success',
+       'errors',
+       'branch',
+       'commit_files'
+      ]
+    },
+    {
+      name => 'git_post_commit',
+      arguments => []
     }
   ];
+}
+
+sub _conditions {
+  return [
+    {
+      tool => 'git',
+      name => 'git_check_current_project',
+      callback => '_check_current_project',
+      params => [
+        {
+          name => 'project',
+          label => 'Git Project name'
+        }
+      ]
+    }
+  ];
+}
+
+sub _check_current_project {
+  my $class = shift;
+  my $params = shift;
+  my $config = $class->_get_config();
+  return ($config->{project} eq $params->{project});
+}
+
+sub _actions {
+  return [
+    {
+      tool => 'git',
+      name => 'git_exec_pre_commit_command',
+      callback => '_exec_pre_commit_command',
+      arguments => [
+        'commit_files'
+      ],
+      params => [
+        {
+          name => 'shell_command',
+          label => 'Shell command (use $file as placeholder)'
+        }
+      ]
+    }
+  ];
+}
+
+sub _exec_pre_commit_command {
+  my $class = shift;
+  my $arguments = shift;
+  my $params = shift;
+  my $config = $class->_get_config();
+
+  if (${$arguments}->{success} && $config->{hooks}->{pre_commit}) {
+    foreach my $file (@{${$arguments}->{commit_files}}) {
+      my $command = "$params->{shell_command}";
+      $command =~ s/\$file/$file/;
+      Daemon::printLabel("▶ $command", "bold black on_bright_yellow", 1);
+      my $result = system("$command");
+
+      if ($result != 0) {
+        push(@{${$arguments}->{errors}}, "Errors processing file $file");
+        ${$arguments}->{success} = 0;
+      }
+    }
+  }
 }
 
 # PRIVATE METHODS ##############################################################
@@ -250,20 +396,32 @@ sub _get_config {
     my $destination = `git config memento.branch.destination`;
     my $delete = `git config memento.branch.delete`;
     my $pattern = `git config memento.branch.pattern`;
+    my $commit_msg = `git config memento.hooks.commit-msg`;
+    my $pre_commit = `git config memento.hooks.pre-commit`;
+    my $post_commit = `git config memento.hooks.post-commit`;
     my $redmine = `git config memento.redmine`;
 
     chomp($source);
     chomp($destination);
     chomp($delete);
     chomp($pattern);
+    chomp($commit_msg);
+    chomp($pre_commit);
+    chomp($post_commit);
     chomp($redmine);
 
     $config = {
+      project => $class->_get_project_name,
       branch => {
         source => $source,
         destination => $destination,
         delete => $delete,
         pattern => $pattern
+      },
+      hooks => {
+        commit_msg => $commit_msg,
+        pre_commit => $pre_commit,
+        post_commit => $post_commit
       },
       redmine => $redmine
     };
@@ -272,10 +430,8 @@ sub _get_config {
 
 sub _delete_config {
   my $class = shift;
-  system("git config --unset memento.branch.source");
-  system("git config --unset memento.branch.pattern");
   system("git config --remove-section memento.branch");
-  system("git config --unset memento.redmine");
+  system("git config --remove-section memento.hooks");
   system("git config --remove-section memento");
 }
 
@@ -298,6 +454,12 @@ sub _get_commit_sha {
   return $sha;
 }
 
+sub _get_pretty_commit_message {
+  my $message = `git log -1 --oneline --pretty`;
+  chomp($message);
+  return $message;
+}
+
 sub _get_remote {
   my $class = shift;
   my $branch = $class->_get_current_branch();
@@ -318,6 +480,32 @@ sub _get_tracked_branch {
   my $tracked_branch = `git rev-parse --abbrev-ref $branch\@{upstream}`;
   chomp($tracked_branch);
   return $tracked_branch;
+}
+
+sub _get_project_name {
+  my $class = shift;
+  my $p_root = $class->root() or die "Cannot find git project root";
+  my @content = Daemon::read($p_root . "/.git/description");
+  my $p_name = "@content";
+  chomp($p_name);
+
+  return ($p_name ne "Unnamed repository; edit this file 'description' to name the repository.") ? $p_name : undef;
+}
+
+sub _get_issue {
+  my $class = shift;
+  my $branch = $class->_get_current_branch();
+  my $config = $class->_get_config();
+  my $issue;
+
+  if ($config->{redmine}) {
+    my $rm_storage = $class->{redmine}->_get_storage();
+    if ($rm_storage->{issues}->{$branch}->{issue_id}) {
+      $issue = $class->{redmine}->_get_issue($rm_storage->{issues}->{$branch}->{issue_id});
+    }
+  }
+
+  return $issue;
 }
 
 1;

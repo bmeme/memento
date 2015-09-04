@@ -185,6 +185,22 @@ sub _on_git_flow_start {
   }
 }
 
+sub _on_git_post_commit {
+  my $class = shift;
+  my $subject = shift;
+  my $event = shift;
+  my $params = shift;
+
+  my $git = MemenTool->instantiate('git', '');
+  my $issue = $git->_get_issue();
+
+  if ($issue) {
+    my $data = {};
+    $data->{issue}->{notes} = "*[memento]* " . $git->_get_pretty_commit_message();
+    $class->_call_api("issues/" . $issue->{id}, $data, 'PUT');
+  }
+}
+
 # RULES ########################################################################
 
 sub _conditions {

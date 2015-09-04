@@ -3,6 +3,7 @@ package Daemon;
 
 use feature 'say';
 use Cwd;
+use File::HomeDir;
 use JSON::PP;
 use Switch;
 use Term::ANSIColor;
@@ -161,14 +162,14 @@ sub array2table {
       if ((($ref eq 'HASH') || ($ref eq 'ARRAY')) && $options->{allow_nested}) {
         if ($ref eq 'HASH') {
           if ($options->{full_nested}) {
-            $value = array2table(0, [$item->{lc $key}]);
+            $value = array2table(0, [$item->{lc $key}], $options);
           }
           else {
             $value = $item->{lc $key}->{$options->{extract_nested_key}};
           }
         }
         else {
-          $value = array2table(0, $item->{lc $key});
+          $value = array2table(0, $item->{lc $key}, $options);
         }
       }
       else {
@@ -204,7 +205,9 @@ sub array2table {
 sub printLabel {
   my $label = shift;
   my $color = shift || "bold white on_rgb015";
-  say colored([$color], uc " $label ");
+  my $no_upper = shift || 0;
+  $label = $no_upper ? " $label " : uc " $label ";
+  say colored([$color], $label);
 }
 
 sub in_array {
@@ -221,8 +224,7 @@ sub print_list {
 }
 
 sub storage {
-  chdir;
-  my $home = cwd;
+  my $home = File::HomeDir->my_home;
   my $storage = "$home/.memento";
 
   if (!-d $storage) {

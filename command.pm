@@ -11,6 +11,9 @@ use JSON::PP;
 use Text::Trim;
 use Data::Dumper;
 
+our ($root);
+$root = MemenTool->root();
+
 sub new {
   my $class = shift;
   my $type = shift;
@@ -25,11 +28,20 @@ sub new {
 
   if ($class->_dependencies()) {
     for my $dependency (@{$class->_dependencies()}) {
-      $self->{$dependency} = Memento->instantiate($dependency, '');
+      $self->{$dependency} = MemenTool->instantiate($dependency, '');
     }
   }
 
-  return bless $self, $class;
+  my $instance = bless $self, $class;
+
+  # Add observers in order to allow interactions with other tools.
+  my @commands = MemenTool->commands();
+  for my $tool (@commands) {
+    require "$root/Memento/$tool.pm";
+    $instance->add_observer("Memento::$tool");
+  }
+
+  return $instance;
 }
 
 sub help {
@@ -56,11 +68,11 @@ sub update {
   my $class = shift;
   my $tool = $class;
   $tool =~ s/^Memento\:\://;
-  $class = Memento->instantiate($tool, '');
+  $class = MemenTool->instantiate($tool, '');
 
   my ($item, $event) = @_;
   if ($class->can($event)) {
-    $class->$event(@_);
+    $class->$event($item, $event, $_[2][0]);
   }
 }
 
@@ -87,7 +99,7 @@ sub _on {
   }
 
   if (Daemon::in_array($events, $event)) {
-    $class->notify_observers("_on_$event", @params);
+    $class->notify_observers("_on_$event", \@params);
   }
 }
 

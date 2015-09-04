@@ -19,7 +19,7 @@ use Data::Dumper;
 sub check {
   my $class = shift;
   my $config = $class->_get_config();
-  my $git = Memento->instantiate('git', '');
+  my $git = MemenTool->instantiate('git', '');
 
   chdir $root;
   my $sha = $git->_get_commit_sha();
@@ -33,7 +33,6 @@ sub check {
 
   my $content = decode_json $response;
   if ($content->{commit}->{sha} ne $sha) {
-    say Memento::splash();
     say "There is an available update:";
 
     my $excluded = ['comment_count', 'committer', 'tree', 'url'];
@@ -43,6 +42,7 @@ sub check {
     if ($confirm eq 'yes') {
       system("git reset --hard HEAD");
       system("git pull origin $branch");
+      say Memento::splash();
       system("./install.pl");
     }
   }
@@ -80,6 +80,10 @@ sub config {
   }
 }
 
+sub root {
+  say MemenTool->root;
+}
+
 # OVERRIDDEN METHODS ###########################################################
 
 sub _def_config {
@@ -93,7 +97,7 @@ sub _def_config {
 # EVENT LISTENERS ##############################################################
 
 sub _on_post_execution {
-  my $class = Memento->instantiate('schema');
+  my $class = MemenTool->instantiate('schema');
   my $config = $class->_get_config();
 
   if (!$config->{auto_check}) {
