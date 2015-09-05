@@ -51,7 +51,7 @@ sub rules {
 
         if ($condition->{params}) {
           foreach my $param (@{$condition->{params}}) {
-            my $tool = MemenTool->instantiate($condition->{tool}, '');
+            my $tool = MemenTool->instantiate($condition->{tool});
             my $options_callback = $param->{options};
             my $options = $options_callback ? $tool->$options_callback() : undef;
             $condition_rule->{params}->{$param->{name}} = Daemon::prompt("Enter $param->{label}", undef, $options);
@@ -76,7 +76,7 @@ sub rules {
 
         if ($action->{params}) {
           foreach my $param (@{$action->{params}}) {
-            my $tool = MemenTool->instantiate($action->{tool}, '');
+            my $tool = MemenTool->instantiate($action->{tool});
             my $options_callback = $param->{options};
             my $options = $options_callback ? $tool->$options_callback() : undef;
             $action_rule->{params}->{$param->{name}} = Daemon::prompt("Enter $param->{label}", undef, $options);
@@ -141,7 +141,7 @@ sub update {
   my $class = shift;
   my $tool_name = $class;
   $tool_name =~ s/^Memento\:\://;
-  $class = MemenTool->instantiate($tool_name, '');
+  $class = MemenTool->instantiate($tool_name);
 
   my $item = shift;
   my $event = shift;
@@ -156,7 +156,7 @@ sub update {
       # Checks conditions
       my $count_valid = 0;
       foreach my $condition (@{$rule->{conditions}}) {
-        my $tool = MemenTool->instantiate($condition->{tool}, '');
+        my $tool = MemenTool->instantiate($condition->{tool});
         my $callback = $condition->{callback};
         my $params = $condition->{params} ? $condition->{params} : {};
 
@@ -168,7 +168,7 @@ sub update {
       # Executes actions
       if ($count_valid == scalar(@{$rule->{conditions}})) {
         foreach my $action (@{$rule->{actions}}) {
-          my $tool = MemenTool->instantiate($action->{tool}, '');
+          my $tool = MemenTool->instantiate($action->{tool});
           my $callback = $action->{callback};
           my $params = $action->{params} ? $action->{params} : {};
 
@@ -188,7 +188,7 @@ sub _get_all_events {
   my $events = shift;
   my @commands = MemenTool->commands();
   foreach my $tool (@commands) {
-    $tool = MemenTool->instantiate($tool, '');
+    $tool = MemenTool->instantiate($tool);
     foreach my $event (@{$tool->_events()}) {
       push(@{${$events}}, $event);
     }
@@ -202,7 +202,7 @@ sub _get_all_conditions {
   my $conditions = shift;
   my @commands = MemenTool->commands();
   foreach my $tool (@commands) {
-    $tool = MemenTool->instantiate($tool, '');
+    $tool = MemenTool->instantiate($tool);
     foreach my $condition (@{$tool->_conditions()}) {
       push(@{${$conditions}}, $condition);
     }
@@ -216,7 +216,7 @@ sub _get_all_actions {
   my $actions = shift;
   my @commands = MemenTool->commands();
   foreach my $tool (@commands) {
-    $tool = MemenTool->instantiate($tool, '');
+    $tool = MemenTool->instantiate($tool);
     foreach my $action (@{$tool->_actions()}) {
       push(@{${$actions}}, $action);
     }

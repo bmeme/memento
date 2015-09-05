@@ -51,7 +51,7 @@ if ($#ARGV > -1) {
   }
   else {
     shift @args;
-    my $history = MemenTool->instantiate('history', 'bookmarks');
+    my $history = MemenTool->instantiate('history');
     my $bookmarks = $history->_get_config()->{bookmarks};
     my $found = 0;
     for my $bookmark (@{$bookmarks}) {

@@ -28,7 +28,7 @@ sub new {
 
   if ($class->_dependencies()) {
     for my $dependency (@{$class->_dependencies()}) {
-      $self->{$dependency} = MemenTool->instantiate($dependency, '');
+      $self->{$dependency} = MemenTool->instantiate($dependency);
     }
   }
 
@@ -68,7 +68,7 @@ sub update {
   my $class = shift;
   my $tool = $class;
   $tool =~ s/^Memento\:\://;
-  $class = MemenTool->instantiate($tool, '');
+  $class = MemenTool->instantiate($tool);
 
   my ($item, $event) = @_;
   if ($class->can($event)) {

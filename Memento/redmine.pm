@@ -191,7 +191,7 @@ sub _on_git_post_commit {
   my $event = shift;
   my $params = shift;
 
-  my $git = MemenTool->instantiate('git', '');
+  my $git = MemenTool->instantiate('git');
   my $issue = $git->_get_issue();
 
   if ($issue) {

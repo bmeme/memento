@@ -19,7 +19,7 @@ use Data::Dumper;
 sub check {
   my $class = shift;
   my $config = $class->_get_config();
-  my $git = MemenTool->instantiate('git', '');
+  my $git = MemenTool->instantiate('git');
 
   chdir $root;
   my $sha = $git->_get_commit_sha();

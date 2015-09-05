@@ -28,7 +28,7 @@ sub commands {
 sub instantiate {
   my $class = shift;
   my $type = shift;
-  my $command = shift;
+  my $command = shift || "";
   my $location = "Memento/$type.pm";
   $class = "Memento::$type";
   my $instance;
