@@ -448,6 +448,15 @@ sub _get_commit_sha {
   return $sha;
 }
 
+sub _get_updates {
+  my $class = shift;
+  my $remote = $class->_get_remote();
+  my $branch = $class->_get_current_branch();
+  my @updates = `git log HEAD..$remote/$branch --oneline`;
+  chomp(@updates);
+  return @updates;
+}
+
 sub _get_pretty_commit_message {
   my $message = `git log -1 --oneline --pretty`;
   chomp($message);

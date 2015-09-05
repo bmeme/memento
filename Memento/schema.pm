@@ -33,15 +33,24 @@ sub check {
 
   my $content = decode_json $response;
   if ($content->{commit}->{sha} ne $sha) {
-    say "There is an available update:";
+    print "\n";
+    Daemon::printLabel("New memento version is now available!");
 
-    my $excluded = ['comment_count', 'committer', 'tree', 'url'];
-    say Daemon::array2table("Update details", [$content->{commit}->{commit}], {exclude => $excluded, full_nested => 1});
-    my $confirm = Daemon::prompt("Do you want to run code updates?", undef, ['yes', 'no']);
+    my $details = [];
+    my @updates = $git->_get_updates();
+
+    foreach my $update (@updates) {
+      $update =~ /^(\w+) (.*?)$/;
+      push(@{$details}, {commit => $1, info => $2});
+    }
+
+    say Daemon::array2table("Memento Updates", $details);
+    my $confirm = Daemon::prompt("Do you want to run code updates?", 'yes', ['yes', 'no']);
 
     if ($confirm eq 'yes') {
+      my $remote = $git->_get_remote();
       system("git reset --hard HEAD");
-      system("git pull origin $branch");
+      system("git pull $remote $branch");
       say Memento::splash();
       system("./install.pl");
     }
@@ -124,7 +133,7 @@ sub _on_post_execution {
   }
 
   if ($check) {
-    system("memento schema check");
+    $class->check();
   }
 }
 

@@ -214,9 +214,9 @@ sub array2table {
 sub printLabel {
   my $label = shift;
   my $color = shift || "bold white on_rgb015";
-  my $no_upper = shift || 0;
-  $label = $no_upper ? " $label " : uc " $label ";
-  say colored([$color], $label);
+  my $lower = shift;
+  $label = $lower ? $label : uc $label;
+  say colored([$color], " $label ");
 }
 
 sub in_array {
