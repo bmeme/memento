@@ -17,7 +17,7 @@ sub rules {
   my $config = $class->_get_config();
 
   if (!$op) {
-    $op = Daemon::prompt("Choose an operation", undef, ['add', 'delete', 'list']);
+    $op = Daemon::prompt("Choose an operation", undef, ['add', 'edit', 'delete', 'list']);
   }
 
   switch ($op) {
@@ -101,28 +101,30 @@ sub rules {
 
       push(@{$config->{rules}}, $rule);
       $class->_save_config($config);
-      say 'Workflow Rule configurations have been saved';
+      say "Workflow Rule $rule_name has been saved";
+    }
+    case 'edit' {
+      my $name = Daemon::prompt("Enter the Workflow Rule to edit", undef, $class->_get_rules());
+      my $rule = $class->_get_rule($name);
+      my $filename = "/tmp/memento-workflow-rule-$name";
+
+      Daemon::write($filename, JSON::PP->new->utf8->pretty->encode($rule), '1', '>');
+      Daemon::open_default_editor($filename);
+      my $edit_rule = Daemon::json_decode_file($filename);
+      unlink $filename;
+
+      $class->_delete_rule($name);
+      $config = $class->_get_config();
+      push(@{$config->{rules}}, $edit_rule);
+      $class->_save_config($config);
     }
     case 'list' {
       say Daemon::array2table("Workflow Rules", $config->{rules}, {full_nested => 1});
     }
     case 'delete' {
-      my $rules;
-      foreach my $rule (@{$config->{rules}}) {
-        push(@{$rules}, $rule->{name});
-      }
-
-      my $name = Daemon::prompt("Enter the Workflow Rule to delete", undef, $rules);
-      my $i = 0;
-      for my $item (@{$config->{rules}}) {
-        if ($item->{name} eq $name) {
-          delete $config->{rules}[$i];
-        }
-        $i++;
-      }
-
-      $class->_save_config($config);
-      say 'Workflow API configurations have been deleted';
+      my $name = Daemon::prompt("Enter the Workflow Rule to delete", undef, $class->_get_rules());
+      $class->_delete_rule($name);
+      say "Workflow Rule $name have been deleted";
     }
   }
 }
@@ -254,6 +256,60 @@ sub _get_allowed_event_interaction {
   }
 
   return $avail_interactions;
+}
+
+sub _get_rules {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my $rules;
+
+  foreach my $rule (@{$config->{rules}}) {
+    push(@{$rules}, $rule->{name});
+  }
+
+  return $rules;
+}
+
+sub _get_rule {
+  my $class = shift;
+  my $name = shift;
+  my $config = $class->_get_config();
+  my $i = 0;
+  my $rule;
+
+  for my $item (@{$config->{rules}}) {
+    if ($item->{name} eq $name) {
+      $rule = $config->{rules}[$i];
+    }
+    $i++;
+  }
+
+  if ($rule) {
+    return $rule;
+  }
+  else {
+    die "Cannot find workflow rule $name\n";
+  }
+}
+
+sub _delete_rule {
+  my $class = shift;
+  my $name = shift;
+
+  if (!$class->_get_rule($name)) {
+    die "Cannot delete workflow rule $name: rule not found.\n";
+  }
+
+  my $config = $class->_get_config();
+  my $i = 0;
+  for my $item (@{$config->{rules}}) {
+    if ($item->{name} eq $name) {
+      delete $config->{rules}[$i];
+    }
+    $i++;
+  }
+
+  $class->_save_config($config);
 }
 
 1;

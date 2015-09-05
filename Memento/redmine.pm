@@ -276,9 +276,13 @@ sub _change_issue_status {
     };
 
     if (Daemon::prompt("Do you want to add a comment to the issue?", 'no', ['yes', 'no']) eq 'yes') {
-      $data->{issue}->{notes} = Daemon::prompt("Enter comment text");
+      my $filename = '/tmp/memento-redmine-issue-comment';
+      Daemon::write($filename, '', '1', '>');
+      Daemon::open_default_editor($filename);
+      my @content = Daemon::read($filename);
+      unlink $filename;
+      $data->{issue}->{notes} = "@content";
     }
-
     $class->_call_api("issues/" . $issue->{id}, $data, 'PUT');
 
     print "\n";

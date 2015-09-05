@@ -79,6 +79,15 @@ sub open_default_browser {
   }
 }
 
+sub open_default_editor {
+  my $filename = shift or die "Missing filename to open\n";
+  if (!-f $filename) {
+    die "Cannot find $filename! $!\n";
+  }
+  my $editor = $ENV{EDITOR} || 'vim';
+  system $editor => $filename;
+}
+
 sub prompt {
   my $question = shift;
   my $defaultValue = shift;

@@ -134,10 +134,6 @@ sub start {
   my $config = $class->_get_config();
   my $branch;
   my @branches = $class->_get_branches();
-
-  if (!$config) {
-    die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
-  }
   my $source = $config->{branch}->{source};
   chomp($source);
 
@@ -188,19 +184,13 @@ sub start {
       `git push --set-upstream origin $branch`;
       say "Configured upstream for branch '$branch'";
     }
-
-    $class->_on('git_flow_start', {branch => $branch, issue => $issue});
   }
+  $class->_on('git_flow_start', {branch => $branch, issue => $issue});
 }
 
 sub finish {
   my $class = shift;
   my $config = $class->_get_config();
-
-  if (!$config) {
-    die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
-  }
-
   my $destination = $config->{branch}->{destination};
   my $delete = $config->{branch}->{delete};
   my $branch = $class->_get_current_branch();
@@ -221,6 +211,7 @@ sub finish {
     $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
   }
 
+  my $issue = $class->_get_issue();
   if ($destination && ($destination ne $branch)) {
     system("git push $remote $branch") if ($remote);
     system("git checkout $destination");
@@ -229,12 +220,12 @@ sub finish {
     system("git push $remote $destination") if ($remote);
     system("git branch -D $branch") if ($delete);
     system("git push $remote :$branch") if ($remote && ($delete == 2));
-
-    $class->_on('git_flow_finish', {branch => $branch, issue => $class->_get_issue()});
   }
   else {
     die "Current branch and destination branch are the same. Cannot proceed.\n";
   }
+
+  $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
 }
 
 
@@ -425,6 +416,9 @@ sub _get_config {
       },
       redmine => $redmine
     };
+  }
+  else {
+    die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
   }
 }
 
