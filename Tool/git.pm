@@ -1,11 +1,11 @@
 #!/usr/bin/env perl
 require "$root/Daemon.pm";
-require "$root/Command.pm";
+require "$root/Memento/Command.pm";
 
 package Tool::git;
 
 use feature 'say';
-our @ISA = qw(Command);
+our @ISA = qw(Memento::Command);
 use strict; use warnings;
 use Cwd;
 use File::Copy qw(copy);

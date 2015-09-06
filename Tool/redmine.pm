@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
 require "$root/Daemon.pm";
-require "$root/Command.pm";
+require "$root/Memento/Command.pm";
 
 package Tool::redmine;
 
 use feature 'say';
 use JSON::PP;
-our @ISA = qw(Command);
+our @ISA = qw(Memento::Command);
 use strict; use warnings;
 use Data::Dumper;
 use Encode qw(encode);

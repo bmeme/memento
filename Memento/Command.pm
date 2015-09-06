@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 require "$root/Daemon.pm";
 
-package Command;
+package Memento::Command;
 
 use strict; use warnings;
 use feature 'say';

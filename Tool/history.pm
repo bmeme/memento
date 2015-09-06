@@ -1,11 +1,11 @@
 #!/usr/bin/env perl
 require "$root/Daemon.pm";
-require "$root/Command.pm";
+require "$root/Memento/Command.pm";
 
 package Tool::history;
 
 use feature 'say';
-our @ISA = qw(Command);
+our @ISA = qw(Memento::Command);
 use strict; use warnings;
 use Getopt::Long;
 use Switch;

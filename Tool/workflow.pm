@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
 require "$root/Daemon.pm";
-require "$root/Command.pm";
+require "$root/Memento/Command.pm";
 our ($root);
 
 package Tool::workflow;
 
 use feature 'say';
-our @ISA = qw(Command);
+our @ISA = qw(Memento::Command);
 use strict; use warnings;
 use Switch;
 use Data::Dumper;
