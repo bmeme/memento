@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.5.3
+    version 0.6.1
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -14,6 +14,7 @@ DESCRIPTION
     memento is a modular step by step command line tool. By default it
     provides the following commands:
 
+      - features
       - git
       - history
       - redmine
@@ -31,9 +32,12 @@ DESCRIPTION
 
       $ memento
       Enter the tool name to be used:
+      - features
       - git
       - history
       - redmine
+      - schema
+      - workflow
       » history
 
       Choose a command:
@@ -47,6 +51,73 @@ DESCRIPTION
       » last
 
       memento git status
+
+FEATURES
+    *memento features* allows you to export and import all your tools
+    configurations.
+
+    It provides the following operations:
+
+    *export*
+      Export configurations of your tools (features). You can choose to
+      export all of them or just one by one. By default the export will be
+      printed to the standard output. If you want you can save your
+      configurations into a file by using ">" as follows:
+
+      `memento features export all > memento_all.cfg'
+
+    *import [--file]*
+      Import your features using a previously exported config file. You can
+      choose to import all of them or just one by one. Use --file option to
+      specify the file path (in direct input mode), otherwise memento will
+      remember you to specify it later (progressive input mode):
+
+      `memento features import git --file memento_all.cfg'
+
+GIT
+    *memento git* is a configurable tool with the main purpose to help
+    developers creating branches, following git-flow-like (but divergent)
+    flows. This is not a wrapper around git core features, but just
+    something like an extension.
+
+    *memento git* provides the following operations:
+
+    *config*
+      Manages Memento Git configurations providing the following operations:
+
+      *init*
+        Initialize your git repository storing configurations that will be
+        used for branches creation, project name configuration and git hooks
+        management.
+
+      *list*
+        Lists all Memento Git configurations.
+
+      *delete*
+        Delete all Memento Git configurations affecting your current
+        repository.
+
+    *root*
+      Utitlity command used to show the repository root.
+
+    *start [--source]*
+      Creates a new branch starting from the configured source branch. Use
+      --source option to override the default one. If during the
+      configuration operation, the Issue Tracker support was enabled, you
+      will be asked to insert an Issue Id. It will be used to build the new
+      branch, following the configured branch pattern. Via the *workflow*
+      tool, is possible to create a rule for updating issue status and done
+      ratio on git flow start, automatically assigning it to current user,
+      and optionally add a comment.
+
+    *finish [--safe]*
+      Use this command to merge current branch into the configure
+      destination branch. Current branch will also be deleted if the delete
+      configuration has been set. If you are not familiar with this command,
+      use the --safe option to avoid unwanted behaviors (you will be asked
+      to confirm destination and deletion options). Via the *workflow* tool,
+      is possible to create a rule for updating issue status and done ratio
+      on git flow finish and optionally add a comment.
 
 HISTORY
     Every command executed is logged into the memento history and can be
@@ -120,51 +191,6 @@ REDMINE
     *user*
       Renders a table containing info about current user referring to the
       active api.
-
-GIT
-    *memento git* is a configurable tool with the main purpose to help
-    developers creating branches, following git-flow-like (but divergent)
-    flows. This is not a wrapper around git core features, but just
-    something like an extension.
-
-    *memento git* provides the following operations:
-
-    *config*
-      Manages Memento Git configurations providing the following operations:
-
-      *init*
-        Initialize your git repository storing configurations that will be
-        used for branches creation, project name configuration and git hooks
-        management.
-
-      *list*
-        Lists all Memento Git configurations.
-
-      *delete*
-        Delete all Memento Git configurations affecting your current
-        repository.
-
-    *root*
-      Utitlity command used to show the repository root.
-
-    *start [--source]*
-      Creates a new branch starting from the configured source branch. Use
-      --source option to override the default one. If during the
-      configuration operation, the Redmine support was enabled, you will be
-      asked to insert a Redmine Issue Id. It will be used to build the new
-      branch, following the configured branch pattern. Via the *workflow*
-      tool, is possible to create a rule for updating issue status and done
-      ratio on git flow start, automatically assigning it to current user,
-      and optionally add a comment.
-
-    *finish [--safe]*
-      Use this command to merge current branch into the configure
-      destination branch. Current branch will also be deleted if the delete
-      configuration has been set. If you are not familiar with this command,
-      use the --safe option to avoid unwanted behaviors (you will be asked
-      to confirm destination and deletion options). Via the *workflow* tool,
-      is possible to create a rule for updating issue status and done ratio
-      on git flow finish and optionally add a comment.
 
 SCHEMA
     *memento schema* is the automatic update manager for Memento codebase.

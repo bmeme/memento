@@ -83,27 +83,7 @@ sub config {
         if ($default->{project}) {
           $class->_delete_config();
         }
-        $class->root(1);
-
-        Daemon::write('.git/description', $p_name, 1, '>');
-
-        system("git config memento.branch.source " . $config->{branch}->{source});
-        system("git config memento.branch.destination " . $config->{branch}->{destination});
-        system("git config memento.branch.delete " . $config->{branch}->{delete});
-        system("git config memento.branch.pattern " . $config->{branch}->{pattern});
-        system("git config memento.hooks.commit-msg " . $config->{hooks}->{commit_msg});
-        system("git config memento.hooks.pre-commit " . $config->{hooks}->{pre_commit});
-        system("git config memento.hooks.post-commit " . $config->{hooks}->{post_commit});
-        system("git config memento.issue-tracker " . $config->{issue_tracker});
-
-        # Enable Git Hooks.
-        my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
-        my $git_hooks_dir = getcwd() . "/.git/hooks";
-
-        system("ln -s $git_hooks $git_hooks_dir/commit-msg")  if (!-f "$git_hooks_dir/commit-msg");
-        system("ln -s $git_hooks $git_hooks_dir/pre-commit") if (!-f "$git_hooks_dir/pre-commit");
-        system("ln -s $git_hooks $git_hooks_dir/post-commit") if (!-f "$git_hooks_dir/post-commit");
-
+        $class->_save_config($config);
         say "\nYour Memento Git configurations have been saved:";
         system("memento git config list");
       }
@@ -269,6 +249,82 @@ sub _def_config {
   };
 }
 
+sub _get_config {
+  my $class = shift;
+  my $optional = shift;
+  my $config = $class->_def_config();
+
+  if (&_is_configured()) {
+    my $source = `git config memento.branch.source`;
+    my $destination = `git config memento.branch.destination`;
+    my $delete = `git config memento.branch.delete`;
+    my $pattern = `git config memento.branch.pattern`;
+    my $commit_msg = `git config memento.hooks.commit-msg`;
+    my $pre_commit = `git config memento.hooks.pre-commit`;
+    my $post_commit = `git config memento.hooks.post-commit`;
+    my $issue_tracker = `git config memento.issue-tracker`;
+
+    chomp($source);
+    chomp($destination);
+    chomp($delete);
+    chomp($pattern);
+    chomp($commit_msg);
+    chomp($pre_commit);
+    chomp($post_commit);
+    chomp($issue_tracker);
+
+    $config = {
+      project => $class->_get_project_name,
+      branch => {
+        source => $source,
+        destination => $destination,
+        delete => $delete,
+        pattern => $pattern
+      },
+      hooks => {
+        commit_msg => $commit_msg,
+        pre_commit => $pre_commit,
+        post_commit => $post_commit
+      },
+      issue_tracker => $issue_tracker
+    };
+  }
+  else {
+    if (!$optional) {
+      die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
+    }
+  }
+
+  return $config;
+}
+
+sub _save_config {
+  my $class = shift;
+  my $config = shift;
+
+  $class->root(1);
+  Daemon::write('.git/description', $config->{project}, 1, '>');
+
+  system("git config memento.branch.source " . $config->{branch}->{source});
+  system("git config memento.branch.destination " . $config->{branch}->{destination});
+  system("git config memento.branch.delete " . $config->{branch}->{delete});
+  system("git config memento.branch.pattern " . $config->{branch}->{pattern});
+  system("git config memento.hooks.commit-msg " . $config->{hooks}->{commit_msg});
+  system("git config memento.hooks.pre-commit " . $config->{hooks}->{pre_commit});
+  system("git config memento.hooks.post-commit " . $config->{hooks}->{post_commit});
+  system("git config memento.issue-tracker " . $config->{issue_tracker});
+
+  # Enable Git Hooks.
+  my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
+  my $git_hooks_dir = getcwd() . "/.git/hooks";
+
+  system("ln -s $git_hooks $git_hooks_dir/commit-msg")  if (!-f "$git_hooks_dir/commit-msg");
+  system("ln -s $git_hooks $git_hooks_dir/pre-commit") if (!-f "$git_hooks_dir/pre-commit");
+  system("ln -s $git_hooks $git_hooks_dir/post-commit") if (!-f "$git_hooks_dir/post-commit");
+
+  $class->SUPER::_save_config($config);
+}
+
 sub _pre {
   chdir $cwd;
 }
@@ -409,55 +465,6 @@ sub _check_branch_name {
   $branch =~ s/^\w{1,2}_|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
   $branch =~ s/^_|_$//g;         #removes trailing and leading "_".
   return $branch;
-}
-
-sub _get_config {
-  my $class = shift;
-  my $optional = shift;
-  my $config = $class->_def_config();
-
-  if (&_is_configured()) {
-    my $source = `git config memento.branch.source`;
-    my $destination = `git config memento.branch.destination`;
-    my $delete = `git config memento.branch.delete`;
-    my $pattern = `git config memento.branch.pattern`;
-    my $commit_msg = `git config memento.hooks.commit-msg`;
-    my $pre_commit = `git config memento.hooks.pre-commit`;
-    my $post_commit = `git config memento.hooks.post-commit`;
-    my $issue_tracker = `git config memento.issue-tracker`;
-
-    chomp($source);
-    chomp($destination);
-    chomp($delete);
-    chomp($pattern);
-    chomp($commit_msg);
-    chomp($pre_commit);
-    chomp($post_commit);
-    chomp($issue_tracker);
-
-    $config = {
-      project => $class->_get_project_name,
-      branch => {
-        source => $source,
-        destination => $destination,
-        delete => $delete,
-        pattern => $pattern
-      },
-      hooks => {
-        commit_msg => $commit_msg,
-        pre_commit => $pre_commit,
-        post_commit => $post_commit
-      },
-      issue_tracker => $issue_tracker
-    };
-  }
-  else {
-    if (!$optional) {
-      die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
-    }
-  }
-
-  return $config;
 }
 
 sub _delete_config {
