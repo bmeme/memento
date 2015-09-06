@@ -3,7 +3,7 @@ require "$root/Daemon.pm";
 require "$root/Memento/Command.pm";
 our ($root);
 
-package Tool::workflow;
+package Memento::Tool::workflow;
 
 use feature 'say';
 our @ISA = qw(Memento::Command);
@@ -140,7 +140,7 @@ sub _def_config {
 sub update {
   my $class = shift;
   my $tool_name = $class;
-  $tool_name =~ s/^Tool\:\://;
+  $tool_name =~ s/^Memento\:\:Tool\:\://;
   $class = Memento::Tool->instantiate($tool_name);
 
   my $item = shift;

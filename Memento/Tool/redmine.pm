@@ -2,7 +2,7 @@
 require "$root/Daemon.pm";
 require "$root/Memento/Command.pm";
 
-package Tool::redmine;
+package Memento::Tool::redmine;
 
 use feature 'say';
 use JSON::PP;

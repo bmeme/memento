@@ -2,7 +2,7 @@
 require "$root/Daemon.pm";
 require "$root/Memento/Command.pm";
 
-package Tool::history;
+package Memento::Tool::history;
 
 use feature 'say';
 our @ISA = qw(Memento::Command);

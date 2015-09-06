@@ -3,7 +3,7 @@ require "$root/Daemon.pm";
 require "$root/Memento/Command.pm";
 our ($root);
 
-package Tool::schema;
+package Memento::Tool::schema;
 
 use feature 'say';
 our @ISA = qw(Memento::Command);

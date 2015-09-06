@@ -2,7 +2,7 @@
 require "$root/Daemon.pm";
 require "$root/Memento/Command.pm";
 
-package Tool::git;
+package Memento::Tool::git;
 
 use feature 'say';
 our @ISA = qw(Memento::Command);

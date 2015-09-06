@@ -37,8 +37,8 @@ sub new {
   # Add observers in order to allow interactions with other tools.
   my @commands = Memento::Tool->commands();
   for my $tool (@commands) {
-    require "$root/Tool/$tool.pm";
-    $instance->add_observer("Tool::$tool");
+    require "$root/Memento/Tool/$tool.pm";
+    $instance->add_observer("Memento::Tool::$tool");
   }
 
   return $instance;
@@ -47,7 +47,7 @@ sub new {
 sub help {
   my $class = shift;
   my $class_name = undef;
-  if ($class =~ /(^\w+::\w+)=/i) {
+  if ($class =~ /(^\w+::\w+::\w+)=/i) {
     $class_name = $1;
     my $meta = Class::MOP::Class->initialize($class_name);
     my @methods = sort $meta->get_method_list;
@@ -67,7 +67,7 @@ sub help {
 sub update {
   my $class = shift;
   my $tool = $class;
-  $tool =~ s/^Tool\:\://;
+  $tool =~ s/^Memento\:\:Tool\:\://;
   $class = Memento::Tool->instantiate($tool);
 
   my ($item, $event) = @_;
