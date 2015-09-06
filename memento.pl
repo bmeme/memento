@@ -31,7 +31,7 @@ if ($#ARGV > -1) {
   my $command = shift || "help";
 
   if (my $tool = Memento::Tool->instantiate($type, $command)) {
-    if (!$tool->can($command)) {
+    if (!$tool->can($command) || $command =~ /^_/) {
       say "Trying to use an invalid command.";
       $command = "help";
     }

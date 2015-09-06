@@ -20,7 +20,6 @@ $cwd = getcwd();
 sub config {
   my $class = shift;
   my $op = shift;
-  my @branches = $class->_get_branches();
 
   if (!$op) {
     $op = Daemon::prompt("Choose an operation", undef, ['init', 'list', 'delete']);
@@ -36,12 +35,16 @@ sub config {
 
       say "";
       Daemon::printLabel("Branch configurations");
+      my @branches = $class->_get_branches();
       my $source = Daemon::prompt('Specify source branch for "memento git start"', $class->_get_current_branch(), [@branches]);
       my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $source, [@branches]);
       my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'remote+local']);
       $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
-      my $redmine = Daemon::prompt('Do you want to enable Redmine support?', 'yes', ['yes', 'no']) eq 'yes' ? 1 : 0;
-      my $pattern = $redmine ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/:id:-:subject:') : 0;
+      my $issue_tracker = 0;
+      if (Daemon::prompt('Do you want to enable Issue Tracker support?', 'yes', ['yes', 'no']) eq 'yes') {
+        $issue_tracker = Daemon::prompt('Choose an Issue Tracker', undef, $class->_get_issue_trackers());
+      }
+      my $pattern = $issue_tracker ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/:id:-:subject:') : 0;
 
       say "";
       Daemon::printLabel("Git Hooks");
@@ -54,7 +57,7 @@ sub config {
       my $pre_commit = (Daemon::prompt("Do you want to enable 'pre commit' events for this project?", 'no', ['yes', 'no']) eq 'yes') ? 1 : 0;
 
       my $post_commit_notify = 0;
-      if ($redmine && (Daemon::prompt("Do you want to enable Redmine notifications after each commit?", 'no', ['yes', 'no']) eq 'yes')) {
+      if ($issue_tracker && (Daemon::prompt("Do you want to enable $issue_tracker notifications after each commit?", 'no', ['yes', 'no']) eq 'yes')) {
         $post_commit_notify = 1;
       }
 
@@ -71,7 +74,7 @@ sub config {
           pre_commit => $pre_commit,
           post_commit => $post_commit_notify
         },
-        redmine => $redmine
+        issue_tracker => $issue_tracker
       };
 
       say Daemon::array2table('Memento Git configurations', [$config], {full_nested => 1});
@@ -91,7 +94,7 @@ sub config {
         system("git config memento.hooks.commit-msg " . $config->{hooks}->{commit_msg});
         system("git config memento.hooks.pre-commit " . $config->{hooks}->{pre_commit});
         system("git config memento.hooks.post-commit " . $config->{hooks}->{post_commit});
-        system("git config memento.redmine " . $config->{redmine});
+        system("git config memento.issue_tracker " . $config->{issue_tracker});
 
         # Enable Git Hooks.
         my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
@@ -147,15 +150,16 @@ sub start {
 
   my $issue;
 
-  if ($config->{redmine}) {
-    my $id = Daemon::prompt("Enter Redmine issue id");
-    $issue = $class->{redmine}->_get_issue($id);
+  if ($config->{issue_tracker}) {
+    my $issue_tracker = $class->{issue_tracker};
+    my $id = Daemon::prompt("Enter $issue_tracker issue id");
+    $issue = $class->{issue_tracker}->_get_issue($id);
     if (!$issue) {
       die "You have specified an invalid issue id.";
     }
 
     say "You are going to create a new branch for the following issue:\n";
-    $class->{redmine}->_render_issue($issue);
+    $class->{issue_tracker}->_render_issue($issue);
     if (Daemon::prompt("Do you confirm?", 'yes', ['yes', 'no']) eq 'no') {
       die "Aborting...\n";
     }
@@ -232,7 +236,17 @@ sub finish {
 # OVERRIDDEN METHODS ###########################################################
 
 sub _dependencies {
-  return ['redmine'];
+  my $dependencies = [];
+  my @config = trim `git config -l | grep memento`;
+
+  if (scalar @config > 1) {
+    my $issue_tracker = trim `git config memento.issue_tracker`;
+    if ($issue_tracker) {
+      push(@{$dependencies}, $issue_tracker);
+    }
+  }
+
+  return $dependencies;
 }
 
 sub _pre {
@@ -382,7 +396,7 @@ sub _get_config {
   my $config;
   my @conf = trim `memento git config list`;
 
-  if ($#conf > 0) {
+  if ($#conf > 1) {
     my $source = `git config memento.branch.source`;
     my $destination = `git config memento.branch.destination`;
     my $delete = `git config memento.branch.delete`;
@@ -390,7 +404,7 @@ sub _get_config {
     my $commit_msg = `git config memento.hooks.commit-msg`;
     my $pre_commit = `git config memento.hooks.pre-commit`;
     my $post_commit = `git config memento.hooks.post-commit`;
-    my $redmine = `git config memento.redmine`;
+    my $issue_tracker = `git config memento.issue_tracker`;
 
     chomp($source);
     chomp($destination);
@@ -399,7 +413,7 @@ sub _get_config {
     chomp($commit_msg);
     chomp($pre_commit);
     chomp($post_commit);
-    chomp($redmine);
+    chomp($issue_tracker);
 
     $config = {
       project => $class->_get_project_name,
@@ -414,7 +428,7 @@ sub _get_config {
         pre_commit => $pre_commit,
         post_commit => $post_commit
       },
-      redmine => $redmine
+      issue_tracker => $issue_tracker
     };
   }
   else {
@@ -501,14 +515,18 @@ sub _get_issue {
   my $config = $class->_get_config();
   my $issue;
 
-  if ($config->{redmine}) {
-    my $rm_storage = $class->{redmine}->_get_storage();
-    if ($rm_storage->{issues}->{$branch}->{issue_id}) {
-      $issue = $class->{redmine}->_get_issue($rm_storage->{issues}->{$branch}->{issue_id});
+  if ($config->{issue_tracker}) {
+    my $it_storage = $class->{issue_tracker}->_get_storage();
+    if ($it_storage->{issues}->{$branch}->{issue_id}) {
+      $issue = $class->{issue_tracker}->_get_issue($it_storage->{issues}->{$branch}->{issue_id});
     }
   }
 
   return $issue;
+}
+
+sub _get_issue_trackers {
+  return Memento::IssueTracker->_get_all();
 }
 
 1;

@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
 require "$root/Daemon.pm";
-require "$root/Memento/Command.pm";
+require "$root/Memento/IssueTracker.pm";
 
 package Memento::Tool::redmine;
 
 use feature 'say';
 use JSON::PP;
-our @ISA = qw(Memento::Command);
+our @ISA = qw(Memento::IssueTracker);
 use strict; use warnings;
 use Data::Dumper;
 use Encode qw(encode);
