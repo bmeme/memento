@@ -20,7 +20,14 @@ sub new {
 sub check_interface__IssueTracker {
   my ($self) = @_;
   my $errors = 0;
-  foreach my $method (qw[ issue _get_issue _render_issue _call_api ]) {
+  my @methods = (
+    'issue',
+    '_change_issue_status',
+    '_get_issue',
+    '_render_issue',
+    '_call_api'
+  );
+  foreach my $method (@methods) {
     if (!$self->can($method)) {
       say "[IssueTracker] - missing '$method()' implementation.";
       $errors++;

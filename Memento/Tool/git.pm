@@ -27,24 +27,24 @@ sub config {
 
   switch ($op) {
     case 'init' {
-      my $orig_config = $class->_get_config();
+      my $default = $class->_get_config(1);
       say "Please answer the following questions (press enter to confirm defaults)\n";
 
       Daemon::printLabel("Project");
-      my $p_name = Daemon::prompt("Set/confirm current project name", $orig_config->{project});
+      my $p_name = Daemon::prompt("Set/confirm current project name", $default->{project});
 
       say "";
       Daemon::printLabel("Branch configurations");
       my @branches = $class->_get_branches();
-      my $source = Daemon::prompt('Specify source branch for "memento git start"', $class->_get_current_branch(), [@branches]);
-      my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $source, [@branches]);
+      my $source = Daemon::prompt('Specify source branch for "memento git start"', $default->{branch}->{source}, [@branches]);
+      my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $default->{branch}->{destination}, [@branches]);
       my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'remote+local']);
       $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
       my $issue_tracker = 0;
       if (Daemon::prompt('Do you want to enable Issue Tracker support?', 'yes', ['yes', 'no']) eq 'yes') {
         $issue_tracker = Daemon::prompt('Choose an Issue Tracker', undef, $class->_get_issue_trackers());
       }
-      my $pattern = $issue_tracker ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', 'feature/:id:-:subject:') : 0;
+      my $pattern = $issue_tracker ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', $default->{branch}->{pattern}) : 0;
 
       say "";
       Daemon::printLabel("Git Hooks");
@@ -80,7 +80,7 @@ sub config {
       say Daemon::array2table('Memento Git configurations', [$config], {full_nested => 1});
 
       if (Daemon::prompt('Do you confirm these configurations?', 'yes', ['yes', 'no']) eq 'yes') {
-        if ($orig_config) {
+        if ($default->{project}) {
           $class->_delete_config();
         }
         $class->root(1);
@@ -94,7 +94,7 @@ sub config {
         system("git config memento.hooks.commit-msg " . $config->{hooks}->{commit_msg});
         system("git config memento.hooks.pre-commit " . $config->{hooks}->{pre_commit});
         system("git config memento.hooks.post-commit " . $config->{hooks}->{post_commit});
-        system("git config memento.issue_tracker " . $config->{issue_tracker});
+        system("git config memento.issue-tracker " . $config->{issue_tracker});
 
         # Enable Git Hooks.
         my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
@@ -151,15 +151,15 @@ sub start {
   my $issue;
 
   if ($config->{issue_tracker}) {
-    my $issue_tracker = $class->{issue_tracker};
+    my $issue_tracker = $config->{issue_tracker};
     my $id = Daemon::prompt("Enter $issue_tracker issue id");
-    $issue = $class->{issue_tracker}->_get_issue($id);
+    $issue = $class->{$issue_tracker}->_get_issue($id);
     if (!$issue) {
       die "You have specified an invalid issue id.";
     }
 
     say "You are going to create a new branch for the following issue:\n";
-    $class->{issue_tracker}->_render_issue($issue);
+    $class->{$issue_tracker}->_render_issue($issue);
     if (Daemon::prompt("Do you confirm?", 'yes', ['yes', 'no']) eq 'no') {
       die "Aborting...\n";
     }
@@ -237,16 +237,36 @@ sub finish {
 
 sub _dependencies {
   my $dependencies = [];
-  my @config = trim `git config -l | grep memento`;
 
-  if (scalar @config > 1) {
-    my $issue_tracker = trim `git config memento.issue_tracker`;
+  if (&_is_configured()) {
+    my $issue_tracker = trim `git config memento.issue-tracker`;
     if ($issue_tracker) {
       push(@{$dependencies}, $issue_tracker);
     }
   }
 
   return $dependencies;
+}
+
+sub _def_config {
+  my $class = shift;
+  my $source = $class->_get_current_branch();
+
+  return {
+    project => undef,
+    branch => {
+      source => $source,
+      destination => $source,
+      delete => 0,
+      pattern => 'feature/:id:-:subject:'
+    },
+    hooks => {
+      commit_msg => 0,
+      pre_commit => 0,
+      post_commit => 0
+    },
+    issue_tracker => 0
+  };
 }
 
 sub _pre {
@@ -366,7 +386,7 @@ sub _exec_pre_commit_command {
     foreach my $file (@{${$arguments}->{commit_files}}) {
       my $command = "$params->{shell_command}";
       $command =~ s/\$file/$file/;
-      Daemon::printLabel("▶ $command", "bold black on_bright_yellow", 1);
+      Daemon::printLabel("▶ $command", "black on_bright_yellow", 1);
       my $result = system("$command");
 
       if ($result != 0) {
@@ -393,10 +413,10 @@ sub _check_branch_name {
 
 sub _get_config {
   my $class = shift;
-  my $config;
-  my @conf = trim `memento git config list`;
+  my $optional = shift;
+  my $config = $class->_def_config();
 
-  if ($#conf > 1) {
+  if (&_is_configured()) {
     my $source = `git config memento.branch.source`;
     my $destination = `git config memento.branch.destination`;
     my $delete = `git config memento.branch.delete`;
@@ -404,7 +424,7 @@ sub _get_config {
     my $commit_msg = `git config memento.hooks.commit-msg`;
     my $pre_commit = `git config memento.hooks.pre-commit`;
     my $post_commit = `git config memento.hooks.post-commit`;
-    my $issue_tracker = `git config memento.issue_tracker`;
+    my $issue_tracker = `git config memento.issue-tracker`;
 
     chomp($source);
     chomp($destination);
@@ -432,15 +452,39 @@ sub _get_config {
     };
   }
   else {
-    die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
+    if (!$optional) {
+      die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
+    }
   }
+
+  return $config;
 }
 
 sub _delete_config {
   my $class = shift;
-  system("git config --remove-section memento.branch");
-  system("git config --remove-section memento.hooks");
-  system("git config --remove-section memento");
+  my $p_root = $class->root() or die "Cannot find git project root";
+  my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
+
+  # Delete memento git configurations if exist.
+  if (&_is_configured()) {
+    system("git config --remove-section memento.branch");
+    system("git config --remove-section memento.hooks");
+    system("git config --remove-section memento");
+  }
+
+  # Delete git hooks symlinks if exist.
+  my $git_hooks_dir = "$p_root/.git/hooks";
+  my @hooks = ('commit-msg', 'pre-commit', 'post-commit');
+
+  foreach my $hook (@hooks) {
+    my $link = "$git_hooks_dir/$hook";
+    if (-l $link){
+      my $symlink = readlink($link);
+      if ($symlink eq $git_hooks) {
+        unlink $link or die "Failed to remove file $link: $!\n";
+      }
+    }
+  }
 }
 
 sub _get_branches {
@@ -516,9 +560,10 @@ sub _get_issue {
   my $issue;
 
   if ($config->{issue_tracker}) {
-    my $it_storage = $class->{issue_tracker}->_get_storage();
+    my $issue_tracker = $config->{issue_tracker};
+    my $it_storage = $class->{$issue_tracker}->_get_storage();
     if ($it_storage->{issues}->{$branch}->{issue_id}) {
-      $issue = $class->{issue_tracker}->_get_issue($it_storage->{issues}->{$branch}->{issue_id});
+      $issue = $class->{$issue_tracker}->_get_issue($it_storage->{issues}->{$branch}->{issue_id});
     }
   }
 
@@ -527,6 +572,11 @@ sub _get_issue {
 
 sub _get_issue_trackers {
   return Memento::IssueTracker->_get_all();
+}
+
+sub _is_configured {
+  my @config = trim `git config -l | grep memento`;
+  return scalar @config > 1 ? 1 : 0;
 }
 
 1;

@@ -266,6 +266,19 @@ sub _change_issue_status {
     }
 
     my $user = $class->_get_current_user();
+
+    if (Daemon::prompt("Do you want to change the issue assignee?", 'no', ['yes', 'no']) eq 'yes') {
+      my $project_id = $issue->{project}->{id};
+      my $memberships = $class->_get_project_memberships($project_id);
+      my %assignees;
+      foreach my $membership (@{$memberships}) {
+        my $member = defined $membership->{group} ? $membership->{group} : $membership->{user};
+        $assignees{$member->{name}} = $member;
+      }
+      my $assignee = Daemon::prompt("Choose an assignee", undef, [keys %assignees]);
+      $user = $assignees{$assignee};
+    }
+
     my $data = {
       issue => {
         assigned_to_id => $user->{id},
@@ -327,6 +340,14 @@ sub _get_current_user {
   return $data->{'user'};
 }
 
+sub _get_project_memberships {
+  my $class = shift;
+  my $project_id = shift or die "Missing project id argument";
+  my $data = $class->_call_api("projects/$project_id/memberships", {limit => 1});
+  $data = $class->_call_api("projects/$project_id/memberships", {limit => $data->{total_count}});
+  return $data->{'memberships'};
+}
+
 sub _config_load {
   my $class = shift;
   my $id = shift or die "Missing config id to load";
@@ -366,7 +387,7 @@ sub _call_api {
 
   if ($method eq 'GET') {
     my $offset = '0';
-    my $limit = '25';
+    my $limit = defined $query->{limit} ? $query->{limit} : '25';
     my $sort = '';
 
     GetOptions(
