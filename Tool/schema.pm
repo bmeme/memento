@@ -3,7 +3,7 @@ require "$root/Daemon.pm";
 require "$root/Command.pm";
 our ($root);
 
-package Memento::schema;
+package Tool::schema;
 
 use feature 'say';
 our @ISA = qw(Command);
@@ -32,7 +32,7 @@ sub check {
   ]);
 
   my $content = decode_json $response;
-  if ($content->{commit}->{sha} ne $sha) {
+  if ((defined $content->{commit}) && ($content->{commit}->{sha} ne $sha)) {
     print "\n";
     Daemon::printLabel("New memento version is now available!");
 

@@ -27,7 +27,6 @@ my @vendors = (
   'Switch',
   'FLORA/Term-Complete-1.402.tar.gz',
   'Term::ANSIColor',
-  'Term::ProgressBar',
   'Text::Aligner',
   'Text::ASCIITable',
   'Text::Table',
@@ -37,13 +36,13 @@ my @vendors = (
 
 foreach my $vendor (@vendors) {
   say "\n>> Installing [$vendor]";
-  system("cpan -i $vendor");
+  system("cpan -i -T $vendor");
 }
 
 say "\n>> Applying patches:";
 foreach my $vendor (@vendors) {
   $vendor =~ s/^[A-Z]+\/(\w+)\-(\w+)(.*)/$1::$2/;
-  my $patches_dir = "$cwd/Patches/$vendor";
+  my $patches_dir = "$cwd/patches/$vendor";
   if (-d $patches_dir) {
     say "[$vendor]";
     my @list;

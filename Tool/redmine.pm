@@ -2,7 +2,7 @@
 require "$root/Daemon.pm";
 require "$root/Command.pm";
 
-package Memento::redmine;
+package Tool::redmine;
 
 use feature 'say';
 use JSON::PP;
@@ -12,7 +12,6 @@ use Data::Dumper;
 use Encode qw(encode);
 use Getopt::Long;
 use Switch;
-use Term::ProgressBar;
 use Text::Aligner;
 use Text::Table;
 use POSIX qw(ceil floor);

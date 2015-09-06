@@ -10,7 +10,7 @@ $root = MemenTool->root();
 sub commands {
   my @list;
   my $i = 0;
-  my $commands_dir = "$root/Memento";
+  my $commands_dir = "$root/Tool";
   my @commands;
 
   opendir(DIR, $commands_dir) || die "Can't open directory $commands_dir: $!";
@@ -29,8 +29,8 @@ sub instantiate {
   my $class = shift;
   my $type = shift;
   my $command = shift || "";
-  my $location = "Memento/$type.pm";
-  $class = "Memento::$type";
+  my $location = "Tool/$type.pm";
+  $class = "Tool::$type";
   my $instance;
 
   if (defined $instances->{$type}) {

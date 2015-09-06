@@ -37,8 +37,8 @@ sub new {
   # Add observers in order to allow interactions with other tools.
   my @commands = MemenTool->commands();
   for my $tool (@commands) {
-    require "$root/Memento/$tool.pm";
-    $instance->add_observer("Memento::$tool");
+    require "$root/Tool/$tool.pm";
+    $instance->add_observer("Tool::$tool");
   }
 
   return $instance;
@@ -67,7 +67,7 @@ sub help {
 sub update {
   my $class = shift;
   my $tool = $class;
-  $tool =~ s/^Memento\:\://;
+  $tool =~ s/^Tool\:\://;
   $class = MemenTool->instantiate($tool);
 
   my ($item, $event) = @_;
