@@ -12,7 +12,7 @@ use Text::Trim;
 use Data::Dumper;
 
 our ($root);
-$root = MemenTool->root();
+$root = Memento::Tool->root();
 
 sub new {
   my $class = shift;
@@ -28,14 +28,14 @@ sub new {
 
   if ($class->_dependencies()) {
     for my $dependency (@{$class->_dependencies()}) {
-      $self->{$dependency} = MemenTool->instantiate($dependency);
+      $self->{$dependency} = Memento::Tool->instantiate($dependency);
     }
   }
 
   my $instance = bless $self, $class;
 
   # Add observers in order to allow interactions with other tools.
-  my @commands = MemenTool->commands();
+  my @commands = Memento::Tool->commands();
   for my $tool (@commands) {
     require "$root/Tool/$tool.pm";
     $instance->add_observer("Tool::$tool");
@@ -68,7 +68,7 @@ sub update {
   my $class = shift;
   my $tool = $class;
   $tool =~ s/^Tool\:\://;
-  $class = MemenTool->instantiate($tool);
+  $class = Memento::Tool->instantiate($tool);
 
   my ($item, $event) = @_;
   if ($class->can($event)) {

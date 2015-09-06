@@ -10,9 +10,9 @@ $root = `memento schema root`;
 chomp $root;
 
 require "$root/Daemon.pm";
-require "$root/tool.pm";
+require "$root/Memento/Tool.pm";
 
-my $git = MemenTool->instantiate('git');
+my $git = Memento::Tool->instantiate('git');
 my $config = $git->_get_config();
 my $hook = "$0";
 $hook =~ s/^\.git\/hooks\///;

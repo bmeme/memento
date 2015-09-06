@@ -20,17 +20,17 @@ else {
 }
 
 require "$root/Daemon.pm";
-require "$root/tool.pm";
+require "$root/Memento/Tool.pm";
 getopts('vh');
 
-my @commands = MemenTool->commands();
+my @commands = Memento::Tool->commands();
 @args = @ARGV;
 
 if ($#ARGV > -1) {
   my $type = shift;
   my $command = shift || "help";
 
-  if (my $tool = MemenTool->instantiate($type, $command)) {
+  if (my $tool = Memento::Tool->instantiate($type, $command)) {
     if (!$tool->can($command)) {
       say "Trying to use an invalid command.";
       $command = "help";
@@ -51,7 +51,7 @@ if ($#ARGV > -1) {
   }
   else {
     shift @args;
-    my $history = MemenTool->instantiate('history');
+    my $history = Memento::Tool->instantiate('history');
     my $bookmarks = $history->_get_config()->{bookmarks};
     my $found = 0;
     for my $bookmark (@{$bookmarks}) {

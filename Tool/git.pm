@@ -94,7 +94,7 @@ sub config {
         system("git config memento.redmine " . $config->{redmine});
 
         # Enable Git Hooks.
-        my $git_hooks = MemenTool->root() . "/misc/git-hooks.pl";
+        my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
         my $git_hooks_dir = getcwd() . "/.git/hooks";
 
         system("ln -s $git_hooks $git_hooks_dir/commit-msg")  if (!-f "$git_hooks_dir/commit-msg");

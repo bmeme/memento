@@ -1,11 +1,11 @@
 #!/usr/bin/env perl
-package MemenTool;
+package Memento::Tool;
 
 use feature 'say';
 use Data::Dumper;
 
 our ($root, @args, $instances);
-$root = MemenTool->root();
+$root = Memento::Tool->root();
 
 sub commands {
   my @list;

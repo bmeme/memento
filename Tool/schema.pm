@@ -19,7 +19,7 @@ use Data::Dumper;
 sub check {
   my $class = shift;
   my $config = $class->_get_config();
-  my $git = MemenTool->instantiate('git');
+  my $git = Memento::Tool->instantiate('git');
 
   chdir $root;
   my $sha = $git->_get_commit_sha();
@@ -90,7 +90,7 @@ sub config {
 }
 
 sub root {
-  say MemenTool->root;
+  say Memento::Tool->root;
 }
 
 # OVERRIDDEN METHODS ###########################################################
@@ -106,7 +106,7 @@ sub _def_config {
 # EVENT LISTENERS ##############################################################
 
 sub _on_post_execution {
-  my $class = MemenTool->instantiate('schema');
+  my $class = Memento::Tool->instantiate('schema');
   my $config = $class->_get_config();
 
   if (!$config->{auto_check}) {
