@@ -2,7 +2,6 @@
 use strict; use warnings;
 use feature 'say';
 use Cwd;
-use File::HomeDir;
 use Data::Dumper;
 
 our $cwd = getcwd();
@@ -72,7 +71,8 @@ $man_dir =~ s/\/bin\/cpan$//;
 my $man = `pod2man -s 1 -c Memento memento.pl > $man_dir/share/man/man7/memento.7`;
 say "ok!";
 
-my $home = File::HomeDir->my_home;;
+chdir;
+my $home = getcwd();
 my $storage = "$home/.memento";
 if (!-d $storage) {
   say "\n>> Creating ~/.memento folder";
