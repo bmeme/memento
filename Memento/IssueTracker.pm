@@ -21,6 +21,7 @@ sub check_interface__IssueTracker {
   my ($self) = @_;
   my $errors = 0;
   my @methods = (
+    'config',
     'issue',
     '_change_issue_status',
     '_get_issue',

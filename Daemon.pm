@@ -94,6 +94,12 @@ sub prompt {
   my @options = shift;
   my $answer = undef;
   my $printed_list = 0;
+  my $hash = 0;
+
+  if (ref(@options[0]) eq 'HASH') {
+    $hash = @options[0];
+    @options = [sort keys %{$hash}];
+  }
 
   do {
     if ($defaultValue) {
@@ -130,6 +136,10 @@ sub prompt {
 
   if ($printed_list) {
     print "\n";
+  }
+
+  if ($hash) {
+    $answer = $hash->{$answer};
   }
 
   return $answer;

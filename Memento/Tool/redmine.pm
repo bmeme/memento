@@ -22,25 +22,23 @@ sub config {
   my $class = shift;
   my $op = shift;
   my $config = $class->_get_config();
+  my $operations = ['add', 'edit', 'delete', 'list', 'switch'];
 
-  if (!$op) {
-    $op = Daemon::prompt("Choose an operation", undef, ['add', 'delete', 'list', 'switch']);
+  if (!$op || !Daemon::in_array($operations, $op)) {
+    $op = Daemon::prompt("Choose an operation", undef, $operations);
   }
 
   switch ($op) {
     case 'add' {
       my $conf;
-      do {
-        say "Please provide your Redmine info and remember that all values are mandatory";
-        $conf = {
-          id => Daemon::prompt('Configuration id'),
-          key => Daemon::prompt('Redmine API Key'),
-          url => Daemon::prompt('Redmine URL')
-        };
-      }
-      while (!$conf->{id} || !$conf->{key} || !$conf->{url});
+      say "Please provide your Redmine info and remember that all values are mandatory";
+      $conf = {
+        id => Daemon::prompt('Configuration id'),
+        key => Daemon::prompt('Redmine API Key'),
+        url => Daemon::prompt('Redmine URL')
+      };
 
-      my $is_default = (Daemon::prompt('Set this configuration as your default one?', 'y') eq 'y');
+      my $is_default = (Daemon::prompt('Set this configuration as your default one?', 'yes', ['yes', 'no']) eq 'yes');
 
       push(@{$config->{api}}, $conf);
       if ($is_default) {
@@ -49,6 +47,27 @@ sub config {
 
       $class->_save_config($config);
       say 'Redmine API configurations have been saved';
+    }
+    case 'edit' {
+      my $api_ids;
+      my $i = 0;
+
+      foreach my $api (@{$config->{api}}) {
+        $api_ids->{$api->{id}} = $i;
+        $i++;
+      }
+
+      my $key = Daemon::prompt('Choose an api id', undef, $api_ids);
+      my $conf = {
+        id => $config->{api}[$key]->{id},
+        key => Daemon::prompt('Redmine API Key', $config->{api}[$key]->{key}),
+        url => Daemon::prompt('Redmine URL', $config->{api}[$key]->{url})
+      };
+
+      $config->{api}[$key] = $conf;
+      $class->_save_config($config);
+      say 'Redmine API configurations have been updated';
+
     }
     case 'delete' {
       my $id = $_[0] || Daemon::prompt("Enter the API id to delete");
@@ -152,6 +171,15 @@ sub user {
 }
 
 # OVERRIDDEN METHODS ###########################################################
+
+sub _pre {
+  my ($class) = @_;
+  my $config = $class->_get_config();
+
+  if ($config->{default}) {
+    Daemon::printLabel($config->{default});
+  }
+}
 
 sub _done {
   my $class = shift;

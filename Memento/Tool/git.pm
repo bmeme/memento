@@ -154,6 +154,11 @@ sub start {
   }
 
   $branch = $class->_check_branch_name($branch);
+  my $current_branch = $class->_get_current_branch();
+
+  if (($branch eq $current_branch) && (Daemon::prompt("New branch and current branch are the same. Continue anyway?", 'no', ['yes', 'no']) eq 'no')) {
+    die "Now exiting.\n";
+  }
 
   if (Daemon::in_array([@branches], $branch)) {
     # Checkout to existing branch.
