@@ -40,9 +40,10 @@ sub config {
       my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $default->{branch}->{destination}, [@branches]);
       my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'remote+local']);
       $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
+
       my $issue_tracker = 0;
       if (Daemon::prompt('Do you want to enable Issue Tracker support?', 'yes', ['yes', 'no']) eq 'yes') {
-        $issue_tracker = Daemon::prompt('Choose an Issue Tracker', undef, $class->_get_issue_trackers());
+        $issue_tracker = Daemon::prompt('Choose an Issue Tracker', $default->{issue_tracker}, $class->_get_issue_trackers());
       }
       my $pattern = $issue_tracker ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', $default->{branch}->{pattern}) : 0;
 
@@ -50,7 +51,7 @@ sub config {
       Daemon::printLabel("Git Hooks");
       my $commit_validation = 0;
       if (Daemon::prompt("Do you want to set a validation for your commit messages?", 'no', ['yes', 'no']) eq 'yes') {
-        $commit_validation = Daemon::prompt('Enter regex to be used as commit validation (without leading and trailing slashes)');
+        $commit_validation = Daemon::prompt('Enter regex to be used as commit validation (without leading and trailing slashes)', $default->{hooks}->{commit_msg});
         $commit_validation =~ s/\\/\\\\/g;
       }
 
@@ -84,12 +85,11 @@ sub config {
           $class->_delete_config();
         }
         $class->_save_config($config);
-        say "\nYour Memento Git configurations have been saved:";
-        system("memento git config list");
+        say "\nYour Memento Git configurations have been saved!";
       }
     }
     case 'list' {
-      say `git config -l | grep memento`;
+      say Daemon::array2table("Git Configurations", [$class->_get_config()], {full_nested => 1});
     }
     case 'delete' {
       $class->_delete_config();
@@ -252,50 +252,13 @@ sub _def_config {
 sub _get_config {
   my $class = shift;
   my $optional = shift;
-  my $config = $class->_def_config();
 
   if (&_is_configured()) {
-    my $source = `git config memento.branch.source`;
-    my $destination = `git config memento.branch.destination`;
-    my $delete = `git config memento.branch.delete`;
-    my $pattern = `git config memento.branch.pattern`;
-    my $commit_msg = `git config memento.hooks.commit-msg`;
-    my $pre_commit = `git config memento.hooks.pre-commit`;
-    my $post_commit = `git config memento.hooks.post-commit`;
-    my $issue_tracker = `git config memento.issue-tracker`;
-
-    chomp($source);
-    chomp($destination);
-    chomp($delete);
-    chomp($pattern);
-    chomp($commit_msg);
-    chomp($pre_commit);
-    chomp($post_commit);
-    chomp($issue_tracker);
-
-    $config = {
-      project => $class->_get_project_name,
-      branch => {
-        source => $source,
-        destination => $destination,
-        delete => $delete,
-        pattern => $pattern
-      },
-      hooks => {
-        commit_msg => $commit_msg,
-        pre_commit => $pre_commit,
-        post_commit => $post_commit
-      },
-      issue_tracker => $issue_tracker
-    };
+    return $class->SUPER::_get_config();
   }
-  else {
-    if (!$optional) {
-      die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n"
-    }
+  elsif (!$optional) {
+    die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n";
   }
-
-  return $config;
 }
 
 sub _save_config {
