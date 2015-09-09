@@ -308,6 +308,7 @@ sub _on_git_commit_msg {
 
   if (${$params}->{success} && $config->{hooks}->{commit_msg}) {
     my $validation = $config->{hooks}->{commit_msg};
+    $validation =~ s/\\\\/\\/g;
     if (${$params}->{message} !~ /$validation/) {
       push(@{${$params}->{errors}}, "Please respect the commit criteria: /$validation/");
       ${$params}->{success} = 0;
