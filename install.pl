@@ -35,7 +35,9 @@ my @vendors = (
 
 foreach my $vendor (@vendors) {
   say "\n>> Installing [$vendor]";
-  system("cpan -i -T $vendor");
+  my $options = ($^V lt 'v5.18.0') ? '-i -f' : '-i -T';
+  say "▶ cpan $options $vendor";
+  system("cpan $options $vendor");
 }
 
 say "\n>> Applying patches:";
