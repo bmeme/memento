@@ -38,7 +38,7 @@ sub config {
       my @branches = $class->_get_branches();
       my $source = Daemon::prompt('Specify source branch for "memento git start"', $default->{branch}->{source}, [@branches]);
       my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $default->{branch}->{destination}, [@branches]);
-      my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'remote+local']);
+      my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'remote + local']);
       $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
 
       my $issue_tracker = 0;
@@ -192,7 +192,7 @@ sub finish {
 
   if ($safe) {
     my @branches = $class->_get_branches();
-    my $delete_modes = ['no', 'local', 'local+remote'];
+    my $delete_modes = ['no', 'local', 'remote + local'];
     my $delete_default = $delete ? @{$delete_modes}[$delete] : 'no';
 
     $destination = Daemon::prompt('Specify destination branch for merge', $destination, [@branches]);
@@ -257,13 +257,57 @@ sub _def_config {
 sub _get_config {
   my $class = shift;
   my $optional = shift;
+  my $config;
 
   if (&_is_configured()) {
-    return $class->SUPER::_get_config();
+    my $source = `git config memento.branch.source`;
+    my $destination = `git config memento.branch.destination`;
+    my $delete = `git config memento.branch.delete`;
+    my $pattern = `git config memento.branch.pattern`;
+    my $commit_msg = `git config memento.hooks.commit-msg`;
+    my $pre_commit = `git config memento.hooks.pre-commit`;
+    my $post_commit = `git config memento.hooks.post-commit`;
+    my $issue_tracker = `git config memento.issue-tracker`;
+
+    chomp($source);
+    chomp($destination);
+    chomp($delete);
+    chomp($pattern);
+    chomp($commit_msg);
+    chomp($pre_commit);
+    chomp($post_commit);
+    chomp($issue_tracker);
+
+    $config = {
+      project => $class->_get_project_name,
+      branch => {
+        source => $source,
+        destination => $destination,
+        delete => $delete,
+        pattern => $pattern
+      },
+      hooks => {
+        commit_msg => $commit_msg,
+        pre_commit => $pre_commit,
+        post_commit => $post_commit
+      },
+      issue_tracker => $issue_tracker
+    };
   }
-  elsif (!$optional) {
-    die "No Memento git config has been found. Please run 'memento git config init' and then try again.\n";
+  elsif (!&_is_configured && $optional) {
+    $config = $class->_def_config();
   }
+  else {
+    if (Daemon::prompt("No Memento git config has been found. Do you want to configure it now?", 'yes', ['yes', 'no']) eq 'yes') {
+      system("memento git config init");
+      return $class->_get_config();
+    }
+    else {
+      die "Now exiting.\n";
+    }
+  }
+
+  return $config;
 }
 
 sub _save_config {
