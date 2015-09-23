@@ -473,6 +473,7 @@ sub _check_branch_name {
   my $branch = shift or die "Missing branch to check.\n";
 
   $branch = lc $branch;
+  $branch =~ s/[\[\]\{\}\(\)]+//g; #remove parentheses.
   $branch =~ s/[^\w\/\#\-]+/_/g; #converts anything different from the pattern.
   $branch =~ s/_+\-+_*/_/g;      #removes "_-_".
   $branch =~ s/^\w{1,2}_|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
