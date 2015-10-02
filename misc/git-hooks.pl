@@ -55,7 +55,8 @@ PRE_COMMIT {
   }
   Daemon::printLabel("memento - $hook");
   my $git_hooks = shift;
-  my $against = `git rev-parse --verify HEAD >/dev/null 2>&1` ? 'HEAD' : '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+  my $head = `git rev-parse --verify HEAD`;
+  my $against = $head ? 'HEAD' : '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
   my @commit_files = `git diff-index --cached --name-only $against`;
   chomp(@commit_files);
 
