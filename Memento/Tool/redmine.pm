@@ -228,6 +228,17 @@ sub _on_git_post_commit {
   }
 }
 
+sub _on_schema_check {
+  my $class = shift;
+  my $query = {assigned_to_id => "me", set_filter => 1, sort => "priority:desc,updated_on:desc"};
+  my $data = $class->_call_api("issues", $query);
+
+  print "\n";
+  Daemon::printLabel("Redmine is watching you");
+  say "This is just a reminder from your issue tracker. Don't ever forget to work on your open issues.";
+  say Daemon::array2table("Your open issues", $data->{'issues'}, {exclude => ['description', 'created_on', 'custom_fields']});
+}
+
 # RULES ########################################################################
 
 sub _conditions {

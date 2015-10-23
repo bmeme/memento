@@ -103,6 +103,22 @@ sub _def_config {
   };
 }
 
+# RULES ########################################################################
+
+sub _events {
+  return [
+    {
+      name => 'schema_check',
+      arguments => []
+    }
+  ];
+}
+
+sub _on_schema_check {
+  my $class = shift;
+  $class->check();
+}
+
 # EVENT LISTENERS ##############################################################
 
 sub _on_post_execution {
@@ -133,7 +149,7 @@ sub _on_post_execution {
   }
 
   if ($check) {
-    $class->check();
+    $class->_on('schema_check', {});
   }
 }
 
