@@ -70,24 +70,23 @@ sub config {
 
     }
     case 'delete' {
-      my $id = $_[0] || Daemon::prompt("Enter the API id to delete");
-      my $updated = 0;
-      my $i = 0;
-      for my $item (@{$config->{api}}) {
-        if ($item->{id} eq $id) {
-          delete $config->{api}[$i];
-          $updated = 1;
-        }
-        $i++;
+      if (scalar(@{$config->{api}}) < 1) {
+        die "Redmine API configs not found.\n";
       }
 
-      if ($updated) {
-        $class->_save_config($config);
-        say 'Redmine API configurations have been deleted';
+      my $api_ids;
+      my $i = 0;
+
+      foreach my $api (@{$config->{api}}) {
+        $api_ids->{$api->{id}} = $i;
+        $i++;
       }
-      else {
-        die "Redmine API id not found: $id\n";
-      }
+      my $key = Daemon::prompt('Choose an api id to delete', undef, $api_ids);
+
+      delete $config->{api}[$key];
+      $class->_save_config($config);
+
+      say 'Redmine API configurations have been deleted';
     }
     case 'list' {
       say Daemon::array2table("Redmine Configurations", $config->{api});

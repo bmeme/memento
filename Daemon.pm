@@ -258,7 +258,7 @@ sub http_request {
   my $uri = shift;
   my $data = shift || {};
   my @header = shift;
-  my %options = shift;
+  my $options = shift || {};
   my $curl = WWW::Curl::Easy->new;
 
   $method = uc $method;
@@ -289,12 +289,10 @@ sub http_request {
   $curl->setopt(CURLOPT_URL, $uri);
   $curl->setopt(CURLOPT_HTTPHEADER, @header);
   $curl->setopt(CURLOPT_SSL_VERIFYPEER, 0);
-  $curl->setopt(CURLOPT_TIMEOUT, 5);
+  $curl->setopt(CURLOPT_TIMEOUT, 10);
 
-  if (%options) {
-    for my $key (keys %options) {
-      $curl->setopt($key, $options{$key});
-    }
+  foreach my $key (keys %$options) {
+    $curl->setopt($key, $options->{$key});
   }
 
   my $response;
