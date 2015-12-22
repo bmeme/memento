@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.7.0
+    version 0.7.1
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -52,6 +52,18 @@ DESCRIPTION
       » last
 
       memento git status
+
+    If you want to extend Memento with your own tools, put them into
+    Memento/Tool directory, with a leading underscore (eg.
+    Memento/Tool/_my_awesome_tool). The best tools will be added into
+    Memento core tools, so feel free to send us your tool!
+
+INSTALLATION
+    Open a terminal and run *./install.pl* inside memento directory. If you
+    have permissions problems try to run the same command with *sudo*.
+
+    In order to be able to manage third party perl modules Memento requires
+    cpan (http://www.cpan.org/).
 
 FEATURES
     *memento features* allows you to export and import all your tools
@@ -240,6 +252,10 @@ SCHEMA
     *check*
       Check, for code updates automatically, with the frequency specified
       via config.
+
+      Insert *memento schema check* entry into your bash profile in order to
+      automatically execute the command whenever you open a new terminal
+      window.
 
     *config*
       Manages Memento schema configurations, allowing user to enable/disable
