@@ -196,6 +196,11 @@ sub _def_config {
 
 sub _on_git_flow_start {
   my $class = shift;
+
+  if (!$class->_is_default()) {
+    return;
+  }
+
   my $subject = shift;
   my $event = shift;
   my $params = shift;
@@ -213,6 +218,11 @@ sub _on_git_flow_start {
 
 sub _on_git_post_commit {
   my $class = shift;
+
+  if (!$class->_is_default()) {
+    return;
+  }
+
   my $subject = shift;
   my $event = shift;
   my $params = shift;
@@ -530,6 +540,10 @@ sub _render_issue {
     Daemon::printLabel("Description");
     say encode('utf8', $issue->{'description'});
   }
+}
+
+sub _name {
+  return 'redmine';
 }
 
 1;

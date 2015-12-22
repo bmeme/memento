@@ -26,7 +26,8 @@ sub check_interface__IssueTracker {
     '_change_issue_status',
     '_get_issue',
     '_render_issue',
-    '_call_api'
+    '_call_api',
+    '_name'
   );
   foreach my $method (@methods) {
     if (!$self->can($method)) {
@@ -54,6 +55,14 @@ sub _get_all {
   }
 
   return $issue_trackers;
+}
+
+sub _is_default {
+  my $class = shift;
+  my $git = Memento::Tool->instantiate('git');
+  my $git_config = $git->_get_config();
+
+  return ($git_config->{issue_tracker} eq $class->_name());
 }
 
 1;

@@ -582,6 +582,12 @@ sub _get_pretty_commit_message {
   return $message;
 }
 
+sub _get_last_commit_message {
+  my $message = `git log -1 --pretty=%B`;
+  chomp($message);
+  return $message;
+}
+
 sub _get_remote {
   my $class = shift;
   my $branch = $class->_get_current_branch();

@@ -278,7 +278,8 @@ sub http_request {
       $curl->setopt(CURLOPT_POSTFIELDS, encode_json $data);
     }
     case 'POST' {
-      $curl->setopt(CURLOPT_POSTFIELDS, encode_json $data);
+      my %querystring = %{$data};
+      $uri->query_form(%querystring);
     }
     case 'DELETE' {
 
