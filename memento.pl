@@ -98,7 +98,7 @@ memento
 
 =head1 VERSION
 
-version 0.6.1
+version 0.7.0
 
 =head1 SYNOPSIS
 
@@ -115,6 +115,7 @@ By default it provides the following commands:
   - features
   - git
   - history
+  - paymo
   - redmine
   - schema
   - workflow
@@ -275,6 +276,62 @@ Lists all commands logged into the command history.
 =item I<unbookmark>
 
 Deletes a bookmarked command.
+
+=back
+
+
+
+=head1 PAYMO
+
+You can easily integrate Memento with multiple instances of Paymo, with the
+I<memento paymo config add> command, and switch from one to another simply by
+using the I<memento paymo config switch [paymo_api_id]> command.
+
+I<memento paymo> provides the following operations:
+
+=over 2
+
+=item I<config>
+
+Manages Paymo API configurations providing the following options:
+
+=over 2
+
+=item I<add>
+
+Adds a new configurations set for a Paymo instance.
+
+=item I<delete [paymo_api_id]>
+
+Deletes a configurations set for a Paymo instance.
+
+=item I<list>
+
+Lists all Paymo configurations.
+
+=item I<switch [paymo_api_id]>
+
+Sets a Paymo instance as the default one. All queries will be executed to the
+default one. Otherwise, you can change on the fly the active Paymo instance by
+using the B<--api-id> option, for each memento paymo command.
+
+=back
+
+=item I<clients>
+
+Renders a table containing info about all available Paymo clients.
+
+=item I<projects>
+
+Renders a table containing info about all available Paymo projects.
+
+=item I<users>
+
+Renders a table containing info about all available Paymo users.
+
+=item I<user>
+
+Renders a table containing info about current user referring to the active api.
 
 =back
 

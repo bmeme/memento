@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.6.1
+    version 0.7.0
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -17,6 +17,7 @@ DESCRIPTION
       - features
       - git
       - history
+      - paymo
       - redmine
       - schema
       - workflow
@@ -145,6 +146,45 @@ HISTORY
 
     *unbookmark*
       Deletes a bookmarked command.
+
+PAYMO
+    You can easily integrate Memento with multiple instances of Paymo, with
+    the *memento paymo config add* command, and switch from one to another
+    simply by using the *memento paymo config switch [paymo_api_id]*
+    command.
+
+    *memento paymo* provides the following operations:
+
+    *config*
+      Manages Paymo API configurations providing the following options:
+
+      *add*
+        Adds a new configurations set for a Paymo instance.
+
+      *delete [paymo_api_id]*
+        Deletes a configurations set for a Paymo instance.
+
+      *list*
+        Lists all Paymo configurations.
+
+      *switch [paymo_api_id]*
+        Sets a Paymo instance as the default one. All queries will be
+        executed to the default one. Otherwise, you can change on the fly
+        the active Paymo instance by using the --api-id option, for each
+        memento paymo command.
+
+    *clients*
+      Renders a table containing info about all available Paymo clients.
+
+    *projects*
+      Renders a table containing info about all available Paymo projects.
+
+    *users*
+      Renders a table containing info about all available Paymo users.
+
+    *user*
+      Renders a table containing info about current user referring to the
+      active api.
 
 REDMINE
     You can easily integrate Memento with multiple instances of Redmine,
