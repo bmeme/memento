@@ -364,7 +364,7 @@ sub _save_config {
 }
 
 sub _pre {
-  my $class = shift;
+  my ($class) = @_;
   $class->SUPER::_pre();
   chdir $cwd;
 }

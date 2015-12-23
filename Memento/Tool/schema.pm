@@ -104,7 +104,7 @@ sub _def_config {
 sub _pre {
   my ($class) = @_;
 
-  if ($class->{command} ne 'check') {
+  if (!Daemon::in_array(['check', 'root'], $class->{command})) {
     $class->SUPER::_pre();
   }
 }
