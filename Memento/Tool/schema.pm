@@ -101,6 +101,14 @@ sub _def_config {
   };
 }
 
+sub _pre {
+  my ($class) = @_;
+
+  if ($class->{command} ne 'check') {
+    $class->SUPER::_pre();
+  }
+}
+
 # RULES ########################################################################
 
 sub _events {
