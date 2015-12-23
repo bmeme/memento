@@ -147,7 +147,7 @@ sub _pre {
   my $config = $class->_get_config();
 
   if ($config->{default}) {
-    Daemon::printLabel($config->{default});
+    Daemon::printLabel("[Memento] » Paymo: " . $config->{default});
   }
 }
 
@@ -237,6 +237,9 @@ sub _on_git_flow_finish {
         tasklist_id => $project->{'task_list_id'}
       };
       my $task = $class->_retrieve_task($task_data, $project);
+      my $task_info = $task;
+      $task_info->{'start_time'} = $project->{'start'};
+      say Daemon::array2table("Paymo Time Entry", [$task_info], {exclude => $class->_get_task_excluded_fields()});
 
       if ($task && (Daemon::prompt('Do you want to save worked time on Paymo?', 'yes', ['yes', 'no']) eq 'yes')) {
         $time_entry->{'task_id'} = $task->{'id'};
@@ -369,7 +372,7 @@ sub _retrieve_task {
   my $project = shift;
   my $tasks = {};
 
-  my $query = {where => "where=project_id=" . $project->{'project_id'} . " and name=\"" . $task->{name} . "\""};
+  my $query = {where => "project_id=" . $project->{'project_id'} . " and name=\"" . $task->{name} . "\""};
   my $response = $class->_call_api("tasks", $query);
 
   if (scalar @{$response->{tasks}} < 1) {
@@ -403,6 +406,21 @@ sub _get_user_excluded_fields {
     'time_format',
     'updated_on',
     'managed_projects'
+  ];
+}
+
+sub _get_task_excluded_fields {
+  return [
+    'updated_on',
+    'users',
+    'price_per_hour',
+    'budget_hours',
+    'complete',
+    'created_on',
+    'billable',
+    'description',
+    'seq',
+    'due_date'
   ];
 }
 

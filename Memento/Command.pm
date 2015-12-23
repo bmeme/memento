@@ -104,7 +104,8 @@ sub _on {
 }
 
 sub _pre {
-  # nothing to do by default.
+  my $class = shift;
+  Daemon::printLabel("[Memento] » " . $class->{type});
 }
 
 sub _done {

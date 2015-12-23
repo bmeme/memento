@@ -176,7 +176,7 @@ sub _pre {
   my $config = $class->_get_config();
 
   if ($config->{default}) {
-    Daemon::printLabel($config->{default});
+    Daemon::printLabel("[Memento] » Redmine: " . $config->{default});
   }
 }
 

@@ -157,11 +157,28 @@ tools will be added into Memento core tools, so feel free to send us your tool!
 
 =head1 INSTALLATION
 
-Open a terminal and run I<./install.pl> inside memento directory. If you have
-permissions problems try to run the same command with I<sudo>.
-
 In order to be able to manage third party perl modules Memento requires B<cpan>
 (http://www.cpan.org/).
+
+Open a terminal and execute the B<install.pl> file located into memento dir:
+
+C<< ./install.pl >>
+
+=over 2
+
+=item I<On Ubuntu>
+
+Before install Memento, be sure to have I<perl-doc> and I<libwww-curl-perl>:
+
+C<< sudo apt-get install perl-doc >>
+
+C<< sudo apt-get install libwww-curl-perl >>
+
+C<< sudo ./install.pl >>
+
+=back
+
+
 
 =head1 FEATURES
 
