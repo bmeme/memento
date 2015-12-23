@@ -243,7 +243,7 @@ sub _on_schema_check {
   my $data = $class->_call_api("issues", $query);
 
   print "\n";
-  Daemon::printLabel("[Memento] - Redmine");
+  Daemon::printLabel("[Memento] » Redmine");
   say "This is just a reminder from your issue tracker. Don't ever forget to work on your open issues.";
   say Daemon::array2table("Your open issues", $data->{'issues'}, {exclude => ['description', 'created_on', 'custom_fields']});
 }
