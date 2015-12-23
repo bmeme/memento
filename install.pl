@@ -43,7 +43,7 @@ foreach my $vendor (@vendors) {
 say "\n>> Applying patches:";
 foreach my $vendor (@vendors) {
   $vendor =~ s/^[A-Z]+\/(\w+)\-(\w+)(.*)/$1::$2/;
-  my $patches_dir = "$cwd/patches/$vendor";
+  my $patches_dir = "$cwd/Patches/$vendor";
   if (-d $patches_dir) {
     say "[$vendor]";
     my @list;
