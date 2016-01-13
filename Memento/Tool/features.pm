@@ -76,5 +76,14 @@ sub _get_commands {
 
   return @commands;
 }
+# OVERRIDDEN METHODS ###########################################################
+
+sub _pre {
+  my ($class) = @_;
+
+  if (!Daemon::in_array(['export', 'import'], $class->{command})) {
+    $class->SUPER::_pre();
+  }
+}
 
 1;
