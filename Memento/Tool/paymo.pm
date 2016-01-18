@@ -124,7 +124,7 @@ sub clients {
 
 sub projects {
   my $class = shift;
-  my $data = $class->_call_api("projects");
+  my $data = $class->_call_api("projects", {where => "active=true"});
   say Daemon::array2table("Projects", $data->{'projects'}, {exclude => ['users', 'color', 'managers', 'created_on', 'updated_on', 'budget_hours', 'billable']});
 }
 
@@ -284,7 +284,7 @@ sub _get_current_user {
 
 sub _get_projects {
   my $class = shift;
-  my $data = $class->_call_api("projects");
+  my $data = $class->_call_api("projects", {where => "active=true"});
   my %projects;
 
   foreach my $project (@{$data->{'projects'}}) {
