@@ -222,29 +222,38 @@ sub _on_git_flow_finish {
   if ($storage->{'projects'}->{$git_project}) {
     my $issue = $params->{issue};
 
+    my $project = $storage->{'projects'}->{$git_project};
+
+    my $time_entry = {
+      task_id => 0,
+      start_time => $project->{'start'},
+      end_time => $class->_get_formatted_time(),
+      description => $git->_get_last_commit_message()
+    };
+
+    my $name = "";
+
     if ($issue) {
-      my $project = $storage->{'projects'}->{$git_project};
+      $name = "#" . $issue->{'id'} . " - " . $issue->{'subject'};
+    }
+    else {
+      $name = "Git branch: " . $git->_get_current_branch();
+    }
 
-      my $time_entry = {
-        task_id => 0,
-        start_time => $project->{'start'},
-        end_time => $class->_get_formatted_time(),
-        description => $git->_get_last_commit_message()
-      };
+    my $task_data = {
+      name => $name,
+      tasklist_id => $project->{'task_list_id'}
+    };
+    my $task = $class->_retrieve_task($task_data, $project);
+    $task->{'name'} = encode('utf8', $task->{'name'});
 
-      my $task_data = {
-        name => "#" . $issue->{'id'} . " - " . $issue->{'subject'},
-        tasklist_id => $project->{'task_list_id'}
-      };
-      my $task = $class->_retrieve_task($task_data, $project);
-      my $task_info = $task;
-      $task_info->{'start_time'} = $project->{'start'};
-      say Daemon::array2table("Paymo Time Entry", [$task_info], {exclude => $class->_get_task_excluded_fields()});
+    my $task_info = $task;
+    $task_info->{'start_time'} = $project->{'start'};
+    say Daemon::array2table("Paymo Time Entry", [$task_info], {exclude => $class->_get_task_excluded_fields()});
 
-      if ($task && (Daemon::prompt('Do you want to save worked time on Paymo?', 'yes', ['yes', 'no']) eq 'yes')) {
-        $time_entry->{'task_id'} = $task->{'id'};
-        my $response = $class->_call_api("entries", $time_entry, 'POST');
-      }
+    if ($task && (Daemon::prompt('Do you want to save worked time on Paymo?', 'yes', ['yes', 'no']) eq 'yes')) {
+      $time_entry->{'task_id'} = $task->{'id'};
+      my $response = $class->_call_api("entries", $time_entry, 'POST');
     }
   }
 }
