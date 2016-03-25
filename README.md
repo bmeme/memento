@@ -123,7 +123,7 @@ GIT
         repository.
 
     *root*
-      Utitlity command used to show the repository root.
+      Utility command used to show the repository root.
 
     *start [--source]*
       Creates a new branch starting from the configured source branch. Use
@@ -143,6 +143,18 @@ GIT
       to confirm destination and deletion options). Via the *workflow* tool,
       is possible to create a rule for updating issue status and done ratio
       on git flow finish and optionally add a comment.
+
+    *pause*
+      If you have enabled a Time Tracker, use this command to pause the
+      timer and log your worked hours. This will not affect your code but
+      will only handle time entries.
+
+    *resume*
+      If you have previously paused your Time Tracker, you can always resume
+      it by using this command.
+
+    *log*
+      Show the git log tree in a pretty format.
 
 HISTORY
     Every command executed is logged into the memento history and can be
