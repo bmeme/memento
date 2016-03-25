@@ -105,6 +105,10 @@ sub config {
   }
 }
 
+sub log {
+  system("git log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=short");
+}
+
 sub root {
   my $class = shift;
   my $goto = shift || 0;
