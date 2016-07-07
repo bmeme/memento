@@ -92,7 +92,7 @@ sub config {
           $class->_delete_config();
         }
         $class->_save_config($config);
-        say "\nYour Memento Git configurations have been saved!";
+        say "Your Memento Git configurations have been saved!\n";
       }
     }
     case 'list' {
@@ -328,7 +328,7 @@ sub _get_config {
   }
   else {
     if (Daemon::prompt("No Memento git config has been found. Do you want to configure it now?", 'yes', ['yes', 'no']) eq 'yes') {
-      system("memento git config init");
+      $class->config("init");
       return $class->_get_config();
     }
     else {
@@ -518,12 +518,12 @@ sub _check_branch_name {
   my $class = shift;
   my $branch = shift or die "Missing branch to check.\n";
 
-  $branch = lc $branch;
-  $branch =~ s/[\[\]\{\}\(\)]+//g; #remove parentheses.
-  $branch =~ s/[^\w\/\#\-]+/_/g; #converts anything different from the pattern.
-  $branch =~ s/_+\-+_*/_/g;      #removes "_-_".
-  $branch =~ s/^\w{1,2}_|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
-  $branch =~ s/^_|_$//g;         #removes trailing and leading "_".
+  $branch =~ /^(feature|\w+)\//;
+  my $prefix = $1 ? $1 : "feature";
+
+  $branch =~ s/^$prefix\///g;
+  $branch = Daemon::machine_name($branch);
+  $branch = "$prefix/$branch";
   return $branch;
 }
 

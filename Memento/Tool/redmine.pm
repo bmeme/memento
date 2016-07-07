@@ -527,7 +527,7 @@ sub _render_issue {
   my $bg_color = ($issue->{'done_ratio'} == 100) ? "green" : (($issue->{'done_ratio'} > 0) ? "yellow" : "red");
 
   Daemon::printLabel($title, "bold white on_$bg_color");
-  say sprintf("|- %s: %s [%d/100]", $issue->{'tracker'}->{'name'}, $issue->{'status'}->{'name'}, $issue->{'done_ratio'});
+  say sprintf("|- %s: %s [%d/100]", encode('utf8', $issue->{'tracker'}->{'name'}), $issue->{'status'}->{'name'}, $issue->{'done_ratio'});
   say sprintf("|- Created by: %s on %s", $issue->{'author'}->{'name'}, $issue->{'created_on'});
   say sprintf("|- Assigned to: %s\n", $issue->{'assigned_to'}->{'name'}) if defined $issue->{'assigned_to'};
 

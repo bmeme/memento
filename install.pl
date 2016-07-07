@@ -30,6 +30,7 @@ my @vendors = (
   'Text::ASCIITable',
   'Text::Table',
   'Text::Trim',
+  'Text::Unidecode',
   'WWW::Curl'
 );
 

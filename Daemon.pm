@@ -11,6 +11,7 @@ use Term::Complete;
 use Text::Aligner;
 use Text::ASCIITable;
 use Text::Table;
+use Text::Unidecode;
 use Hash::Merge qw( merge );
 use HTTP::Response;
 use URI;
@@ -315,12 +316,11 @@ sub http_request {
 sub machine_name {
   my $name = shift;
 
-  $name = lc $name;
-  $name =~ s/[^\w\/\#\-]+/_/g; #converts anything different from the pattern.
-  $name =~ s/_+\-+_*/_/g;      #removes "_-_".
-  $name =~ s/^\w{1,2}_|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
-  $name =~ s/^_|_$//g;         #removes trailing and leading "_".
-
+  $name = lc unidecode($name);
+  $name =~ s/[^\w]+/_/g; #converts anything different from the pattern.
+  $name =~ s/^_\w{1,2}|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
+  $name =~ s/_{2,}/_/g;  #removes multiple underscores.
+  $name =~ s/^_|_$//g;   #removes trailing and leading "_".
   return $name;
 }
 
