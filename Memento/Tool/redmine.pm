@@ -49,15 +49,7 @@ sub config {
       say 'Redmine API configurations have been saved';
     }
     case 'edit' {
-      my $api_ids;
-      my $i = 0;
-
-      foreach my $api (@{$config->{api}}) {
-        $api_ids->{$api->{id}} = $i;
-        $i++;
-      }
-
-      my $key = Daemon::prompt('Choose an api id', undef, $api_ids);
+      my $key = Daemon::prompt('Choose an api id', undef, $class->_get_api_ids());
       my $conf = {
         id => $config->{api}[$key]->{id},
         key => Daemon::prompt('Redmine API Key', $config->{api}[$key]->{key}),
@@ -74,18 +66,9 @@ sub config {
         die "Redmine API configs not found.\n";
       }
 
-      my $api_ids;
-      my $i = 0;
-
-      foreach my $api (@{$config->{api}}) {
-        $api_ids->{$api->{id}} = $i;
-        $i++;
-      }
-      my $key = Daemon::prompt('Choose an api id to delete', undef, $api_ids);
-
+      my $key = Daemon::prompt('Choose an api id to delete', undef, $class->_get_api_ids());
       delete $config->{api}[$key];
       $class->_save_config($config);
-
       say 'Redmine API configurations have been deleted';
     }
     case 'list' {
@@ -96,15 +79,9 @@ sub config {
       }
     }
     case 'switch' {
-      my $id = $_[0] || Daemon::prompt("Enter the API id to switch into");
-      my $found = 0;
-      for my $item (@{$config->{api}}) {
-        if ($item->{id} eq $id) {
-          $found = 1;
-        }
-      }
-
-      if ($found) {
+      my @api_id_names = $class->_get_api_id_names();
+      my $id = $_[0] || Daemon::prompt("Enter the API id to switch into", undef, @api_id_names);
+      if (Daemon::in_array(@api_id_names, $id)) {
         $config->{default} = $id;
         $class->_save_config($config);
         say "Redmine API switched to $id";
@@ -239,13 +216,18 @@ sub _on_git_post_commit {
 
 sub _on_schema_check {
   my $class = shift;
+  my $config = $class->_get_config();
+  if (!$config->{default}) {
+    return;
+  }
+
   my $query = {assigned_to_id => "me", set_filter => 1, sort => "priority:desc,updated_on:desc"};
   my $data = $class->_call_api("issues", $query);
 
   print "\n";
   Daemon::printLabel("[Memento] » Redmine");
   say "This is just a reminder from your issue tracker. Don't ever forget to work on your open issues.";
-  say Daemon::array2table("Your open issues", $data->{'issues'}, {exclude => ['description', 'created_on', 'custom_fields']});
+  say Daemon::array2table("Your open issues", $data->{'issues'}, {exclude => ['description', 'created_on', 'custom_fields', 'updated_on']});
 }
 
 # RULES ########################################################################
@@ -544,6 +526,30 @@ sub _render_issue {
 
 sub _name {
   return 'redmine';
+}
+
+sub _get_api_ids {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my $api_ids;
+  my $i = 0;
+
+  foreach my $api (@{$config->{api}}) {
+    $api_ids->{$api->{id}} = $i;
+    $i++;
+  }
+  return $api_ids;
+}
+
+sub _get_api_id_names {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my @api_id_names;
+
+  foreach my $api (@{$config->{api}}) {
+    push(@api_id_names, $api->{id});
+  }
+  return [@api_id_names];
 }
 
 1;
