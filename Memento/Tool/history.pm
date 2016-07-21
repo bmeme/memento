@@ -159,7 +159,6 @@ sub _on_pre_execution {
 
   if ($subject->_log_history()) {
     my $arg = shift || '';
-    my $clean_command = trim "$subject->{base_command} $arg";
     my $full_command = trim "$subject->{base_command} $arg @_";
     my $history = Memento::Tool->instantiate('history');
 
@@ -182,7 +181,7 @@ sub _get_list {
 sub _get_last {
   my $class = shift;
   my @content = $class->_get_list();
-  return trim $content[$#content];
+  return ($#content != -1) ? trim $content[$#content] : '';
 }
 
 sub _log_history {
