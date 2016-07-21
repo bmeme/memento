@@ -575,6 +575,10 @@ sub _get_commit_sha {
 
 sub _get_updates {
   my $class = shift;
+  my $dir = shift || 0;
+  if ($dir) {
+    chdir $dir;
+  }
   my $remote = $class->_get_remote();
   my $branch = $class->_get_current_branch();
   my @updates = `git log HEAD..$remote/$branch --oneline`;

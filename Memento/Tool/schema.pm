@@ -141,7 +141,7 @@ sub _on_schema_check {
     Daemon::printLabel("New memento version is now available!");
 
     my $details = [];
-    my @updates = $git->_get_updates();
+    my @updates = $git->_get_updates($root);
 
     foreach my $update (@updates) {
       $update =~ /^(\w+) (.*?)$/;
