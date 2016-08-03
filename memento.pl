@@ -2,7 +2,6 @@
 package Memento;
 use strict; use warnings;
 use feature 'say';
-use Data::Dumper;
 use Getopt::Std;
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
 

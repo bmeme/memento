@@ -2,7 +2,6 @@
 package Memento::Tool;
 
 use feature 'say';
-use Data::Dumper;
 
 our ($root, @args, $instances);
 $root = Memento::Tool->root();

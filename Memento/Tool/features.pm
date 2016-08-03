@@ -9,7 +9,6 @@ use feature 'say';
 our @ISA = qw(Memento::Command);
 use strict; use warnings;
 use JSON::PP;
-use Data::Dumper;
 use Getopt::Long;
 
 sub export {

@@ -7,7 +7,6 @@ package Memento::TimeTracker;
 our @ISA = qw(Memento::Command);
 use strict; use warnings;
 use Class::ISA;
-use Data::Dumper;
 use feature 'say';
 
 sub new {

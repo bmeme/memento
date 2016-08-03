@@ -8,7 +8,6 @@ use feature 'say';
 use JSON::PP;
 our @ISA = qw(Memento::TimeTracker);
 use strict; use warnings;
-use Data::Dumper;
 use Encode qw(encode);
 use Getopt::Long;
 use Switch;

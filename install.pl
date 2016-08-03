@@ -2,7 +2,6 @@
 use strict; use warnings;
 use feature 'say';
 use Cwd;
-use Data::Dumper;
 
 our $cwd = getcwd();
 my $cpan_path = `which cpan`;

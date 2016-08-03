@@ -12,7 +12,6 @@ use File::Copy qw(copy);
 use Getopt::Long;
 use Switch;
 use Text::Trim;
-use Data::Dumper;
 
 our ($cwd);
 $cwd = getcwd();

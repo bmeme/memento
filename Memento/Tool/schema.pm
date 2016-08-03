@@ -15,7 +15,6 @@ use JSON::PP;
 use POSIX qw(strftime);
 use Getopt::Long;
 use Switch;
-use Data::Dumper;
 
 sub check {
   my $class = shift;

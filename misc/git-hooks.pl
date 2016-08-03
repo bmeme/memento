@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 
 use feature 'say';
-use Data::Dumper;
 use Git::Hooks;
 use Cwd;
 

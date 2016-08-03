@@ -10,7 +10,6 @@ use strict; use warnings;
 use Getopt::Long;
 use Switch;
 use Text::Trim;
-use Data::Dumper;
 
 sub bookmark {
   my $class = shift;

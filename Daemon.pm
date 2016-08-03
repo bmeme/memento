@@ -16,7 +16,6 @@ use Hash::Merge qw( merge );
 use HTTP::Response;
 use URI;
 use WWW::Curl::Easy;
-use Data::Dumper;
 
 sub write {
   if (($#_ + 1) != 4) {

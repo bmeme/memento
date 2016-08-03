@@ -9,7 +9,6 @@ use feature 'say';
 our @ISA = qw(Memento::Command);
 use strict; use warnings;
 use Switch;
-use Data::Dumper;
 
 sub rules {
   my $class = shift;
