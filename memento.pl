@@ -23,7 +23,7 @@ require "$root/Daemon.pm";
 require "$root/Memento/Tool.pm";
 getopts('vh');
 
-my @commands = Memento::Tool->commands();
+my $commands = Memento::Tool->commands();
 @args = @ARGV;
 
 if ($#ARGV > -1) {
@@ -68,7 +68,7 @@ if ($#ARGV > -1) {
   }
 }
 else {
-  my $command = Daemon::prompt("Choose a tool", undef, [@commands]);
+  my $command = Daemon::prompt("Choose a tool", undef, [sort keys %{$commands}]);
   system("memento $command");
 }
 
@@ -151,9 +151,8 @@ or via progressive input:
 
   memento git status
 
-If you want to extend Memento with your own tools, put them into B<Memento/Tool>
-directory, with a leading underscore (eg. Memento/Tool/_my_awesome_tool). The best
-tools will be added into Memento core tools, so feel free to send us your tool!
+If you want to extend Memento with your own tools, put them into B<Memento/Tool/custom>
+directory. The best tools will be added into Memento core tools, so feel free to send us your tool!
 
 =head1 INSTALLATION
 

@@ -2,6 +2,7 @@
 package Memento::Tool;
 
 use feature 'say';
+use Data::Dumper;
 
 our ($root, @args, $instances);
 $root = Memento::Tool->root();
@@ -9,26 +10,29 @@ $root = Memento::Tool->root();
 sub commands {
   my @list;
   my $i = 0;
-  my $commands_dir = "$root/Memento/Tool";
-  my @commands;
+  my @commands_dir = ("Memento/Tool", "Memento/Tool/custom");
+  my $commands = {};
 
-  opendir(DIR, $commands_dir) || die "Can't open directory $commands_dir: $!";
-  @list = grep /\.pm$/, readdir(DIR);
-  closedir DIR;
+  foreach my $commands_dir (@commands_dir) {
+    opendir(DIR, "$root/$commands_dir") || die "Can't open directory $commands_dir: $!";
+    @list = grep /\.pm$/, readdir(DIR);
+    closedir DIR;
 
-  for my $command (sort @list) {
-    $command =~ s/\.pm$//;
-    push (@commands, $command);
+    for my $command (@list) {
+      $command =~ s/\.pm$//;
+      $commands->{$command} = $commands_dir;
+    }
   }
 
-  return @commands;
+  return $commands;
 }
 
 sub instantiate {
   my $class = shift;
   my $type = shift;
   my $command = shift || "";
-  my $location = "Memento/Tool/$type.pm";
+  my $commands = $class->commands();
+  my $location = "$commands->{$type}/$type.pm";
   $class = "Memento::Tool::$type";
   my $instance;
 

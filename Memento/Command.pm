@@ -35,9 +35,10 @@ sub new {
   my $instance = bless $self, $class;
 
   # Add observers in order to allow interactions with other tools.
-  my @commands = Memento::Tool->commands();
-  for my $tool (@commands) {
-    require "$root/Memento/Tool/$tool.pm";
+  my $commands = Memento::Tool->commands();
+  for my $tool (keys %{$commands}) {
+    my $location = "$root/$commands->{$tool}/$tool.pm";
+    require $location;
     $instance->add_observer("Memento::Tool::$tool");
   }
 

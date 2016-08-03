@@ -54,9 +54,8 @@ DESCRIPTION
       memento git status
 
     If you want to extend Memento with your own tools, put them into
-    Memento/Tool directory, with a leading underscore (eg.
-    Memento/Tool/_my_awesome_tool). The best tools will be added into
-    Memento core tools, so feel free to send us your tool!
+    Memento/Tool/custom directory. The best tools will be added into Memento
+    core tools, so feel free to send us your tool!
 
 INSTALLATION
     In order to be able to manage third party perl modules Memento requires
