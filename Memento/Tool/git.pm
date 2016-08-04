@@ -12,6 +12,7 @@ use File::Copy qw(copy);
 use Getopt::Long;
 use Switch;
 use Text::Trim;
+use Data::Dumper;
 
 our ($cwd);
 $cwd = getcwd();
@@ -26,8 +27,14 @@ sub config {
 
   switch ($op) {
     case 'init' {
+      $class->_check_repository();
+
       my $default = $class->_get_config(1);
       say "Please answer the following questions (press enter to confirm defaults)\n";
+
+      GetOptions(
+        'project=s' => \$default->{project}
+      ) or die 'Incorrect usage';
 
       Daemon::printLabel("Project");
       my $p_name = Daemon::prompt("Set/confirm current project name", $default->{project});
@@ -331,7 +338,7 @@ sub _get_config {
       return $class->_get_config();
     }
     else {
-      die "Now exiting.\n";
+      die "Aborting...\n";
     }
   }
 
@@ -512,6 +519,38 @@ sub _exec_pre_commit_command {
 }
 
 # PRIVATE METHODS ##############################################################
+
+sub _check_repository {
+  my $class = shift;
+  if (-d '.git') {
+    return 1;
+  }
+
+  if (Daemon::prompt('Not a git repository. Would you like to initialize Git for this directory?', 'yes', ['yes', 'no']) eq 'yes') {
+    say "Memento will create a standard branch structure executing the following commands:";
+    my $git_commands = [
+      "git init",
+      "git add .",
+      "git commit -am 'first commit'",
+      "git checkout -b development"
+    ];
+    Daemon::print_list($git_commands);
+    print "\n";
+
+    if (Daemon::prompt('Do you confirm execution?', 'yes', ['yes', 'no']) eq 'yes') {
+      foreach my $git_command (@{$git_commands}) {
+        system($git_command);
+      }
+      say "Git repository initialized.\n";
+    }
+    else {
+      die "Aborting...\n";
+    }
+  }
+  else {
+    die "Aborting...\n";
+  }
+}
 
 sub _check_branch_name {
   my $class = shift;

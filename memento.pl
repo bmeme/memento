@@ -97,7 +97,7 @@ memento
 
 =head1 VERSION
 
-version 0.7.3
+version 0.7.4
 
 =head1 SYNOPSIS
 
@@ -223,10 +223,11 @@ Manages Memento Git configurations providing the following operations:
 
 =over 2
 
-=item I<init>
+=item I<init [--project]>
 
 Initialize your git repository storing configurations that will be used for
 branches creation, project name configuration and git hooks management.
+Use B<--project> option to specify a project name.
 
 =item I<list>
 

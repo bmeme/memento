@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.7.3
+    version 0.7.4
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -109,10 +109,10 @@ GIT
     *config*
       Manages Memento Git configurations providing the following operations:
 
-      *init*
+      *init [--project]*
         Initialize your git repository storing configurations that will be
         used for branches creation, project name configuration and git hooks
-        management.
+        management. Use --project option to specify a project name.
 
       *list*
         Lists all Memento Git configurations.
