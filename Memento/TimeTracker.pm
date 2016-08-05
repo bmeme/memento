@@ -38,10 +38,10 @@ sub check_interface__TimeTracker {
 }
 
 sub _get_all {
-  my @commands = Memento::Tool->commands();
+  my $commands = Memento::Tool->commands();
   my $time_trackers = [];
 
-  foreach my $command (@commands) {
+  foreach my $command (keys %{$commands}) {
     my $tool = Memento::Tool->instantiate($command);
     my @classes = Class::ISA::super_path(ref $tool);
     if (Daemon::in_array([@classes], 'Memento::TimeTracker')) {

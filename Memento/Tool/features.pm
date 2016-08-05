@@ -59,7 +59,7 @@ sub _get_commands {
   my $command = shift;
   my @commands = ('all');
 
-  foreach my $cmd (Memento::Tool->commands()) {
+  foreach my $cmd (keys %{Memento::Tool->commands()}) {
     if ($cmd ne 'features') {
       push(@commands, $cmd);
     }

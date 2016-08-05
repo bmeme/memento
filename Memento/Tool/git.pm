@@ -12,7 +12,6 @@ use File::Copy qw(copy);
 use Getopt::Long;
 use Switch;
 use Text::Trim;
-use Data::Dumper;
 
 our ($cwd);
 $cwd = getcwd();
@@ -50,6 +49,10 @@ sub config {
       my $issue_tracker = 0;
       if (Daemon::prompt('Do you want to enable Issue Tracker support?', 'yes', ['yes', 'no']) eq 'yes') {
         $issue_tracker = Daemon::prompt('Choose an Issue Tracker', $default->{issue_tracker}, $class->_get_issue_trackers());
+        if (!$default->{branch}->{pattern}) {
+          my $tracker = Memento::Tool->instantiate($issue_tracker);
+          $default->{branch}->{pattern} = 'feature/' . $tracker->_branch_pattern();
+        }
       }
       my $pattern = $issue_tracker ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', $default->{branch}->{pattern}) : 0;
 
@@ -170,7 +173,7 @@ sub start {
     $branch = Daemon::prompt("Enter the branch name");
   }
 
-  $branch = $class->_check_branch_name($branch);
+  $branch = $class->_check_branch_name($branch, $issue);
   my $current_branch = $class->_get_current_branch();
 
   if (($branch eq $current_branch) && (Daemon::prompt("New branch and current branch are the same. Continue anyway?", 'no', ['yes', 'no']) eq 'no')) {
@@ -274,7 +277,7 @@ sub _def_config {
       source => $source,
       destination => $source,
       delete => 0,
-      pattern => 'feature/:id:-:subject:'
+      pattern => 0
     },
     hooks => {
       commit_msg => 0,
@@ -555,12 +558,20 @@ sub _check_repository {
 sub _check_branch_name {
   my $class = shift;
   my $branch = shift or die "Missing branch to check.\n";
+  my $issue = shift;
+  my $config = $class->_get_config();
 
   $branch =~ /^(feature|\w+)\//;
   my $prefix = $1 ? $1 : "feature";
 
   $branch =~ s/^$prefix\///g;
   $branch = Daemon::machine_name($branch);
+
+  if ($config->{issue_tracker}) {
+    my $issue_tracker = $config->{issue_tracker};
+    $branch = $class->{$issue_tracker}->_fix_branch_name($branch, $issue);
+  }
+
   $branch = "$prefix/$branch";
   return $branch;
 }

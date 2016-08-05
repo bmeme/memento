@@ -185,8 +185,8 @@ sub update {
 sub _get_all_events {
   my $class = shift;
   my $events = shift;
-  my @commands = Memento::Tool->commands();
-  foreach my $tool (@commands) {
+  my $commands = Memento::Tool->commands();
+  foreach my $tool (keys %{$commands}) {
     $tool = Memento::Tool->instantiate($tool);
     foreach my $event (@{$tool->_events()}) {
       push(@{${$events}}, $event);
@@ -199,8 +199,8 @@ sub _get_all_events {
 sub _get_all_conditions {
   my $class = shift;
   my $conditions = shift;
-  my @commands = Memento::Tool->commands();
-  foreach my $tool (@commands) {
+  my $commands = Memento::Tool->commands();
+  foreach my $tool (keys %{$commands}) {
     $tool = Memento::Tool->instantiate($tool);
     foreach my $condition (@{$tool->_conditions()}) {
       push(@{${$conditions}}, $condition);
@@ -213,8 +213,8 @@ sub _get_all_conditions {
 sub _get_all_actions {
   my $class = shift;
   my $actions = shift;
-  my @commands = Memento::Tool->commands();
-  foreach my $tool (@commands) {
+  my $commands = Memento::Tool->commands();
+  foreach my $tool (keys %{$commands}) {
     $tool = Memento::Tool->instantiate($tool);
     foreach my $action (@{$tool->_actions()}) {
       push(@{${$actions}}, $action);

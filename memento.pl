@@ -97,7 +97,7 @@ memento
 
 =head1 VERSION
 
-version 0.7.4
+version 0.8
 
 =head1 SYNOPSIS
 
@@ -114,6 +114,7 @@ By default it provides the following commands:
   - features
   - git
   - history
+  - jira
   - paymo
   - redmine
   - schema
@@ -316,6 +317,86 @@ Lists all commands logged into the command history.
 =item I<unbookmark>
 
 Deletes a bookmarked command.
+
+=back
+
+
+=head1 JIRA
+
+You can easily integrate Memento with multiple instances of Jira, with the
+I<memento jira config add> command, and switch from one to another simply by
+using the I<memento jira config switch [jira_api_id]> command.
+
+I<memento jira> provides the following operations:
+
+=over 2
+
+=item I<config>
+
+Manages Jira API configurations providing the following options:
+
+=over 2
+
+=item I<add>
+
+Adds a new configurations set for a Jira instance.
+
+=item I<delete [jira_api_id]>
+
+Deletes a configurations set for a Jira instance.
+
+=item I<list>
+
+Lists all Jira configurations.
+
+=item I<switch [jira_api_id]>
+
+Sets a Jira instance as the default one. All queries will be executed to the
+default one. Otherwise, you can change on the fly the active Jira instance by
+using the B<--api-id> option, for each memento jira command.
+
+=back
+
+=item I<issue [jira_issue_id_or_key [--open]]>
+
+Shows the details of an issue. If the B<--open> boolean option has been provided,
+the issue will not be rendered, but opened into your default web browser.
+
+=item I<projects>
+
+Renders a table containing info about all available Jira projects.
+
+=item I<search>
+
+Searches for issues using the following options:
+
+=over 2
+
+=item --resolution
+
+Filter by resolution (Unresolved, Done, ...)
+
+=item --assignee
+
+Filter by user key (usually name.surname or the email address chunk before the @)
+
+=item --project
+
+Filter by project KEY
+
+=item --status
+
+Filter by issue status (In progress, Closed, ...)
+
+=item --type
+
+Filter by issue type (Task, Bug, ...)
+
+=back
+
+=item I<user>
+
+Renders a table containing info about current user referring to the active api.
 
 =back
 

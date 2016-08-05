@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.7.4
+    version 0.8
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -17,6 +17,7 @@ DESCRIPTION
       - features
       - git
       - history
+      - jira
       - paymo
       - redmine
       - schema
@@ -181,6 +182,62 @@ HISTORY
 
     *unbookmark*
       Deletes a bookmarked command.
+
+JIRA
+    You can easily integrate Memento with multiple instances of Jira, with
+    the *memento jira config add* command, and switch from one to another
+    simply by using the *memento jira config switch [jira_api_id]* command.
+
+    *memento jira* provides the following operations:
+
+    *config*
+      Manages Jira API configurations providing the following options:
+
+      *add*
+        Adds a new configurations set for a Jira instance.
+
+      *delete [jira_api_id]*
+        Deletes a configurations set for a Jira instance.
+
+      *list*
+        Lists all Jira configurations.
+
+      *switch [jira_api_id]*
+        Sets a Jira instance as the default one. All queries will be
+        executed to the default one. Otherwise, you can change on the fly
+        the active Jira instance by using the --api-id option, for each
+        memento jira command.
+
+    *issue [jira_issue_id_or_key [--open]]*
+      Shows the details of an issue. If the --open boolean option has been
+      provided, the issue will not be rendered, but opened into your default
+      web browser.
+
+    *projects*
+      Renders a table containing info about all available Jira projects.
+
+    *search*
+      Searches for issues using the following options:
+
+      --resolution
+        Filter by resolution (Unresolved, Done, ...)
+
+      --assignee
+        Filter by user key (usually name.surname or the email address chunk
+        before the @)
+
+      --project
+        Filter by project KEY
+
+      --status
+        Filter by issue status (In progress, Closed, ...)
+
+      --type
+        Filter by issue type (Task, Bug, ...)
+
+    *user*
+      Renders a table containing info about current user referring to the
+      active api.
 
 PAYMO
     You can easily integrate Memento with multiple instances of Paymo, with

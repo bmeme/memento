@@ -22,6 +22,8 @@ my @vendors = (
   'Git::Hooks',
   'Hash::Merge',
   'HTTP::Response',
+  'JIRA::REST',
+  'MIME::Base64',
   'Switch',
   'FLORA/Term-Complete-1.402.tar.gz',
   'Term::ANSIColor',

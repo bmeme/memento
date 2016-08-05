@@ -17,6 +17,9 @@ use HTTP::Response;
 use URI;
 use WWW::Curl::Easy;
 
+our($progress_index) = 1;
+our($progress_step) = 1;
+
 sub write {
   if (($#_ + 1) != 4) {
     die("Missing arguments for write()");
@@ -157,6 +160,7 @@ sub array2table {
   $options = merge($default, $options);
 
   my @header = ();
+  my @header_keys = ();
   my @rows = ();
   my $header_row = 1;
 
@@ -167,6 +171,7 @@ sub array2table {
           my $ref = ref($item->{$key});
           if (($ref ne 'ARRAY') || ($ref ne 'HASH') || $options->{allow_nested}) {
             push(@header, uc $key);
+            push(@header_keys, $key);
           }
         }
       }
@@ -174,25 +179,25 @@ sub array2table {
     $header_row = 0;
 
     my @row = ();
-    for my $key (@header) {
-      my $ref = ref($item->{lc $key});
+    for my $key (@header_keys) {
+      my $ref = ref($item->{$key});
       my $value;
 
       if ((($ref eq 'HASH') || ($ref eq 'ARRAY')) && $options->{allow_nested}) {
         if ($ref eq 'HASH') {
           if ($options->{full_nested}) {
-            $value = array2table(0, [$item->{lc $key}], $options);
+            $value = array2table(0, [$item->{$key}], $options);
           }
           else {
-            $value = $item->{lc $key}->{$options->{extract_nested_key}};
+            $value = $item->{$key}->{$options->{extract_nested_key}};
           }
         }
         else {
-          $value = array2table(0, $item->{lc $key}, $options);
+          $value = array2table(0, $item->{$key}, $options);
         }
       }
       else {
-        $value = $item->{lc $key};
+        $value = $item->{$key};
       }
 
       push(@row, $value);
@@ -291,6 +296,8 @@ sub http_request {
   $curl->setopt(CURLOPT_HTTPHEADER, @header);
   $curl->setopt(CURLOPT_SSL_VERIFYPEER, 0);
   $curl->setopt(CURLOPT_TIMEOUT, 10);
+  $curl->setopt(CURLOPT_NOPROGRESS, 0);
+  $curl->setopt(CURLOPT_PROGRESSFUNCTION, \&progress_callback);
 
   foreach my $key (keys %$options) {
     $curl->setopt($key, $options->{$key});
@@ -304,19 +311,55 @@ sub http_request {
   if ($retcode == 0) {
     $response = HTTP::Response->parse($response);
     $content = $response->decoded_content;
+    \progress_finish();
   }
   else {
+    \progress_error();
     die sprintf('HTTP request error %d (%s): %s', $retcode, $curl->strerror($retcode), $curl->errbuf);
   }
 
   return $content;
 }
 
+sub progress_callback {
+  my $progress = colored(['bright_yellow on_bright_yellow'], " " x $progress_index);
+  my $steps = {
+    1 => "|  ",
+    2 => "|| ",
+    3 => "|||",
+    4 => " ||",
+    5 => "  |",
+  };
+  my $step = $steps->{$progress_step};
+  $progress_index++;
+  $progress_step++;
+  if ($progress_step > 5) {
+    $progress_step = 1;
+  }
+  print "\r[HTTP $step] $progress";
+  return 0;
+}
+
+sub progress_finish {
+  my $progress = colored(['bright_green on_bright_green'], " " x $progress_index);
+  $progress_index = 1;
+  $progress_step = 1;
+  print "\r[HTTP √] $progress\n";
+}
+
+sub progress_error {
+  my $progress = colored(['bright_red on_bright_red'], " " x $progress_index);
+  $progress_index = 1;
+  $progress_step = 1;
+  print "\r[HTTP X] $progress\n";
+}
+
 sub machine_name {
   my $name = shift;
 
   $name = lc unidecode($name);
-  $name =~ s/[^\w]+/_/g; #converts anything different from the pattern.
+  $name =~ s/(\w)\-([a-z])/$1_$2/g; #converts dashes between a char and a number.
+  $name =~ s/[^\w\-]+/_/g; #converts anything different from the pattern.
   $name =~ s/^_\w{1,2}|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
   $name =~ s/_{2,}/_/g;  #removes multiple underscores.
   $name =~ s/^_|_$//g;   #removes trailing and leading "_".

@@ -9,7 +9,6 @@ use Class::MOP;
 use base qw(Class::Observable);
 use JSON::PP;
 use Text::Trim;
-use Data::Dumper;
 
 our ($root);
 $root = Memento::Tool->root();

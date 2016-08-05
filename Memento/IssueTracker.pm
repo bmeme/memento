@@ -26,7 +26,8 @@ sub check_interface__IssueTracker {
     '_get_issue',
     '_render_issue',
     '_call_api',
-    '_name'
+    '_name',
+    '_branch_pattern'
   );
   foreach my $method (@methods) {
     if (!$self->can($method)) {
@@ -42,10 +43,10 @@ sub check_interface__IssueTracker {
 }
 
 sub _get_all {
-  my @commands = Memento::Tool->commands();
+  my $commands = Memento::Tool->commands();
   my $issue_trackers = [];
 
-  foreach my $command (@commands) {
+  foreach my $command (keys %{$commands}) {
     my $tool = Memento::Tool->instantiate($command);
     my @classes = Class::ISA::super_path(ref $tool);
     if (Daemon::in_array([@classes], 'Memento::IssueTracker')) {
@@ -62,6 +63,13 @@ sub _is_default {
   my $git_config = $git->_get_config();
 
   return ($git_config->{issue_tracker} eq $class->_name());
+}
+
+sub _fix_branch_name {
+  my $class = shift;
+  my $branch = shift;
+  my $issue = shift;
+  return $branch;
 }
 
 1;

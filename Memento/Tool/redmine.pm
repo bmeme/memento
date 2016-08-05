@@ -225,7 +225,6 @@ sub _on_schema_check {
 
   print "\n";
   Daemon::printLabel("[Memento] » Redmine");
-  say "This is just a reminder from your issue tracker. Don't ever forget to work on your open issues.";
   say Daemon::array2table("Your open issues", $data->{'issues'}, {exclude => ['description', 'created_on', 'custom_fields', 'updated_on']});
 }
 
@@ -250,6 +249,9 @@ sub _conditions {
 sub _check_default_api {
   my $class = shift;
   my $params = shift;
+  if (!$class->_is_default()) {
+    return 0;
+  }
   my $config = $class->_get_config();
   return ($config->{default} eq $params->{redmine_api_id});
 }
@@ -525,6 +527,10 @@ sub _render_issue {
 
 sub _name {
   return 'redmine';
+}
+
+sub _branch_pattern {
+  return ':id:-:subject:';
 }
 
 sub _get_api_ids {
