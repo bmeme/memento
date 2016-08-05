@@ -505,7 +505,7 @@ sub _name {
 }
 
 sub _branch_pattern {
-  return ':key:-:summary:';
+  return ':key:-:fields-summary:';
 }
 
 sub _get_api_ids {
