@@ -13,13 +13,15 @@ sub commands {
   my $commands = {};
 
   foreach my $commands_dir (@commands_dir) {
-    opendir(DIR, "$root/$commands_dir") || die "Can't open directory $commands_dir: $!";
-    @list = grep /\.pm$/, readdir(DIR);
-    closedir DIR;
+    if (-d "$root/$commands_dir") {
+      opendir(DIR, "$root/$commands_dir") || die "Can't open directory $commands_dir: $!";
+      @list = grep /\.pm$/, readdir(DIR);
+      closedir DIR;
 
-    for my $command (@list) {
-      $command =~ s/\.pm$//;
-      $commands->{$command} = $commands_dir;
+      for my $command (@list) {
+        $command =~ s/\.pm$//;
+        $commands->{$command} = $commands_dir;
+      }
     }
   }
 

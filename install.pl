@@ -23,6 +23,8 @@ my @vendors = (
   'Hash::Merge',
   'HTTP::Response',
   'JIRA::REST',
+  'Net::SSLeay',
+  'LWP::Protocol::https',
   'MIME::Base64',
   'Switch',
   'FLORA/Term-Complete-1.402.tar.gz',
