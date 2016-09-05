@@ -533,6 +533,12 @@ sub _branch_pattern {
   return ':id:-:subject:';
 }
 
+sub _time_tracker_entry {
+  my $class = shift;
+  my $issue = shift;
+  return  "#" . $issue->{'id'} . " - " . $issue->{'subject'};
+}
+
 sub _get_api_ids {
   my $class = shift;
   my $config = $class->_get_config();

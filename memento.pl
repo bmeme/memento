@@ -97,7 +97,7 @@ memento
 
 =head1 VERSION
 
-version 0.8.1
+version 0.8.2
 
 =head1 SYNOPSIS
 
@@ -442,9 +442,18 @@ using the B<--api-id> option, for each memento paymo command.
 
 Renders a table containing info about all available Paymo clients.
 
+=item I<info>
+
+Renders a table containing info about Project Name and Task list bounded to the
+current repository.
+
 =item I<projects>
 
 Renders a table containing info about all available Paymo projects.
+
+=item I<setProject>
+
+Allows you to change Project Name and Task list for the current repository.
 
 =item I<users>
 

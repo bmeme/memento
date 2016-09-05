@@ -27,7 +27,8 @@ sub check_interface__IssueTracker {
     '_render_issue',
     '_call_api',
     '_name',
-    '_branch_pattern'
+    '_branch_pattern',
+    '_time_tracker_entry'
   );
   foreach my $method (@methods) {
     if (!$self->can($method)) {

@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.8
+    version 0.8.2
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -268,8 +268,16 @@ PAYMO
     *clients*
       Renders a table containing info about all available Paymo clients.
 
+    *info*
+      Renders a table containing info about Project Name and Task list
+      bounded to the current repository.
+
     *projects*
       Renders a table containing info about all available Paymo projects.
+
+    *setProject*
+      Allows you to change Project Name and Task list for the current
+      repository.
 
     *users*
       Renders a table containing info about all available Paymo users.

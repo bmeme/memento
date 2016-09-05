@@ -16,6 +16,7 @@ use Text::Table;
 use POSIX qw(ceil floor strftime);
 use DateTime;
 use DateTime::Format::Strptime;
+use Data::Dumper;
 
 our (%pager);
 
@@ -139,6 +140,68 @@ sub user {
   say Daemon::array2table("My Paymo Account", $user, {exclude => $class->_get_user_excluded_fields()});
 }
 
+sub info {
+  my $class = shift;
+
+  if (!$class->_is_default()) {
+    say "Paymo has not been configured to run as time tracker for this project.";
+    return;
+  }
+
+  my $storage = $class->_get_storage();
+  my $git = Memento::Tool->instantiate('git');
+  my $git_config = $git->_get_config();
+  my $git_project = $git_config->{'project'};
+  my %projects = $class->_get_projects();
+  my $project_id = $storage->{projects}->{$git_project}->{project_id};
+  my $task_list_id = $storage->{projects}->{$git_project}->{task_list_id};
+
+  for my $project (keys %projects) {
+    if ($projects{$project} == $project_id) {
+      $storage->{projects}->{$git_project}->{project_name} = $project;
+    }
+  }
+
+  my %task_list = $class->_get_task_list($project_id);
+  for my $task (keys %task_list) {
+    if ($task_list{$task} == $task_list_id) {
+      $storage->{projects}->{$git_project}->{task_name} = $task;
+    }
+  }
+
+  say Daemon::array2table("Paymo Project info", [$storage->{projects}->{$git_project}], {exclude => ['start']});
+}
+
+sub setProject {
+  my $class = shift;
+
+  if (!$class->_is_default()) {
+    say "Paymo has not been configured to run as time tracker for this project.";
+    return;
+  }
+
+  my $storage = $class->_get_storage();
+  my $git = Memento::Tool->instantiate('git');
+  my $git_config = $git->_get_config();
+  my $git_project = $git_config->{'project'};
+
+  say "";
+  my %projects = $class->_get_projects();
+  my $project = Daemon::prompt("Please select a Paymo project", undef, [keys %projects]);
+  my $project_id = $projects{$project};
+  $storage->{projects}->{$git_project}->{project_id} = $project_id;
+
+  say "";
+  my %task_list = $class->_get_task_list($project_id);
+  my $task = Daemon::prompt("Choose a task list", undef, [keys %task_list]);
+  my $task_list_id = $task_list{$task};
+  $storage->{projects}->{$git_project}->{task_list_id} = $task_list_id;
+
+  say "Paymo project configurations saved.";
+
+  $class->_save_storage($storage);
+}
+
 # OVERRIDDEN METHODS ###########################################################
 
 sub _pre {
@@ -176,17 +239,7 @@ sub _on_git_flow_start {
   my $git_project = $git_config->{project};
 
   if (!$storage->{projects}->{$git_project}) {
-    say "";
-    my %projects = $class->_get_projects();
-    my $project = Daemon::prompt("Bind this project to a Paymo project", undef, [keys %projects]);
-    my $project_id = $projects{$project};
-    $storage->{projects}->{$git_project}->{project_id} = $project_id;
-
-    say "";
-    my %task_list = $class->_get_task_list($project_id);
-    my $task = Daemon::prompt("Choose a task list", undef, [keys %task_list]);
-    my $task_list_id = $task_list{$task};
-    $storage->{projects}->{$git_project}->{task_list_id} = $task_list_id;
+    $class->set_project();
   }
 
   $storage->{projects}->{$git_project}->{start} = $class->_get_formatted_time();
@@ -233,7 +286,8 @@ sub _on_git_flow_finish {
     my $name = "";
 
     if ($issue) {
-      $name = "#" . $issue->{'id'} . " - " . $issue->{'subject'};
+      my $issue_tracker = Memento::Tool->instantiate($git_config->{'issue_tracker'});
+      $name = $issue_tracker->_time_tracker_entry($issue);
     }
     else {
       $name = "Git branch: " . $git->_get_current_branch();
