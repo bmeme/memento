@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.8.3
+    version 0.8.4
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]

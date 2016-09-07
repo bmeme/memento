@@ -249,6 +249,8 @@ sub _on_git_flow_start {
 
   if (!$storage->{projects}->{$git_project}) {
     $class->setProject();
+    # Reload updated storage.
+    $storage = $class->_get_storage();
   }
 
   $storage->{projects}->{$git_project}->{start} = $class->_get_formatted_time();
