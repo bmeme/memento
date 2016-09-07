@@ -145,6 +145,7 @@ sub info {
 
   if (!$class->_is_default()) {
     say "Paymo has not been configured to run as time tracker for this project.";
+    say "You can run 'memento git config init' in order to configure it.";
     return;
   }
 
@@ -153,23 +154,31 @@ sub info {
   my $git_config = $git->_get_config();
   my $git_project = $git_config->{'project'};
   my %projects = $class->_get_projects();
-  my $project_id = $storage->{projects}->{$git_project}->{project_id};
-  my $task_list_id = $storage->{projects}->{$git_project}->{task_list_id};
+  my $paymo_project = $storage->{projects}->{$git_project};
+
+  if (!$paymo_project) {
+    say "Missing Paymo configurations.";
+    say "You can run 'memento git start' in order to configure project name and task list.";
+    return;
+  }
+
+  my $project_id = $paymo_project->{project_id};
+  my $task_list_id = $paymo_project->{task_list_id};
 
   for my $project (keys %projects) {
     if ($projects{$project} == $project_id) {
-      $storage->{projects}->{$git_project}->{project_name} = $project;
+      $paymo_project->{project_name} = $project;
     }
   }
 
   my %task_list = $class->_get_task_list($project_id);
   for my $task (keys %task_list) {
     if ($task_list{$task} == $task_list_id) {
-      $storage->{projects}->{$git_project}->{task_name} = $task;
+      $paymo_project->{task_name} = $task;
     }
   }
 
-  say Daemon::array2table("Paymo Project info", [$storage->{projects}->{$git_project}], {exclude => ['start']});
+  say Daemon::array2table("Paymo Project info", [$paymo_project], {exclude => ['start']});
 }
 
 sub setProject {
@@ -239,7 +248,7 @@ sub _on_git_flow_start {
   my $git_project = $git_config->{project};
 
   if (!$storage->{projects}->{$git_project}) {
-    $class->set_project();
+    $class->setProject();
   }
 
   $storage->{projects}->{$git_project}->{start} = $class->_get_formatted_time();
