@@ -128,11 +128,11 @@ sub _on_schema_check {
   my $sha = $git->_get_commit_sha();
   my $branch = $git->_get_current_branch();
   my $uri = "https://api.github.com/repos/bmeme/memento/branches/$branch";
-  my $response = Daemon::http_request('GET', $uri, {}, [
-    "Content-Type: application/json; charset=UTF-8",
-    "Accept: application/vnd.github.v3+json",
-    "User-Agent: memento"
-  ]);
+  my $response = Daemon::http_request('GET', $uri, {}, {
+    "Content-Type" => "application/json; charset=UTF-8",
+    "Accept" => "application/vnd.github.v3+json",
+    "User-Agent" => "memento"
+  });
 
   my $content = decode_json $response;
   if ((defined $content->{commit}) && ($content->{commit}->{sha} ne $sha)) {

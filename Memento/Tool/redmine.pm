@@ -223,7 +223,6 @@ sub _on_schema_check {
   my $query = {assigned_to_id => "me", set_filter => 1, sort => "priority:desc,updated_on:desc"};
   my $data = $class->_call_api("issues", $query);
 
-  print "\n";
   Daemon::printLabel("[Memento] » Redmine");
   say Daemon::array2table("Your open issues", $data->{'issues'}, {exclude => ['description', 'created_on', 'custom_fields', 'updated_on']});
 }
@@ -438,10 +437,10 @@ sub _call_api {
     $query->{sort} = $sort;
   }
 
-  my $response = Daemon::http_request($method, $uri, $query, [
-    "Content-Type: application/json; charset=UTF-8",
-    "X-Redmine-API-Key: $key"
-  ]);
+  my $response = Daemon::http_request($method, $uri, $query, {
+    "Content-Type" => "application/json; charset=UTF-8",
+    "X-Redmine-API-Key" => "$key"
+  });
   my $content = ($method eq 'GET') ? decode_json $response : $response;
 
   if (($method eq 'GET') && $content->{'total_count'} && ($content->{'total_count'} > $content->{'limit'})) {

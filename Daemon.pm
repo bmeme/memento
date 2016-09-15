@@ -15,7 +15,7 @@ use Text::Unidecode;
 use Hash::Merge qw( merge );
 use HTTP::Response;
 use URI;
-use WWW::Curl::Easy;
+use LWP::UserAgent;
 
 our($progress_index) = 1;
 our($progress_step) = 1;
@@ -262,6 +262,61 @@ sub http_request {
   my $method = shift || 'GET';
   my $uri = shift;
   my $data = shift || {};
+  my $headers = shift || {};
+  my $credentials = shift;
+  my $client = LWP::UserAgent->new;
+  my $content = undef;
+
+  $client->timeout(10);
+  $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
+  $client->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00);
+
+  $method = uc $method;
+  if (!in_array(['GET', 'POST', 'PUT', 'DELETE'], $method)) {
+    die "Invalid HTTP Method supplied: $method\n";
+  }
+
+  $uri = URI->new($uri);
+  if ($method eq 'GET') {
+    my %querystring = %{$data};
+    $uri->query_form(%querystring);
+    $data = undef;
+  }
+
+  my $req = HTTP::Request->new($method => $uri);
+
+  # Set request credentials.
+  if ($credentials) {
+    $req->authorization_basic($credentials->{user}, $credentials->{pass});
+  }
+
+  # Set request headers.
+  foreach my $key (keys %$headers) {
+    $req->header($key => $headers->{$key});
+  }
+
+  if ($data) {
+    $req->content(encode_json $data);
+  }
+
+  my $resp = $client->request($req);
+
+  if ($resp->is_success) {
+    $content = $resp->decoded_content;
+  }
+  else {
+    say "HTTP $method error code: ", $resp->code;
+    say "HTTP $method error message: ", $resp->message;
+    die("\n");
+  }
+
+  return $content;
+}
+
+sub http_request_old {
+  my $method = shift || 'GET';
+  my $uri = shift;
+  my $data = shift || {};
   my @header = shift;
   my $options = shift || {};
   my $curl = WWW::Curl::Easy->new;
@@ -319,39 +374,6 @@ sub http_request {
   }
 
   return $content;
-}
-
-sub progress_callback {
-  my $progress = colored(['bright_yellow on_bright_yellow'], " " x $progress_index);
-  my $steps = {
-    1 => "|  ",
-    2 => "|| ",
-    3 => "|||",
-    4 => " ||",
-    5 => "  |",
-  };
-  my $step = $steps->{$progress_step};
-  $progress_index++;
-  $progress_step++;
-  if ($progress_step > 5) {
-    $progress_step = 1;
-  }
-  print "\r[HTTP $step] $progress";
-  return 0;
-}
-
-sub progress_finish {
-  my $progress = colored(['bright_green on_bright_green'], " " x $progress_index);
-  $progress_index = 1;
-  $progress_step = 1;
-  print "\r[HTTP √] $progress\n";
-}
-
-sub progress_error {
-  my $progress = colored(['bright_red on_bright_red'], " " x $progress_index);
-  $progress_index = 1;
-  $progress_step = 1;
-  print "\r[HTTP X] $progress\n";
 }
 
 sub machine_name {

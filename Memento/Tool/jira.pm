@@ -283,6 +283,7 @@ sub _on_schema_check {
     push(@{$issues}, $class->_build_search_result($issue));
   }
 
+  Daemon::printLabel("[Memento] » Jira");
   say Daemon::array2table("Your open issues", $issues);
 }
 

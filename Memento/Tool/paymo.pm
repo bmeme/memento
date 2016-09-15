@@ -16,7 +16,6 @@ use Text::Table;
 use POSIX qw(ceil floor strftime);
 use DateTime;
 use DateTime::Format::Strptime;
-use Data::Dumper;
 
 our (%pager);
 
@@ -428,11 +427,17 @@ sub _call_api {
     ) or die 'Incorrect usage';
   }
 
-  my $CURLOPT_USERPWD = 10005;
-  my $response = Daemon::http_request($method, $uri, $query, ["Accept: application/json"], {$CURLOPT_USERPWD => $key});
-  my $content = decode_json $response;
+  my $headers = {
+    "Accept" => "application/json",
+    "Content-Type" => "application/json"
+  };
+  my $credentials = {
+    user => $key,
+    pass => 'X'
+  };
+  my $response = Daemon::http_request($method, $uri, $query, $headers, $credentials);
 
-  return $content;
+  return decode_json $response;
 };
 
 sub _name {

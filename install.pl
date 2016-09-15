@@ -24,6 +24,7 @@ my @vendors = (
   'HTTP::Response',
   'JIRA::REST',
   'Net::SSLeay',
+  'LWP::UserAgent',
   'LWP::Protocol::https',
   'MIME::Base64',
   'Switch',
@@ -33,8 +34,7 @@ my @vendors = (
   'Text::ASCIITable',
   'Text::Table',
   'Text::Trim',
-  'Text::Unidecode',
-  'WWW::Curl'
+  'Text::Unidecode'
 );
 
 foreach my $vendor (@vendors) {
@@ -74,7 +74,7 @@ print "\n>> Generating Memento man page: ";
 my $man_dir = $cpan_path;
 chomp($man_dir);
 $man_dir =~ s/\/bin\/cpan$//;
-my $man = `pod2man -s 1 -c Memento memento.pl > $man_dir/share/man/man7/memento.7`;
+my $man = `pod2man -s 1 -c Memento memento.pl > $man_dir/share/man/man1/memento.1`;
 say "ok!";
 
 chdir;
