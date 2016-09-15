@@ -313,69 +313,6 @@ sub http_request {
   return $content;
 }
 
-sub http_request_old {
-  my $method = shift || 'GET';
-  my $uri = shift;
-  my $data = shift || {};
-  my @header = shift;
-  my $options = shift || {};
-  my $curl = WWW::Curl::Easy->new;
-
-  $method = uc $method;
-  if (!in_array(['GET', 'POST', 'PUT', 'DELETE'], $method)) {
-    die "Invalid HTTP Method supplied: $method\n";
-  }
-
-  $uri = URI->new($uri);
-  $curl->setopt(CURLOPT_CUSTOMREQUEST, $method);
-
-  switch ($method) {
-    case 'GET' {
-      my %querystring = %{$data};
-      $uri->query_form(%querystring);
-    }
-    case 'PUT' {
-      $curl->setopt(CURLOPT_POSTFIELDS, encode_json $data);
-    }
-    case 'POST' {
-      my %querystring = %{$data};
-      $uri->query_form(%querystring);
-    }
-    case 'DELETE' {
-
-    }
-  }
-
-  $curl->setopt(CURLOPT_HEADER,1);
-  $curl->setopt(CURLOPT_URL, $uri);
-  $curl->setopt(CURLOPT_HTTPHEADER, @header);
-  $curl->setopt(CURLOPT_SSL_VERIFYPEER, 0);
-  $curl->setopt(CURLOPT_TIMEOUT, 10);
-  $curl->setopt(CURLOPT_NOPROGRESS, 0);
-  $curl->setopt(CURLOPT_PROGRESSFUNCTION, \&progress_callback);
-
-  foreach my $key (keys %$options) {
-    $curl->setopt($key, $options->{$key});
-  }
-
-  my $response;
-  $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA, \$response);
-
-  my $retcode = $curl->perform;
-  my $content;
-  if ($retcode == 0) {
-    $response = HTTP::Response->parse($response);
-    $content = $response->decoded_content;
-    \progress_finish();
-  }
-  else {
-    \progress_error();
-    die sprintf('HTTP request error %d (%s): %s', $retcode, $curl->strerror($retcode), $curl->errbuf);
-  }
-
-  return $content;
-}
-
 sub machine_name {
   my $name = shift;
 
