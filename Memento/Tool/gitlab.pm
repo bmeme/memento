@@ -386,12 +386,10 @@ sub _get_issue_transitions {
   my $issue = shift;
   my %transitions;
 
-  my @States = qw(opened closed reopened);
+  my @States = qw(close reopen);
 
   foreach my $state (@States) {
-    if ($state ne $issue->{state}) {
-      $transitions{$state} = $state;
-    }
+    $transitions{$state} = $state;
   }
 
   return %transitions;
