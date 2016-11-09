@@ -194,7 +194,7 @@ sub _on_git_flow_start {
 
   if ($params->{issue}) {
     $storage->{issues}->{$params->{branch}} = {
-      issue_id => $params->{issue}->{id},
+      issue_id => $params->{issue}->{iid},
       gitlab_api_id => $config->{default}
     };
     $class->_save_storage($storage);

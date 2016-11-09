@@ -19,7 +19,7 @@ $hook =~ s/\-/_/;
 
 COMMIT_MSG {
   if (!$config->{hooks}->{$hook}) {
-    return 0;
+    return 1;
   }
   Daemon::printLabel("memento - $hook");
   my $git_hooks = shift;
@@ -50,7 +50,7 @@ COMMIT_MSG {
 
 PRE_COMMIT {
   if (!$config->{hooks}->{$hook}) {
-    return 0;
+    return 1;
   }
   Daemon::printLabel("memento - $hook");
   my $git_hooks = shift;
@@ -80,7 +80,7 @@ PRE_COMMIT {
 
 POST_COMMIT {
   if (!$config->{hooks}->{$hook}) {
-    return 0;
+    return 1;
   }
   Daemon::printLabel("memento - $hook");
   my $git_hooks = shift;
