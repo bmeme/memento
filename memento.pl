@@ -97,7 +97,7 @@ memento
 
 =head1 VERSION
 
-version 0.9.0
+version 0.9.1
 
 =head1 SYNOPSIS
 
@@ -113,6 +113,7 @@ By default it provides the following commands:
 
   - features
   - git
+  - gitlab
   - history
   - jira
   - paymo
@@ -133,7 +134,9 @@ or via progressive input:
   Enter the tool name to be used:
   - features
   - git
+  - gitlab
   - history
+  - jira
   - redmine
   - schema
   - workflow
@@ -276,6 +279,59 @@ this command.
 =item I<log>
 
 Show the git log tree in a pretty format.
+
+=back
+
+
+
+=head1 GITLAB
+
+You can easily integrate Memento with multiple instances of Gitlab, with the
+I<memento gitlab config add> command, and switch from one to another simply by
+using the I<memento gitlab config switch [gitlab_api_id]> command.
+
+I<memento gitlab> provides the following operations:
+
+=over 2
+
+=item I<config>
+
+Manages Gitlab API configurations providing the following options:
+
+=over 2
+
+=item I<add>
+
+Adds a new configurations set for a Gitlab instance.
+
+=item I<delete [gitlab_api_id]>
+
+Deletes a configurations set for a Gitlab instance.
+
+=item I<list>
+
+Lists all Gitlab configurations.
+
+=item I<switch [gitlab_api_id]>
+
+Sets a Gitlab instance as the default one. All queries will be executed to the
+default one. Otherwise, you can change on the fly the active Gitlab instance by
+using the B<--api-id> option, for each memento gitlab command.
+
+=back
+
+=item I<issue [gitlab_issue_iid [--open]]>
+
+Shows the details of an issue. If the B<--open> boolean option has been provided,
+the issue will not be rendered, but opened into your default web browser.
+
+=item I<projects>
+
+Renders a table containing info about all available Gitlab projects.
+
+=item I<user>
+
+Renders a table containing info about current user referring to the active api.
 
 =back
 

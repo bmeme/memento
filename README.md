@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.9.0
+    version 0.9.1
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -16,6 +16,7 @@ DESCRIPTION
 
       - features
       - git
+      - gitlab
       - history
       - jira
       - paymo
@@ -36,7 +37,9 @@ DESCRIPTION
       Enter the tool name to be used:
       - features
       - git
+      - gitlab
       - history
+      - jira
       - redmine
       - schema
       - workflow
@@ -155,6 +158,44 @@ GIT
 
     *log*
       Show the git log tree in a pretty format.
+
+GITLAB
+    You can easily integrate Memento with multiple instances of Gitlab, with
+    the *memento gitlab config add* command, and switch from one to another
+    simply by using the *memento gitlab config switch [gitlab_api_id]*
+    command.
+
+    *memento gitlab* provides the following operations:
+
+    *config*
+      Manages Gitlab API configurations providing the following options:
+
+      *add*
+        Adds a new configurations set for a Gitlab instance.
+
+      *delete [gitlab_api_id]*
+        Deletes a configurations set for a Gitlab instance.
+
+      *list*
+        Lists all Gitlab configurations.
+
+      *switch [gitlab_api_id]*
+        Sets a Gitlab instance as the default one. All queries will be
+        executed to the default one. Otherwise, you can change on the fly
+        the active Gitlab instance by using the --api-id option, for each
+        memento gitlab command.
+
+    *issue [gitlab_issue_iid [--open]]*
+      Shows the details of an issue. If the --open boolean option has been
+      provided, the issue will not be rendered, but opened into your default
+      web browser.
+
+    *projects*
+      Renders a table containing info about all available Gitlab projects.
+
+    *user*
+      Renders a table containing info about current user referring to the
+      active api.
 
 HISTORY
     Every command executed is logged into the memento history and can be

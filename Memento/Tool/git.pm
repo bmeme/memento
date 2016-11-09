@@ -374,6 +374,7 @@ sub _save_config {
   system("ln -s $git_hooks $git_hooks_dir/post-commit") if (!-f "$git_hooks_dir/post-commit");
 
   $class->SUPER::_save_config($config);
+  $class->_on('git_config_save', {config => $config});
 }
 
 sub _pre {
@@ -454,6 +455,12 @@ sub _events {
     {
       name => 'git_post_commit',
       arguments => []
+    },
+    {
+      name => 'git_config_save',
+      arguments => [
+        'config'
+      ]
     }
   ];
 }
