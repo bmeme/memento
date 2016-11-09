@@ -133,7 +133,7 @@ sub user {
   my $user = $class->_get_current_user();
   my $users = [
     {
-      id => 1,
+      id => $user->{id},
       username => $user->{username},
       email => $user->{email},
       name => $user->{name},
@@ -279,13 +279,11 @@ sub _change_issue_status {
     my $project_id = $class->_get_project_id(0);
     my $status = $issue->{state};
 
-    if (Daemon::prompt("Do you want to change the issue assignee?", 'yes', ['yes', 'no']) eq 'yes') {
-      my %assignees = $class->_get_assignable_users();
-      my $assignee = Daemon::prompt("Choose an assignee", undef, [sort keys %assignees]);
+    if (Daemon::prompt("Do you want to assign the issue to yourself?", 'yes', ['yes', 'no']) eq 'yes') {
       $data = {
-        assignee_id => $assignees{$assignee}
+        assignee_id => $user->{id}
       };
-      $class->_call_api("projects/$project_id/issue/" . $issue->{id}, $data, 'PUT');
+      $class->_call_api("projects/$project_id/issues/" . $issue->{id}, $data, 'PUT');
     }
 
     if (Daemon::prompt("Do you want to change the issue status [$status]?", 'yes', ['yes', 'no']) eq 'yes') {
@@ -294,7 +292,7 @@ sub _change_issue_status {
       $data = {
         state_event => $transition
       };
-      $class->_call_api("projects/$project_id/issue/" . $issue->{id}, $data, 'PUT');
+      $class->_call_api("projects/$project_id/issues/" . $issue->{id}, $data, 'PUT');
     }
 
     if (Daemon::prompt("Do you want to add a comment to the issue?", 'no', ['yes', 'no']) eq 'yes') {
@@ -309,11 +307,11 @@ sub _change_issue_status {
         issue_id => $issue->{id},
         body => "@content"
       };
-      $class->_call_api("projects/$project_id/issue/" . $issue->{id} . "/notes", $data, 'POST');
+      $class->_call_api("projects/$project_id/issues/" . $issue->{id} . "/notes", $data, 'POST');
     }
 
     print "\n";
-    $class->_render_issue($class->_get_issue($issue->{id}));
+    $class->_render_issue($class->_get_issue($issue->{iid}));
   }
 }
 
