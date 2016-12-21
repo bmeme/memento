@@ -97,7 +97,7 @@ memento
 
 =head1 VERSION
 
-version 0.9.2
+version 0.9.3
 
 =head1 SYNOPSIS
 
@@ -111,6 +111,7 @@ The following single-character options are accepted:
 B<memento> is a modular step by step command line tool.
 By default it provides the following commands:
 
+  - bitbucket
   - features
   - git
   - gitlab
@@ -132,6 +133,7 @@ or via progressive input:
 
   $ memento
   Enter the tool name to be used:
+  - bitbucket
   - features
   - git
   - gitlab
@@ -177,6 +179,63 @@ C<< sudo apt-get install perl-doc >>
 C<< sudo apt-get install libwww-curl-perl >>
 
 C<< sudo ./install.pl >>
+
+=back
+
+
+
+=head1 BITBUCKET
+
+Due to its API limitations, Bitbucket issue tracker can only be used for branch
+naming generation. No change issue status or assignee neither comments creation
+operations can be done.
+
+You can easily integrate Memento with multiple instances of Bitbucket, with the
+I<memento bitbucket config add> command, and switch from one to another simply
+by using the I<memento bitbucket config switch [bitbucket_api_id]> command.
+
+I<memento bitbucket> provides the following operations:
+
+=over 2
+
+=item I<config>
+
+Manages Bitbucket API configurations providing the following options:
+
+=over 2
+
+=item I<add>
+
+Adds a new configurations set for a Bitbucket instance.
+
+=item I<delete [bitbucket_api_id]>
+
+Deletes a configurations set for a Bitbucket instance.
+
+=item I<list>
+
+Lists all Bitbucket configurations.
+
+=item I<switch [bitbucket_api_id]>
+
+Sets a Bitbucket instance as the default one. All queries will be executed to the
+default one. Otherwise, you can change on the fly the active Bitbucket instance by
+using the B<--api-id> option, for each memento bitbucket command.
+
+=back
+
+=item I<issue [bitbucket_issue_id [--open]]>
+
+Shows the details of an issue. If the B<--open> boolean option has been provided,
+the issue will not be rendered, but opened into your default web browser.
+
+=item I<projects>
+
+Renders a table containing info about all available Bitbucket projects.
+
+=item I<user>
+
+Renders a table containing info about current user referring to the active api.
 
 =back
 

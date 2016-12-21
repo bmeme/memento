@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.9.2
+    version 0.9.3
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -14,6 +14,7 @@ DESCRIPTION
     memento is a modular step by step command line tool. By default it
     provides the following commands:
 
+      - bitbucket
       - features
       - git
       - gitlab
@@ -35,6 +36,7 @@ DESCRIPTION
 
       $ memento
       Enter the tool name to be used:
+      - bitbucket
       - features
       - git
       - gitlab
@@ -79,6 +81,49 @@ INSTALLATION
       `sudo apt-get install libwww-curl-perl'
 
       `sudo ./install.pl'
+
+BITBUCKET
+    Due to its API limitations, Bitbucket issue tracker can only be used for
+    branch naming generation. No change issue status or assignee neither
+    comments creation operations can be done.
+
+    You can easily integrate Memento with multiple instances of Bitbucket,
+    with the *memento bitbucket config add* command, and switch from one to
+    another simply by using the *memento bitbucket config switch
+    [bitbucket_api_id]* command.
+
+    *memento bitbucket* provides the following operations:
+
+    *config*
+      Manages Bitbucket API configurations providing the following options:
+
+      *add*
+        Adds a new configurations set for a Bitbucket instance.
+
+      *delete [bitbucket_api_id]*
+        Deletes a configurations set for a Bitbucket instance.
+
+      *list*
+        Lists all Bitbucket configurations.
+
+      *switch [bitbucket_api_id]*
+        Sets a Bitbucket instance as the default one. All queries will be
+        executed to the default one. Otherwise, you can change on the fly
+        the active Bitbucket instance by using the --api-id option, for each
+        memento bitbucket command.
+
+    *issue [bitbucket_issue_id [--open]]*
+      Shows the details of an issue. If the --open boolean option has been
+      provided, the issue will not be rendered, but opened into your default
+      web browser.
+
+    *projects*
+      Renders a table containing info about all available Bitbucket
+      projects.
+
+    *user*
+      Renders a table containing info about current user referring to the
+      active api.
 
 FEATURES
     *memento features* allows you to export and import all your tools
