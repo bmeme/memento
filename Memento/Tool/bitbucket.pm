@@ -241,6 +241,10 @@ sub _on_git_flow_start {
 
 # PRIVATE METHODS ##############################################################
 
+sub _change_issue_status {
+  return 0;
+}
+
 sub _get_issue {
   my $class = shift;
   my $issue_id = shift or die "Missing issue id to load";
