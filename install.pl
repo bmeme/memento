@@ -2,15 +2,49 @@
 use strict; use warnings;
 use feature 'say';
 use Cwd;
+use Getopt::Long;
+use Pod::Usage;
 
 our $cwd = getcwd();
 my $cpan_path = `which cpan`;
+my $bin_dir = "/usr/local/bin";
 
 if (!$cpan_path) {
   say "Please install cpan command line tool in order to proceed with the installation.";
   say "http://www.cpan.org/modules/INSTALL.html\n";
   die "Installation aborted.\n";
 }
+
+GetOptions(
+  'bin-dir=s' => \$bin_dir,
+  q(help) => \my $help,
+) or die 'Incorrect usage';
+pod2usage(q(-verbose) => 1) if $help;
+
+say ">> Checking requirements:";
+if (!-d $bin_dir) {
+  say "'$bin_dir' directory not found, creation in progress...";
+
+  if (!mkdir($bin_dir)) {
+    say "Not enough permissions for creation of '$bin_dir' directory. Retrying with sudo...";
+    my $user = `whoami`;
+    my $group = `id -gn`;
+    chomp($user);
+    chomp($group);
+
+    `sudo mkdir -p $bin_dir`;
+    if (!-d $bin_dir) {
+      die("There was a problem while creating '$bin_dir' directory. Please create it and set writable permissions and then try again.\n");
+    }
+
+    `sudo chown -R $user:$group $bin_dir`;
+    `sudo chmod u+w $bin_dir`;
+    `sudo chmod g+w $bin_dir`;
+  }
+
+  say "'$bin_dir' directory successfully created.";
+}
+say "Requirements are ok! Proceeding with the installation.";
 
 say ">> Installing vendors:";
 my @vendors = (
@@ -85,9 +119,42 @@ if (!-d $storage) {
   mkdir($storage) or die "Cannot create .memento dir in your home directory: $!\n";
 }
 
-if (!-f "/usr/local/bin/memento") {
+if (!-f "$bin_dir/memento") {
   say "\n>> Creating memento symlink";
-  `ln -s $cwd/memento.pl /usr/local/bin/memento`;
+  `ln -s $cwd/memento.pl $bin_dir/memento`;
 }
 
 say "\nMemento installation finished.";
+
+1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+memento install
+
+=head1 VERSION
+
+version 0.9.4
+
+=head1 USAGE
+
+The installation script must be run in the following way:
+
+"perl install.pl" or "./install.pl":
+
+=over 2
+
+=item --bin-dir
+
+Can be used to define a custom bin directory. If not set "/usr/local/bin" will
+be used as the default one.
+
+=back
+
+=cut
