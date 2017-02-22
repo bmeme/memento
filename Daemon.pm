@@ -322,6 +322,9 @@ sub machine_name {
   $name =~ s/^_\w{1,2}|_\w{1,2}_|_\w{1,2}$/_/g; #removes short words (<= 2).
   $name =~ s/_{2,}/_/g;  #removes multiple underscores.
   $name =~ s/^_|_$//g;   #removes trailing and leading "_".
+  $name =~ s/_[\w\-]_/_/g;  #converts dirty segments to "_".
+  $name =~ s/_\-_/_/g; #converts "_-_" to "_".
+  $name =~ s/^_\w{1,2}|_\w{1,2}_|_\w{1,2}$/_/g; #recheck for short words (<= 2).
   return $name;
 }
 
