@@ -97,7 +97,7 @@ memento
 
 =head1 VERSION
 
-version 0.9.4
+version 0.9.5
 
 =head1 SYNOPSIS
 
@@ -316,7 +316,7 @@ Via the I<workflow> tool, is possible to create a rule for updating issue status
 and done ratio on git flow start, automatically assigning it to current user, and
 optionally add a comment.
 
-=item I<finish [--safe]>
+=item I<finish [--safe] [--silent]>
 
 Use this command to merge current branch into the configure B<destination> branch.
 Current branch will also be deleted if the B<delete> configuration has been set.
@@ -324,6 +324,9 @@ If you are not familiar with this command, use the B<--safe> option to avoid
 unwanted behaviors (you will be asked to confirm destination and deletion options).
 Via the I<workflow> tool, is possible to create a rule for updating issue status
 and done ratio on git flow finish and optionally add a comment.
+If you want to avoid execution of B<git flow finish> events, run this command with
+the B<--silent> option. Your code will be merged into the destination branch but
+no other action will be performed (eg: time traker or issue traker actions).
 
 =item I<pause>
 

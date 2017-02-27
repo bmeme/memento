@@ -220,8 +220,10 @@ sub finish {
   my $remote = $class->_get_remote();
 
   my $safe = 0;
+  my $silent = 0;
   GetOptions(
-    'safe!' => \$safe
+    'safe!' => \$safe,
+    'silent!' => \$silent
   ) or die 'Incorrect usage';
 
   if ($safe) {
@@ -248,7 +250,9 @@ sub finish {
     die "Current branch and destination branch are the same. Cannot proceed.\n";
   }
 
-  $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
+  if (!$silent) {
+    $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
+  }
 }
 
 
