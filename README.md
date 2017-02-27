@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.9.4.1
+    version 0.9.5
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -183,14 +183,18 @@ GIT
       ratio on git flow start, automatically assigning it to current user,
       and optionally add a comment.
 
-    *finish [--safe]*
+    *finish [--safe] [--silent]*
       Use this command to merge current branch into the configure
       destination branch. Current branch will also be deleted if the delete
       configuration has been set. If you are not familiar with this command,
       use the --safe option to avoid unwanted behaviors (you will be asked
       to confirm destination and deletion options). Via the *workflow* tool,
       is possible to create a rule for updating issue status and done ratio
-      on git flow finish and optionally add a comment.
+      on git flow finish and optionally add a comment. If you want to avoid
+      execution of git flow finish events, run this command with the
+      --silent option. Your code will be merged into the destination branch
+      but no other action will be performed (eg: time traker or issue traker
+      actions).
 
     *pause*
       If you have enabled a Time Tracker, use this command to pause the
