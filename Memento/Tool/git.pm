@@ -12,6 +12,7 @@ use File::Copy qw(copy);
 use Getopt::Long;
 use Switch;
 use Text::Trim;
+use Data::Dumper;
 
 our ($cwd);
 $cwd = getcwd();
@@ -41,8 +42,12 @@ sub config {
       say "";
       Daemon::printLabel("Branch configurations");
       my @branches = $class->_get_branches();
-      my $source = Daemon::prompt('Specify source branch for "memento git start"', $default->{branch}->{source}, [@branches]);
+      my @source_branches = @branches;
+      shift @source_branches;
+      my $source = Daemon::prompt('Specify source branch for "memento git start"', $default->{branch}->{source}, [@source_branches]);
       my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $default->{branch}->{destination}, [@branches]);
+      $destination = ($destination eq '<none>') ? 0 : $destination;
+
       my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'remote + local']);
       $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
 
@@ -236,21 +241,24 @@ sub finish {
     $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
   }
 
-  my $issue = $class->_get_issue();
-  if ($destination && ($destination ne $branch)) {
-    system("git push $remote $branch") if ($remote);
-    system("git checkout $destination");
-    system("git pull $remote $destination") if ($remote);
-    system("git merge $branch");
-    system("git push $remote $destination") if ($remote);
-    system("git branch -D $branch") if ($delete);
-    system("git push $remote :$branch") if ($remote && ($delete == 2));
-  }
-  else {
-    die "Current branch and destination branch are the same. Cannot proceed.\n";
+  system("git push $remote $branch") if ($remote);
+
+  if ($destination ne '0') {
+    if ($destination ne $branch) {
+      system("git checkout $destination");
+      system("git pull $remote $destination") if ($remote);
+      system("git merge $branch");
+      system("git push $remote $destination") if ($remote);
+      system("git branch -D $branch") if ($delete);
+      system("git push $remote :$branch") if ($remote && ($delete == 2));
+    }
+    else {
+      die "Current branch and destination branch are the same. Cannot proceed.\n";
+    }
   }
 
   if (!$silent) {
+    my $issue = $class->_get_issue();
     $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
   }
 }
@@ -618,7 +626,9 @@ sub _get_branches {
   my $class = shift;
   my $branch_list = trim `git branch`;
   $branch_list =~ s/\* //;
-  return split(' ', $branch_list);
+  my @branches = split(' ', $branch_list);
+  unshift @branches, '<none>';
+  return @branches;
 }
 
 sub _get_current_branch {
