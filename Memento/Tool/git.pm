@@ -143,10 +143,12 @@ sub start {
   my $branch;
   my @branches = $class->_get_branches();
   my $source = $config->{branch}->{source};
+  my $upstream = 0;
   chomp($source);
 
   GetOptions(
-    'source=s' => \$source
+    'source=s' => \$source,
+    'set-upstream!' => \$upstream
   ) or die 'Incorrect usage';
 
   if (!Daemon::in_array([@branches], $source)) {
@@ -190,11 +192,14 @@ sub start {
     system("git checkout $branch");
   }
   else {
+    # Update source branch.
+    system("git checkout $source");
+    system("git reset --hard origin/$source");
     # Create a new branch from the specified source.
     system("git checkout -b $branch $source");
 
     # Set upstream for the new branch if a remote origin exists.
-    if ($class->_get_origin_url() && !$class->_get_tracked_branch()) {
+    if ($upstream && $class->_get_origin_url() && !$class->_get_tracked_branch()) {
       `git push --set-upstream origin $branch`;
       say "Configured upstream for branch '$branch'";
     }

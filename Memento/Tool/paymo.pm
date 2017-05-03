@@ -16,6 +16,7 @@ use Text::Table;
 use POSIX qw(ceil floor strftime);
 use DateTime;
 use DateTime::Format::Strptime;
+use Data::Dumper;
 
 our (%pager);
 
@@ -195,13 +196,13 @@ sub setProject {
 
   say "";
   my %projects = $class->_get_projects();
-  my $project = Daemon::prompt("Please select a Paymo project", undef, [keys %projects]);
+  my $project = Daemon::prompt("Please select a Paymo project", undef, [sort keys %projects]);
   my $project_id = $projects{$project};
   $storage->{projects}->{$git_project}->{project_id} = $project_id;
 
   say "";
   my %task_list = $class->_get_task_list($project_id);
-  my $task = Daemon::prompt("Choose a task list", undef, [keys %task_list]);
+  my $task = Daemon::prompt("Choose a task list", undef, [sort keys %task_list]);
   my $task_list_id = $task_list{$task};
   $storage->{projects}->{$git_project}->{task_list_id} = $task_list_id;
 
@@ -246,7 +247,7 @@ sub _on_git_flow_start {
   my $git_config = $git->_get_config();
   my $git_project = $git_config->{project};
 
-  if (!$storage->{projects}->{$git_project}) {
+  if (!$class->_project_exists($git_project)) {
     $class->setProject();
     # Reload updated storage.
     $storage = $class->_get_storage();
@@ -281,43 +282,47 @@ sub _on_git_flow_finish {
   my $git_config = $git->_get_config();
   my $git_project = $git_config->{'project'};
 
-  if ($storage->{'projects'}->{$git_project}) {
-    my $issue = $params->{issue};
+  if (!$class->_project_exists($git_project)) {
+    $class->setProject();
+    # Reload updated storage.
+    $storage = $class->_get_storage();
+  }
 
-    my $project = $storage->{'projects'}->{$git_project};
+  my $issue = $params->{issue};
+  my $project = $storage->{'projects'}->{$git_project};
+  my $time_entry = {
+    task_id => 0,
+    start_time => $project->{'start'},
+    end_time => $class->_get_formatted_time(),
+    description => $git->_get_last_commit_message()
+  };
+  my $name = "";
 
-    my $time_entry = {
-      task_id => 0,
-      start_time => $project->{'start'},
-      end_time => $class->_get_formatted_time(),
-      description => $git->_get_last_commit_message()
-    };
+  if ($issue) {
+    my $issue_tracker = Memento::Tool->instantiate($git_config->{'issue_tracker'});
+    $name = $issue_tracker->_time_tracker_entry($issue);
+  }
+  else {
+    $name = "Git branch: " . $git->_get_current_branch();
+  }
 
-    my $name = "";
+  my $task_data = {
+    name => $name,
+    tasklist_id => $project->{'task_list_id'}
+  };
+  my $task = $class->_retrieve_task($task_data, $project);
+  $task->{'name'} = encode('utf8', $task->{'name'});
 
-    if ($issue) {
-      my $issue_tracker = Memento::Tool->instantiate($git_config->{'issue_tracker'});
-      $name = $issue_tracker->_time_tracker_entry($issue);
-    }
-    else {
-      $name = "Git branch: " . $git->_get_current_branch();
-    }
+  my $task_info = {
+    'name' => $task->{'name'},
+    'start_time' => $project->{'start'},
+    'project_id' => $task->{'project_id'}
+  };
+  say Daemon::array2table("Paymo Time Entry", [$task_info]);
 
-    my $task_data = {
-      name => $name,
-      tasklist_id => $project->{'task_list_id'}
-    };
-    my $task = $class->_retrieve_task($task_data, $project);
-    $task->{'name'} = encode('utf8', $task->{'name'});
-
-    my $task_info = $task;
-    $task_info->{'start_time'} = $project->{'start'};
-    say Daemon::array2table("Paymo Time Entry", [$task_info], {exclude => $class->_get_task_excluded_fields()});
-
-    if ($task && (Daemon::prompt('Do you want to save worked time on Paymo?', 'yes', ['yes', 'no']) eq 'yes')) {
-      $time_entry->{'task_id'} = $task->{'id'};
-      my $response = $class->_call_api("entries", $time_entry, 'POST');
-    }
+  if ($task && (Daemon::prompt('Do you want to save worked time on Paymo?', 'yes', ['yes', 'no']) eq 'yes')) {
+    $time_entry->{'task_id'} = $task->{'id'};
+    my $response = $class->_call_api("entries", $time_entry, 'POST');
   }
 }
 
@@ -364,6 +369,19 @@ sub _get_projects {
   }
 
   return %projects;
+}
+
+sub _project_exists() {
+  my $class = shift;
+  my $git_project = shift || 0;
+  my $storage = $class->_get_storage();
+  my %projects = $class->_get_projects();
+  my @project_ids = [values %projects];
+  my $project_id = 0;
+  if ($storage->{projects}->{$git_project}) {
+    $project_id = $storage->{projects}->{$git_project}->{project_id};
+  }
+  return ($project_id && Daemon::in_array(@project_ids, $project_id));
 }
 
 sub _get_task_list {
