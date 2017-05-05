@@ -228,6 +228,7 @@ sub finish {
   my $delete = $config->{branch}->{delete};
   my $branch = $class->_get_current_branch();
   my $remote = $class->_get_remote();
+  my $issue = $class->_get_issue();
 
   my $safe = 0;
   my $silent = 0;
@@ -251,7 +252,7 @@ sub finish {
   if ($destination ne '0') {
     if ($destination ne $branch) {
       system("git checkout $destination");
-      system("git pull $remote $destination") if ($remote);
+      system("git reset --hard origin/$destination") if ($remote);
       system("git merge $branch");
       system("git push $remote $destination") if ($remote);
       system("git branch -D $branch") if ($delete);
@@ -263,7 +264,6 @@ sub finish {
   }
 
   if (!$silent) {
-    my $issue = $class->_get_issue();
     $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
   }
 }
