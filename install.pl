@@ -125,6 +125,8 @@ if (!-f "$bin_dir/memento") {
 }
 
 say "\nMemento installation finished.";
+say "Please add the following line to your .bashrc or .zshrc file:\n";
+say "\tmemento schema check\n";
 
 1;
 
@@ -140,7 +142,7 @@ memento install
 
 =head1 VERSION
 
-version 0.9.4
+version 0.9.8.1
 
 =head1 USAGE
 
