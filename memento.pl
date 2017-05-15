@@ -97,7 +97,7 @@ memento
 
 =head1 VERSION
 
-version 0.9.8.1
+version 0.9.8.2
 
 =head1 SYNOPSIS
 
