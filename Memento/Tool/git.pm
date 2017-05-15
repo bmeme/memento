@@ -12,7 +12,6 @@ use File::Copy qw(copy);
 use Getopt::Long;
 use Switch;
 use Text::Trim;
-use Data::Dumper;
 
 our ($cwd);
 $cwd = getcwd();
@@ -227,7 +226,7 @@ sub finish {
   my $destination = $config->{branch}->{destination};
   my $delete = $config->{branch}->{delete};
   my $branch = $class->_get_current_branch();
-  my $remote = $class->_get_remote();
+  my $remote = $class->_get_origin_url() ? 'origin' : 0;
   my $issue = $class->_get_issue();
 
   my $safe = 0;
