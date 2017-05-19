@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 0.9.8.2
+    version 0.9.9.0
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -463,7 +463,7 @@ AUTHOR
     Adriano Cori <adriano.cori@bmeme.com>
 
 COPYRIGHT
-    Copyright (c) 2015 Adriano Cori. All rights reserved. This program is
+    Copyright (c) 2015 - 2017 Adriano Cori. All rights reserved. This program is
     free software; you can redistribute it and/or modify it under the terms
     of the GPL2 license.
 
@@ -474,7 +474,7 @@ AUTHOR
     Bonsaimeme S.r.l. <http://www.bmeme.com>
 
 COPYRIGHT AND LICENSE
-    This software is Copyright (c) 2105 by Adriano Cori and Bonsaimeme
+    This software is Copyright (c) 2105 - 2017 by Adriano Cori and Bonsaimeme
     S.r.l.
 
     This is free software, licensed under:

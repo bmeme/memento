@@ -10,6 +10,7 @@ use strict; use warnings;
 use Getopt::Long;
 use Switch;
 use Text::Trim;
+use Data::Dumper;
 
 sub bookmark {
   my $class = shift;
@@ -115,9 +116,10 @@ sub list {
 sub unbookmark {
   my $class = shift;
   my $name = shift;
+  my $bookmarks = $class->_get_bookmarks();
 
   if (!$name) {
-    $name = Daemon::prompt("Enter the name of the bookmark to delete");
+    $name = Daemon::prompt("Enter the name of the bookmark to delete", 0, $bookmarks);
   }
 
   my $config = $class->_get_config();
@@ -185,6 +187,67 @@ sub _get_last {
 
 sub _log_history {
   return 0;
+}
+
+# RULES ########################################################################
+
+sub _actions {
+  return [
+    {
+      tool => 'history',
+      name => 'history_exec_bookmark',
+      callback => '_exec_bookmark',
+      arguments => [],
+      params => [
+        {
+          name => 'bookmark',
+          label => 'History bookmark',
+          options => '_get_bookmarks'
+        },
+        {
+          name => 'arguments',
+          label => 'Bookmark additional arguments [enter <none> for no arguments]'
+        }
+      ]
+    }
+  ];
+}
+
+sub _exec_bookmark {
+  my $class = shift;
+  my $arguments = shift;
+  my $params = shift;
+  my $config = $class->_get_config();
+  my $exists = 0;
+
+  foreach my $bookmark (@{$config->{bookmarks}}) {
+    if ($bookmark->{name} eq $params->{bookmark}) {
+      $exists = 1;
+      last;
+    }
+  }
+
+  if (!$exists) {
+    die("You have specified an undefined bookmark to be executed with the history_exec_bookmark action.\n");
+  }
+
+  my $bookmark_params = ($params->{arguments} eq '<none>') ? '' : $params->{arguments};
+  my $command = "memento $params->{bookmark} $bookmark_params";
+
+  Daemon::printLabel("▶ $command", "black on_bright_yellow", 1);
+  system("$command");
+}
+
+sub _get_bookmarks {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my @bookmarks = ();
+
+  foreach my $bookmark (@{$config->{bookmarks}}) {
+    push(@bookmarks, $bookmark->{name});
+  }
+
+  return [sort @bookmarks];
 }
 
 1;
