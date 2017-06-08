@@ -16,6 +16,7 @@ use Hash::Merge qw( merge );
 use HTTP::Response;
 use URI;
 use LWP::UserAgent;
+use Env;
 
 our($progress_index) = 1;
 our($progress_step) = 1;
@@ -266,8 +267,9 @@ sub http_request {
   my $credentials = shift;
   my $client = LWP::UserAgent->new;
   my $content = undef;
+  my $timeout = $ENV{MEMENTO_HTTP_TIMEOUT} ? $ENV{MEMENTO_HTTP_TIMEOUT} : 10;
 
-  $client->timeout(10);
+  $client->timeout($timeout);
   $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
   $client->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00);
 
