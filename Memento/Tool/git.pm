@@ -193,7 +193,7 @@ sub start {
   else {
     # Update source branch.
     system("git checkout $source");
-    system("git reset --hard origin/$source");
+    system("git pull origin $source");
     # Create a new branch from the specified source.
     system("git checkout -b $branch $source");
 
