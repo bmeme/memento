@@ -81,7 +81,16 @@ INSTALLATION
       `sudo apt-get install libwww-curl-perl'
 
       `sudo ./install.pl'
-
+      
+      *On Debian (9.1 - stretch)*
+       Before install Memento, be sure to have *libssl-dev* and *zlib1g-dev*:
+       
+       `sudo apt-get install libssl-dev zlib1g-dev`
+       
+       `./install.pl`
+       
+       The script will ask you for the sudo password when needed.
+       
 BITBUCKET
     Due to its API limitations, Bitbucket issue tracker can only be used for
     branch naming generation. No change issue status or assignee neither

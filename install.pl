@@ -97,7 +97,7 @@ foreach my $vendor (@vendors) {
       if (-f $full_path) {
         foreach my $patch (@list) {
           say "Applying patch $patch at $full_path...";
-          system("patch -sN $full_path $patches_dir/$patch");
+          system("sudo patch -sN $full_path $patches_dir/$patch");
         }
       }
     }
@@ -108,7 +108,7 @@ print "\n>> Generating Memento man page: ";
 my $man_dir = $cpan_path;
 chomp($man_dir);
 $man_dir =~ s/\/bin\/cpan$//;
-my $man = `pod2man -s 1 -c Memento memento.pl > $man_dir/share/man/man1/memento.1`;
+my $man = `pod2man -s 1 -c Memento memento.pl | sudo tee -a $man_dir/share/man/man1/memento.1`;
 say "ok!";
 
 chdir;
@@ -121,7 +121,7 @@ if (!-d $storage) {
 
 if (!-f "$bin_dir/memento") {
   say "\n>> Creating memento symlink";
-  `ln -s $cwd/memento.pl $bin_dir/memento`;
+  `sudo ln -s $cwd/memento.pl $bin_dir/memento`;
 }
 
 say "\nMemento installation finished.";
