@@ -138,6 +138,7 @@ sub root {
 
 sub start {
   my $class = shift;
+  my $id = shift || 0;
   my $config = $class->_get_config();
   my $branch;
   my @branches = $class->_get_branches();
@@ -158,7 +159,9 @@ sub start {
 
   if ($config->{issue_tracker}) {
     my $issue_tracker = $config->{issue_tracker};
-    my $id = Daemon::prompt("Enter $issue_tracker issue id");
+    if (!$id) {
+      $id = Daemon::prompt("Enter $issue_tracker issue id");
+    }
     $issue = $class->{$issue_tracker}->_get_issue($id);
     if (!$issue) {
       die "You have specified an invalid issue id.";

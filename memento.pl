@@ -306,12 +306,13 @@ Delete all Memento Git configurations affecting your current repository.
 
 Utility command used to show the repository root.
 
-=item I<start [--source]>
+=item I<start [issue-id] [--source]>
 
 Creates a new branch starting from the configured source branch. Use B<--source>
 option to override the default one. If during the configuration operation, the
-Issue Tracker support was enabled, you will be asked to insert an Issue Id. It
-will be used to build the new branch, following the configured branch pattern.
+Issue Tracker support was enabled, you will be asked to insert an Issue Id, or you
+can provide it inline I<memento git start [issue-id]>. It will be
+used to build the new branch, following the configured branch pattern.
 Via the I<workflow> tool, is possible to create a rule for updating issue status
 and done ratio on git flow start, automatically assigning it to current user, and
 optionally add a comment.
