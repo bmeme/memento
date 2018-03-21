@@ -1,2 +1,5 @@
 .idea
 Memento/Tool/custom
+*.bak
+*.swp
+

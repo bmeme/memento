@@ -182,11 +182,12 @@ GIT
     *root*
       Utility command used to show the repository root.
 
-    *start [--source]*
+    *start [issue-id] [--source]*
       Creates a new branch starting from the configured source branch. Use
       --source option to override the default one. If during the
       configuration operation, the Issue Tracker support was enabled, you
-      will be asked to insert an Issue Id. It will be used to build the new
+      will be asked to insert an Issue Id, or you can provide it inline 
+      *memento git start [issue-id]*. It will be used to build the new
       branch, following the configured branch pattern. Via the *workflow*
       tool, is possible to create a rule for updating issue status and done
       ratio on git flow start, automatically assigning it to current user,
