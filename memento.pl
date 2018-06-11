@@ -28,6 +28,11 @@ my $commands = Memento::Tool->commands();
 if ($#ARGV > -1) {
   my $type = shift;
   my $command = shift || "help";
+  my $git = Memento::Tool->instantiate('git');
+
+  # change active directory to the project root so that memento commands can be
+  # executed from anywhere within the project.
+  $git->root(1);
 
   if (my $tool = Memento::Tool->instantiate($type, $command)) {
     if (!$tool->can($command) || $command =~ /^_/) {
@@ -97,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 0.9.9.1
+version 1.0.0.0
 
 =head1 SYNOPSIS
 

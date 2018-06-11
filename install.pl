@@ -142,7 +142,7 @@ memento install
 
 =head1 VERSION
 
-version 0.9.9.0
+version 1.0.0.0
 
 =head1 USAGE
 
