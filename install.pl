@@ -4,6 +4,7 @@ use feature 'say';
 use Cwd;
 use Getopt::Long;
 use Pod::Usage;
+use Data::Dumper;
 
 our $cwd = getcwd();
 my $cpan_path = `which cpan`;
@@ -47,29 +48,8 @@ if (!-d $bin_dir) {
 say "Requirements are ok! Proceeding with the installation.";
 
 say ">> Installing vendors:";
-my @vendors = (
-  'Class::MOP',
-  'Class::Observable',
-  'DateTime',
-  'DateTime::Format::Strptime',
-  'File::HomeDir',
-  'Git::Hooks',
-  'Hash::Merge',
-  'HTTP::Response',
-  'JIRA::REST',
-  'Net::SSLeay',
-  'LWP::UserAgent',
-  'LWP::Protocol::https',
-  'MIME::Base64',
-  'Switch',
-  'FLORA/Term-Complete-1.402.tar.gz',
-  'Term::ANSIColor',
-  'Text::Aligner',
-  'Text::ASCIITable',
-  'Text::Table',
-  'Text::Trim',
-  'Text::Unidecode'
-);
+require './vendors.pl';
+my @vendors = get_vendors();
 
 foreach my $vendor (@vendors) {
   say "\n>> Installing [$vendor]";
@@ -142,7 +122,7 @@ memento install
 
 =head1 VERSION
 
-version 1.0.0.1
+version 1.1.0.0
 
 =head1 USAGE
 

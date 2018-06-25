@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 1.0.0.1
+    version 1.1.0.0
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]

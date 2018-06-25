@@ -15,6 +15,8 @@ use JSON::PP;
 use POSIX qw(strftime);
 use Getopt::Long;
 use Switch;
+use MIME::Base64;
+use Data::Dumper;
 
 sub check {
   my $class = shift;
@@ -123,16 +125,18 @@ sub _on_schema_check {
   my $class = shift;
   my $config = $class->_get_config();
   my $git = Memento::Tool->instantiate('git');
-
-  chdir $root;
-  my $sha = $git->_get_commit_sha();
-  my $branch = $git->_get_current_branch();
-  my $uri = "https://api.github.com/repos/bmeme/memento/branches/$branch";
-  my $response = Daemon::http_request('GET', $uri, {}, {
+  my $github_headers = {
     "Content-Type" => "application/json; charset=UTF-8",
     "Accept" => "application/vnd.github.v3+json",
     "User-Agent" => "memento"
-  });
+  };
+
+  chdir $root;
+
+  my $sha = $git->_get_commit_sha();
+  my $branch = $git->_get_current_branch();
+  my $uri = "https://api.github.com/repos/bmeme/memento/branches/$branch";
+  my $response = Daemon::http_request('GET', $uri, {}, $github_headers);
 
   my $content = decode_json $response;
   if ((defined $content->{commit}) && ($content->{commit}->{sha} ne $sha)) {
@@ -151,11 +155,45 @@ sub _on_schema_check {
     my $confirm = Daemon::prompt("Do you want to run code updates?", 'yes', ['yes', 'no']);
 
     if ($confirm eq 'yes') {
+      # Get remote vendors info.
+      my $full_install = 1;
+      my $vendors_uri = 'https://api.github.com/search/code?q=repo:bmeme/memento+filename:vendors.pl';
+      my $vendors_response = Daemon::http_request('GET', $vendors_uri, {}, $github_headers);
+      my $vendors_content = decode_json $vendors_response;
+
+      # If vendors file exists, let's check it's content.
+      if (($vendors_content->{total_count} > 0)) {
+        my $git_url = $vendors_content->{items}[0]->{git_url};
+        my $file_response = Daemon::http_request('GET', $git_url, {}, $github_headers);
+        $file_response = decode_json $file_response;
+
+        # Remove carriage returns for later comparison with local file.
+        my $vendors_file_content = $file_response->{content};
+        $vendors_file_content =~ s/[\r\n]+//gm;
+
+        # Read local vendors file content.
+        local $/;
+        open(FILE, './vendors.pl') or die "Can't read file 'filename' [$!]\n";
+        my $local_vendors = <FILE>;
+        close (FILE);
+
+        # Encode in base 64 like the remote one and remove carriage returns.
+        my $local_vendors_file_content = encode_base64($local_vendors);
+        $local_vendors_file_content =~ s/[\r\n]+//gm;
+
+        # No need to rerun the full installation if there are no vendor changes.
+        if ($local_vendors_file_content eq $vendors_file_content){
+          $full_install = 0;
+        }
+      }
+
       my $remote = $git->_get_remote();
       system("git reset --hard HEAD");
       system("git pull $remote $branch");
       say Memento::splash();
-      system("./install.pl");
+      if ($full_install) {
+        system("./install.pl");
+      }
     }
   }
 
