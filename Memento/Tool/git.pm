@@ -151,6 +151,11 @@ sub start {
     'set-upstream!' => \$upstream
   ) or die 'Incorrect usage';
 
+  # Reset $id to 0 if an option has been passed but not an ID.
+  if ($id =~ /^--/) {
+    $id = 0;
+  }
+
   if (!Daemon::in_array([@branches], $source)) {
     die "You have specified an invalid source branch: $source\n";
   }
