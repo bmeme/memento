@@ -125,10 +125,10 @@ sub log {
 sub root {
   my $class = shift;
   my $goto = shift || 0;
-  my $p_root = `git rev-parse --show-toplevel`;
+  my $p_root = `git rev-parse --show-toplevel 2>/dev/null`;
   chomp($p_root);
 
-  if ($goto) {
+  if ($goto && $p_root) {
     chdir $p_root;
   }
   else {
@@ -697,7 +697,7 @@ sub _get_origin_url {
 sub _get_tracked_branch {
   my $class = shift;
   my $branch = $class->_get_current_branch();
-  my $tracked_branch = `git rev-parse --abbrev-ref $branch\@{upstream}`;
+  my $tracked_branch = `git rev-parse --abbrev-ref $branch\@{upstream} 2>/dev/null`;
   chomp($tracked_branch);
   return $tracked_branch;
 }
