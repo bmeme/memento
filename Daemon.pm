@@ -274,7 +274,7 @@ sub http_request {
   $client->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00);
 
   $method = uc $method;
-  if (!in_array(['GET', 'POST', 'PUT', 'DELETE'], $method)) {
+  if (!in_array(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], $method)) {
     die "Invalid HTTP Method supplied: $method\n";
   }
 

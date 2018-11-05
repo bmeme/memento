@@ -102,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 1.1.0.1
+version 1.1.2
 
 =head1 SYNOPSIS
 
@@ -396,6 +396,59 @@ the issue will not be rendered, but opened into your default web browser.
 =item I<projects>
 
 Renders a table containing info about all available Gitlab projects.
+
+=item I<user>
+
+Renders a table containing info about current user referring to the active api.
+
+=back
+
+
+
+=head1 TAIGA
+
+You can easily integrate Memento with multiple instances of Taiga, with the
+I<memento taiga config add> command, and switch from one to another simply by
+using the I<memento taiga config switch [taiga_api_id]> command.
+
+I<memento taiga> provides the following operations:
+
+=over 2
+
+=item I<config>
+
+Manages Taiga API configurations providing the following options:
+
+=over 2
+
+=item I<add>
+
+Adds a new configurations set for a Taiga instance.
+
+=item I<delete [taiga_api_id]>
+
+Deletes a configurations set for a Taiga instance.
+
+=item I<list>
+
+Lists all Taiga configurations.
+
+=item I<switch [taiga_api_id]>
+
+Sets a Taiga instance as the default one. All queries will be executed to the
+default one. Otherwise, you can change on the fly the active Taiga instance by
+using the B<--api-id> option, for each memento taiga command.
+
+=back
+
+=item I<issue [task|issue]/[taiga_issue_id [--open]]>
+
+Shows the details of an issue or task. If the B<--open> boolean option has been
+provided, the issue will not be rendered, but opened into your default web browser.
+
+=item I<projects>
+
+Renders a table containing info about all available Taiga projects.
 
 =item I<user>
 
