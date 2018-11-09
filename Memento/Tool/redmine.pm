@@ -529,7 +529,7 @@ sub _name {
 }
 
 sub _branch_pattern {
-  return ':id:-:subject:';
+  return 'feature/:id:-:subject:';
 }
 
 sub _time_tracker_entry {

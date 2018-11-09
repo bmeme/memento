@@ -476,7 +476,7 @@ sub _name {
 }
 
 sub _branch_pattern {
-  return ':iid:-:title:';
+  return 'feature/:iid:-:title:';
 }
 
 sub _time_tracker_entry {

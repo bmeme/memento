@@ -55,7 +55,7 @@ sub config {
         $issue_tracker = Daemon::prompt('Choose an Issue Tracker', $default->{issue_tracker}, $class->_get_issue_trackers());
         if (!$default->{branch}->{pattern}) {
           my $tracker = Memento::Tool->instantiate($issue_tracker);
-          $default->{branch}->{pattern} = 'feature/' . $tracker->_branch_pattern();
+          $default->{branch}->{pattern} = $tracker->_branch_pattern();
         }
       }
       my $pattern = $issue_tracker ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', $default->{branch}->{pattern}) : 0;

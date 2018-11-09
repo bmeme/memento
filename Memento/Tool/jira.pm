@@ -506,7 +506,7 @@ sub _name {
 }
 
 sub _branch_pattern {
-  return ':key:-:fields-summary:';
+  return 'feature/:key:-:fields-summary:';
 }
 
 sub _time_tracker_entry {
