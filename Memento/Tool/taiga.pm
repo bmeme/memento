@@ -268,19 +268,22 @@ sub _on_schema_check {
   my $settings = $class->_get_settings();
   my $username = $settings->{username};
   my $query = {'assigned_to' => $user->{id}, 'status__is_closed' => 'false'};
-  my $data = $class->_call_api("tasks", $query);
-
-  if (!$data->{issues}) {
-    return;
-  }
-
-  my $issues = [];
-  foreach my $issue (@{$data->{issues}}) {
-    push(@{$issues}, $class->_build_search_result($issue));
-  }
-
+  my $data;
+  my $issues;
+  my $types = ['tasks', 'issues', 'userstories'];
   Daemon::printLabel("[Memento] » Taiga");
-  say Daemon::array2table("Your open tasks", $issues);
+  
+  for my $type (@{$types}) {
+    $data = $class->_call_api($type, $query);
+    $issues = [];
+    if ($data) {
+      foreach my $issue (@{$data}) {
+        push(@{$issues}, $class->_build_search_result($issue));
+      }
+      say Daemon::array2table("Your open $type", $issues);
+    }
+  }
+
 }
 
 # RULES ########################################################################
