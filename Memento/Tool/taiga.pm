@@ -110,7 +110,7 @@ sub issue {
   my $open = 0;
 
   if (!$id) {
-    $id = Daemon::prompt('Enter the issue/task ID (eg: task/12 or issue/3)');
+    $id = Daemon::prompt('Enter the issue/task/us ID (eg: task/12, issue/3 or us/13)');
   }
 
   GetOptions(
@@ -118,11 +118,7 @@ sub issue {
   ) or die 'Incorrect usage';
 
   my ($type, $ref) = split('/', $id);
-  my $types = ['task', 'issue'];
-
-  if (!$type || !Daemon::in_array($types, $type)) {
-    die("Undefined type: the issue ID has to be something like issue/ISSUE_ID or task/TASK_ID\n");
-  }
+  $class->_validate_activity_id($type);
 
   if ($open) {
     my $config = $class->_get_config();
@@ -351,7 +347,8 @@ sub _change_issue_status {
       $issue->{status} = $transitions{$transition}->{id};
     }
 
-    $class->_call_api($issue->{type} . "s/" . $issue->{id}, $issue, 'PUT');
+    my $typePath = $class->_get_issue_type_path($issue->{type});
+    $class->_call_api($typePath . "/" . $issue->{id}, $issue, 'PUT');
     print "\n";
     $class->_render_issue($class->_get_issue($issue->{type} . "/" . $issue->{'ref'}));
   }
@@ -386,12 +383,42 @@ sub _get_issue_transitions {
 
 sub _get_issue {
   my $class = shift;
-  my $id = shift or die "Missing issue/task id to load";
+  my $id = shift or die "Missing issue/task/us id to load";
   my ($type, $ref) = split('/', $id);
   my $project = $class->_get_storage_project();
-  my $issue = $class->_call_api($type . "s/by_ref", {'ref' => $ref, 'project__slug' => $project->{project_slug}});
+  my $typePath = $class->_get_issue_type_path($type);
+  my $issue = $class->_call_api($typePath . "/by_ref", {'ref' => $ref, 'project__slug' => $project->{project_slug}});
   $issue->{type} = $type;
   return $issue;
+}
+
+sub _get_issue_type_path {
+  my $class = shift;
+  my $type = shift or die "Missing type for type path";
+  $class->_validate_activity_id($type);
+  my $typePath = '';
+  switch ($type) {
+    case 'task' {
+      $typePath = 'tasks';
+    }
+    case 'issue' {
+      $typePath = 'issues';
+    }
+    case 'us' {
+      $typePath = 'userstories';
+    }
+  }
+  return $typePath;
+}
+
+sub _validate_activity_id {
+  my $class = shift;
+  my $type = shift or die "Missing type";
+  my $types = ['task', 'issue', 'us'];
+  if (!Daemon::in_array($types, $type)) {
+    die("Undefined type: the ID has to be something like issue/ISSUE_ID, task/TASK_ID or us/USERSTORY_ID\n");
+  }
+  return 1;
 }
 
 sub _get_storage_project {
