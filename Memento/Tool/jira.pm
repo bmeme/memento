@@ -271,7 +271,7 @@ sub _on_schema_check {
 
   my $settings = $class->_get_settings();
   my $username = $settings->{username};
-  my $query = {jql => "resolution=Unresolved AND assignee=$username"};
+  my $query = {jql => "status not in (\"Closed\", \"Done\", \"Resolved\") AND assignee=$username"};
   my $data = $class->_call_api("search", $query);
 
   if (!$data->{issues}) {

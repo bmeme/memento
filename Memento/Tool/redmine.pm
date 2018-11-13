@@ -220,7 +220,7 @@ sub _on_schema_check {
     return;
   }
 
-  my $query = {assigned_to_id => "me", set_filter => 1, sort => "priority:desc,updated_on:desc"};
+  my $query = {assigned_to_id => "me", set_filter => 1, sort => "priority:desc,updated_on:desc", status_id => "open"};
   my $data = $class->_call_api("issues", $query);
 
   Daemon::printLabel("[Memento] » Redmine");
