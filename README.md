@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 1.1.0.1
+    version 1.1.3
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -81,16 +81,7 @@ INSTALLATION
       `sudo apt-get install libwww-curl-perl'
 
       `sudo ./install.pl'
-      
-      *On Debian (9.1 - stretch)*
-       Before install Memento, be sure to have *libssl-dev* and *zlib1g-dev*:
-       
-       `sudo apt-get install libssl-dev zlib1g-dev`
-       
-       `./install.pl`
-       
-       The script will ask you for the sudo password when needed.
-       
+
 BITBUCKET
     Due to its API limitations, Bitbucket issue tracker can only be used for
     branch naming generation. No change issue status or assignee neither
@@ -186,7 +177,7 @@ GIT
       Creates a new branch starting from the configured source branch. Use
       --source option to override the default one. If during the
       configuration operation, the Issue Tracker support was enabled, you
-      will be asked to insert an Issue Id, or you can provide it inline 
+      will be asked to insert an Issue Id, or you can provide it inline
       *memento git start [issue-id]*. It will be used to build the new
       branch, following the configured branch pattern. Via the *workflow*
       tool, is possible to create a rule for updating issue status and done
@@ -217,6 +208,9 @@ GIT
 
     *log*
       Show the git log tree in a pretty format.
+
+    *rebaseFromSource*
+      Rebases current branch with the source branch.
 
 GITLAB
     You can easily integrate Memento with multiple instances of Gitlab, with
@@ -251,6 +245,44 @@ GITLAB
 
     *projects*
       Renders a table containing info about all available Gitlab projects.
+
+    *user*
+      Renders a table containing info about current user referring to the
+      active api.
+
+TAIGA
+    You can easily integrate Memento with multiple instances of Taiga, with
+    the *memento taiga config add* command, and switch from one to another
+    simply by using the *memento taiga config switch [taiga_api_id]*
+    command.
+
+    *memento taiga* provides the following operations:
+
+    *config*
+      Manages Taiga API configurations providing the following options:
+
+      *add*
+        Adds a new configurations set for a Taiga instance.
+
+      *delete [taiga_api_id]*
+        Deletes a configurations set for a Taiga instance.
+
+      *list*
+        Lists all Taiga configurations.
+
+      *switch [taiga_api_id]*
+        Sets a Taiga instance as the default one. All queries will be
+        executed to the default one. Otherwise, you can change on the fly
+        the active Taiga instance by using the --api-id option, for each
+        memento taiga command.
+
+    *issue [task|issue]/[taiga_issue_id [--open]]*
+      Shows the details of an issue or task. If the --open boolean option
+      has been provided, the issue will not be rendered, but opened into
+      your default web browser.
+
+    *projects*
+      Renders a table containing info about all available Taiga projects.
 
     *user*
       Renders a table containing info about current user referring to the
@@ -473,9 +505,9 @@ AUTHOR
     Adriano Cori <adriano.cori@bmeme.com>
 
 COPYRIGHT
-    Copyright (c) 2015 - 2018 Adriano Cori. All rights reserved. This program is
-    free software; you can redistribute it and/or modify it under the terms
-    of the GPL2 license.
+    Copyright (c) 2015 - 2018 Adriano Cori. All rights reserved. This
+    program is free software; you can redistribute it and/or modify it under
+    the terms of the GPL2 license.
 
     The full text of the license can be found in the LICENSE file included
     with this module.
@@ -484,8 +516,8 @@ AUTHOR
     Bonsaimeme S.r.l. <http://www.bmeme.com>
 
 COPYRIGHT AND LICENSE
-    This software is Copyright (c) 2105 - 2018 by Adriano Cori and Bonsaimeme
-    S.r.l.
+    This software is Copyright (c) 2105 - 2018 by Adriano Cori and
+    Bonsaimeme S.r.l.
 
     This is free software, licensed under:
 

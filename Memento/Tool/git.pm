@@ -200,14 +200,15 @@ sub start {
   }
   else {
     # Update source branch.
+    my $remote = $class->_get_remote();
     system("git checkout $source");
-    system("git pull origin $source");
+    system("git pull $remote $source");
     # Create a new branch from the specified source.
     system("git checkout -b $branch $source");
 
     # Set upstream for the new branch if a remote origin exists.
     if ($upstream && $class->_get_origin_url() && !$class->_get_tracked_branch()) {
-      `git push --set-upstream origin $branch`;
+      `git push --set-upstream $remote $branch`;
       say "Configured upstream for branch '$branch'";
     }
   }
@@ -259,7 +260,7 @@ sub finish {
   if ($destination ne '0') {
     if ($destination ne $branch) {
       system("git checkout $destination");
-      system("git reset --hard origin/$destination") if ($remote);
+      system("git reset --hard $remote/$destination") if ($remote);
       system("git merge $branch");
       system("git push $remote $destination") if ($remote);
       system("git branch -D $branch") if ($delete);
@@ -272,6 +273,30 @@ sub finish {
 
   if (!$silent) {
     $class->_on('git_flow_finish', {branch => $branch, issue => $issue});
+  }
+}
+
+sub rebaseFromSource {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my $source = $config->{branch}->{source};
+  my $branch = $class->_get_current_branch();
+  my $remote = $class->_get_origin_url() ? 'origin' : 0;
+  my $modified_files = $class->_get_modified_files();
+
+  if (length($modified_files)) {
+    system("git stash");
+  }
+
+  if ($remote) {
+    system("git checkout $source");
+    system("git pull $remote $source");
+    system("git checkout $branch");
+  }
+  system("git rebase $source");
+
+  if (length($modified_files)) {
+    system("git stash apply");
   }
 }
 
@@ -689,7 +714,9 @@ sub _get_remote {
 }
 
 sub _get_origin_url {
-  my $origin = `git config --get remote.origin.url`;
+  my $class = shift;
+  my $remote = $class->_get_remote();
+  my $origin = `git config --get remote.$remote.url`;
   chomp($origin);
   return $origin;
 }
@@ -740,6 +767,13 @@ sub _get_time_trackers {
 sub _is_configured {
   my @config = trim `git config -l | grep memento`;
   return scalar @config > 1 ? 1 : 0;
+}
+
+sub _get_modified_files {
+  my $class = shift;
+  my $files = `git ls-files --other --modified --exclude-standard`;
+  chomp($files);
+  return $files;
 }
 
 1;

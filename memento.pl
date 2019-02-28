@@ -102,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 1.1.2
+version 1.1.3
 
 =head1 SYNOPSIS
 
@@ -347,6 +347,10 @@ this command.
 =item I<log>
 
 Show the git log tree in a pretty format.
+
+=item I<rebaseFromSource>
+
+Rebases current branch with the source branch.
 
 =back
 
