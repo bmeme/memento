@@ -235,7 +235,7 @@ sub finish {
   my $destination = $config->{branch}->{destination};
   my $delete = $config->{branch}->{delete};
   my $branch = $class->_get_current_branch();
-  my $remote = $class->_get_origin_url() ? 'origin' : 0;
+  my $remote = $class->_get_origin_url() ? $class->_get_remote() : 0;
   my $issue = $class->_get_issue();
 
   my $safe = 0;
@@ -710,6 +710,21 @@ sub _get_remote {
   my $branch = $class->_get_current_branch();
   my $remote = `git config --get branch.$branch.remote`;
   chomp($remote);
+
+  if (length($remote)) {
+    return $remote;
+  }
+  return $class->_get_remotes();
+}
+
+sub _get_remotes {
+  my @remotes = `git remote`;
+  chomp(@remotes);
+  my $remote = $remotes[0];
+
+  if (scalar @remotes > 1) {
+    $remote = Daemon::prompt("Please choose a remote", $remote, [@remotes]);
+  }
   return $remote;
 }
 
