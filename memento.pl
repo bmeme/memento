@@ -102,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 1.1.4
+version 1.1.5
 
 =head1 SYNOPSIS
 
@@ -125,6 +125,7 @@ By default it provides the following commands:
   - paymo
   - redmine
   - schema
+  - taiga
   - workflow
 
 Memento, for each command, provides by default a fallback helper if a

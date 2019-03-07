@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 1.1.4
+    version 1.1.5
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -23,6 +23,7 @@ DESCRIPTION
       - paymo
       - redmine
       - schema
+      - taiga
       - workflow
 
     Memento, for each command, provides by default a fallback helper if a

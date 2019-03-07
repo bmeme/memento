@@ -281,7 +281,7 @@ sub rebaseFromSource {
   my $config = $class->_get_config();
   my $source = $config->{branch}->{source};
   my $branch = $class->_get_current_branch();
-  my $remote = $class->_get_origin_url() ? 'origin' : 0;
+  my $remote = $class->_get_origin_url() ? $class->_get_remote() : 0;
   my $modified_files = $class->_get_modified_files();
 
   if (length($modified_files)) {
