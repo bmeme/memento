@@ -12,6 +12,7 @@ use File::Copy qw(copy);
 use Getopt::Long;
 use Switch;
 use Text::Trim;
+use Data::Dumper;
 
 our ($cwd);
 $cwd = getcwd();
@@ -398,12 +399,29 @@ sub _get_config {
   return $config;
 }
 
+sub _get_git_dir {
+  my $class = shift;
+  my $dir = '.git';
+
+  $class->_check_repository();
+
+  if (-f $dir) {
+    my @content = Daemon::read($dir);
+    $dir = $content[0];
+    chomp($dir);
+    $dir =~ s/^gitdir:\s//g;
+  }
+
+  return $class->root() . "/$dir";
+}
+
 sub _save_config {
   my $class = shift;
   my $config = shift;
 
   $class->root(1);
-  Daemon::write('.git/description', $config->{project}, 1, '>');
+  my $git_dir = $class->_get_git_dir();
+  Daemon::write("$git_dir/description", $config->{project}, 1, '>');
 
   system("git config memento.branch.source " . $config->{branch}->{source});
   system("git config memento.branch.destination " . $config->{branch}->{destination});
@@ -417,7 +435,7 @@ sub _save_config {
 
   # Enable Git Hooks.
   my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
-  my $git_hooks_dir = getcwd() . "/.git/hooks";
+  my $git_hooks_dir = "$git_dir/hooks";
 
   system("ln -s $git_hooks $git_hooks_dir/commit-msg")  if (!-f "$git_hooks_dir/commit-msg");
   system("ln -s $git_hooks $git_hooks_dir/pre-commit") if (!-f "$git_hooks_dir/pre-commit");
@@ -582,7 +600,7 @@ sub _exec_pre_commit_command {
 
 sub _check_repository {
   my $class = shift;
-  if (-d '.git') {
+  if (-f '.git' || -d '.git') {
     return 1;
   }
 
@@ -635,7 +653,7 @@ sub _check_branch_name {
 
 sub _delete_config {
   my $class = shift;
-  my $p_root = $class->root() or die "Cannot find git project root";
+  my $git_dir = $class->_get_git_dir() or die "Cannot find git project root";
   my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
 
   # Delete memento git configurations if exist.
@@ -646,7 +664,7 @@ sub _delete_config {
   }
 
   # Delete git hooks symlinks if exist.
-  my $git_hooks_dir = "$p_root/.git/hooks";
+  my $git_hooks_dir = "$git_dir/hooks";
   my @hooks = ('commit-msg', 'pre-commit', 'post-commit');
 
   foreach my $hook (@hooks) {
