@@ -36,7 +36,8 @@ sub config {
       ) or die 'Incorrect usage';
 
       Daemon::printLabel("Project");
-      my $p_name = Daemon::prompt("Set/confirm current project name", $default->{project});
+      my $project = $default->{project} ? $default->{project} : Daemon::current_dir_name();
+      my $p_name = Daemon::prompt("Set/confirm current project name", $project);
 
       say "";
       Daemon::printLabel("Branch configurations");

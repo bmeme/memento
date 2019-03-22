@@ -330,4 +330,9 @@ sub machine_name {
   return $name;
 }
 
+sub current_dir_name {
+  my @dir = split('/', getcwd());
+  return $dir[-1];
+}
+
 1;
