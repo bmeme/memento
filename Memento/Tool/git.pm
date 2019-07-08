@@ -204,7 +204,7 @@ sub start {
     # Update source branch.
     my $remote = $class->_get_remote();
     system("git checkout $source");
-    system("git pull $remote $source");
+    system("git pull $remote $source --rebase");
     # Create a new branch from the specified source.
     system("git checkout -b $branch $source");
 
@@ -292,7 +292,7 @@ sub rebaseFromSource {
 
   if ($remote) {
     system("git checkout $source");
-    system("git pull $remote $source");
+    system("git pull $remote $source --rebase");
     system("git checkout $branch");
   }
   system("git rebase $source");
