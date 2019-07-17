@@ -101,7 +101,7 @@ sub prompt {
   my $answer = undef;
   my $printed_list = 0;
   my $hash = 0;
-  my $remaining = 1;
+  my $remaining = 0;
   my $has_options = 0;
 
   if (ref(@options[0]) eq 'HASH') {
@@ -126,7 +126,7 @@ sub prompt {
       $remaining = $max_length;
     }
     else {
-      $remaining = 1;
+      $remaining = 0;
     }
 
     if (@options[0] && !$printed_list) {
@@ -154,9 +154,12 @@ sub prompt {
 
     if (!$has_options && $max_length) {
       $remaining = $max_length - length $answer;
+      if ($remaining < 0) {
+        Daemon::printLabel("Max length exceeded: $remaining", "black on_red", 1);
+      }
     }
   }
-  while (!$answer || !length $answer || ($remaining < 1) || ($has_options && !in_array(@options, $answer)));
+  while (!$answer || !length $answer || ($remaining < 0) || ($has_options && !in_array(@options, $answer)));
 
   if ($printed_list) {
     print "\n";

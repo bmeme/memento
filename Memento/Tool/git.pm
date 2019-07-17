@@ -324,7 +324,7 @@ sub commit {
   my $scope = "";
   my $color = "black on_bright_yellow";
 
-  Daemon::printLabel("A scope may be provided to a commit’s type, to provide additional contextual information.", $color);
+  Daemon::printLabel("A scope MAY be provided to a commit’s type, to provide additional contextual information. Eg: $type(login): ", $color, 1);
   if (Daemon::prompt("Do you want to add a scope?", 'no', ['no', 'yes']) eq 'yes') {
     $scope = trim lc Daemon::prompt("Commit scope");
   }
@@ -336,15 +336,20 @@ sub commit {
   my $message = "$type$scope: ";
   my $max_length = 72 - length $message;
 
+  print "\n";
+  Daemon::printLabel("The description is a short summary of the code changes, e.g., $type$scope: array parsing issue when multiple spaces were contained in string.", $color, 1);
   my $description = trim Daemon::prompt("Commit description", '', 0, $max_length);
   $description =~ s/[\s\.]*?$//;
 
   my $breaking = "";
   my $body = "";
-  Daemon::printLabel("A longer commit body MAY be provided after the short description, providing additional contextual information about the code changes", $color);
+
+  print "\n";
+  Daemon::printLabel("A longer commit body MAY be provided after the short description, providing additional contextual information about the code changes.", $color, 1);
   if (Daemon::prompt("Do you want to add a body?", 'no', ['no', 'yes']) eq 'yes') {
-    Daemon::printLabel("Conventional commits of any type can be API-breaking changes. These changes occasion a major version change (5 to 6, say) in Semantic Versioning.", "white on_magenta");
+    Daemon::printLabel("Conventional commits of any type can be API-breaking changes. These changes occasion a major version change (5 to 6, say) in Semantic Versioning.", "white on_magenta", 1);
     $breaking = (Daemon::prompt("Does this commit contain breaking changes?", 'no', ['no', 'yes']) eq 'yes') ? 'BREAKING CHANGE: ' : '';
+
     $filename = '/tmp/git-commit-body';
     Daemon::write($filename, '', '1', '>');
     Daemon::open_default_editor($filename);
@@ -360,7 +365,8 @@ sub commit {
     $footer = "refs: $name";
   }
 
-  Daemon::printLabel("An optional footer MUST contain meta-information about the commit, e.g., related pull-requests, reviewers, breaking changes, with one piece of meta-information per-line.", $color);
+  print "\n";
+  Daemon::printLabel("An optional footer MUST contain meta-information about the commit, e.g., related pull-requests, reviewers, breaking changes, with one piece of meta-information per-line.", $color, 1);
   if (Daemon::prompt("Do you want to add a footer message? Info about current activity will be added automatically where possible.", 'no', ['no', 'yes']) eq 'yes') {
     $filename = '/tmp/git-commit-footer';
     Daemon::write($filename, '', '1', '>');
