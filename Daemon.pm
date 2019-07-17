@@ -11,6 +11,7 @@ use Term::Complete;
 use Text::Aligner;
 use Text::ASCIITable;
 use Text::Table;
+use Text::Trim;
 use Text::Unidecode;
 use Hash::Merge qw( merge );
 use HTTP::Response;
@@ -96,13 +97,20 @@ sub prompt {
   my $question = shift;
   my $defaultValue = shift;
   my @options = shift;
+  my $max_length = shift;
   my $answer = undef;
   my $printed_list = 0;
   my $hash = 0;
+  my $remaining = 1;
+  my $has_options = 0;
 
   if (ref(@options[0]) eq 'HASH') {
     $hash = @options[0];
     @options = [sort keys %{$hash}];
+  }
+
+  if (ref(@options[0]) eq 'ARRAY') {
+    $has_options = 1;
   }
 
   do {
@@ -111,6 +119,14 @@ sub prompt {
     }
     else {
       print $question, ": ";
+    }
+
+    if (!$has_options && $max_length) {
+      print "[max-length: $max_length]: ";
+      $remaining = $max_length;
+    }
+    else {
+      $remaining = 1;
     }
 
     if (@options[0] && !$printed_list) {
@@ -135,8 +151,12 @@ sub prompt {
     else {
       $answer = $_;
     }
+
+    if (!$has_options && $max_length) {
+      $remaining = $max_length - length $answer;
+    }
   }
-  while (!$answer || !length $answer || (@options[0] && !in_array(@options, $answer)));
+  while (!$answer || !length $answer || ($remaining < 1) || ($has_options && !in_array(@options, $answer)));
 
   if ($printed_list) {
     print "\n";

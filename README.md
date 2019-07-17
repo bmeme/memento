@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 1.1.7
+    version 1.1.8
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -212,6 +212,9 @@ GIT
 
     *rebaseFromSource*
       Rebases current branch with the source branch.
+
+    *commit*
+      Allows you to commit your code by using conventional commits.
 
 GITLAB
     You can easily integrate Memento with multiple instances of Gitlab, with

@@ -302,6 +302,76 @@ sub rebaseFromSource {
   }
 }
 
+sub commit {
+  my $class = shift;
+  my $issue = $class->_get_issue();
+  my $filename = "";
+  my $type = Daemon::prompt("Type of commit", 0, [
+    'build',
+    'ci',
+    'chore',
+    'docs',
+    'feat',
+    'fix',
+    'improvement',
+    'perf',
+    'refactor',
+    'revert',
+    'style',
+    'test'
+  ]);
+
+  my $scope = "";
+  my $color = "black on_bright_yellow";
+
+  Daemon::printLabel("A scope may be provided to a commit’s type, to provide additional contextual information.", $color);
+  if (Daemon::prompt("Do you want to add a scope?", 'no', ['no', 'yes']) eq 'yes') {
+    $scope = trim lc Daemon::prompt("Commit scope");
+  }
+
+  if ($scope) {
+    $scope = "($scope)";
+  }
+
+  my $message = "$type$scope: ";
+  my $max_length = 72 - length $message;
+
+  my $description = trim Daemon::prompt("Commit description", '', 0, $max_length);
+  $description =~ s/[\s\.]*?$//;
+
+  my $breaking = "";
+  my $body = "";
+  Daemon::printLabel("A longer commit body MAY be provided after the short description, providing additional contextual information about the code changes", $color);
+  if (Daemon::prompt("Do you want to add a body?", 'no', ['no', 'yes']) eq 'yes') {
+    Daemon::printLabel("Conventional commits of any type can be API-breaking changes. These changes occasion a major version change (5 to 6, say) in Semantic Versioning.", "white on_magenta");
+    $breaking = (Daemon::prompt("Does this commit contain breaking changes?", 'no', ['no', 'yes']) eq 'yes') ? 'BREAKING CHANGE: ' : '';
+    $filename = '/tmp/git-commit-body';
+    Daemon::write($filename, '', '1', '>');
+    Daemon::open_default_editor($filename);
+    my @body_content = Daemon::read($filename);
+    unlink $filename;
+    $body = trim "@body_content";
+  }
+
+  my $footer = "";
+  if ($issue) {
+    my $issue_tracker = Memento::Tool->instantiate($class->_get_config()->{'issue_tracker'});
+    my $name = $issue_tracker->_time_tracker_entry($issue);
+    $footer = "refs: $name";
+  }
+
+  Daemon::printLabel("An optional footer MUST contain meta-information about the commit, e.g., related pull-requests, reviewers, breaking changes, with one piece of meta-information per-line.", $color);
+  if (Daemon::prompt("Do you want to add a footer message? Info about current activity will be added automatically where possible.", 'no', ['no', 'yes']) eq 'yes') {
+    $filename = '/tmp/git-commit-footer';
+    Daemon::write($filename, '', '1', '>');
+    Daemon::open_default_editor($filename);
+    my @footer_content = Daemon::read($filename);
+    unlink $filename;
+    $footer = "$footer\n@footer_content";
+  }
+
+  system("git commit -m \"$type$scope: $description\n\n$breaking$body\n\n$footer\"");
+}
 
 # OVERRIDDEN METHODS ###########################################################
 
