@@ -33,8 +33,8 @@ sub config {
     case 'add' {
       say "Please provide your Jira info and remember that all values are mandatory";
       my $id = Daemon::prompt('Configuration id');
-      my $username = Daemon::prompt('Jira username');
-      my $password = Daemon::prompt('Jira password');
+      my $username = Daemon::prompt('Jira account email');
+      my $password = Daemon::prompt('Jira API token (https://id.atlassian.com/manage/api-tokens)');
       my $url = Daemon::prompt('Jira URL');
 
       my $conf = {
@@ -57,8 +57,8 @@ sub config {
       my $key = Daemon::prompt('Choose an api id', undef, $class->_get_api_ids());
 
       my $id = $config->{api}[$key]->{id};
-      my $username = Daemon::prompt('Jira username');
-      my $password = Daemon::prompt('Jira password');
+      my $username = Daemon::prompt('Jira account email');
+      my $password = Daemon::prompt('Jira API token (https://id.atlassian.com/manage/api-tokens)');
       my $url = Daemon::prompt('Jira URL', $config->{api}[$key]->{url});
 
       my $conf = {
