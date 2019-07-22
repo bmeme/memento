@@ -565,7 +565,7 @@ sub _branch_pattern {
 sub _time_tracker_entry {
   my $class = shift;
   my $issue = shift;
-  return  "#" . $issue->{'ref'} . " - " . $issue->{'subject'};
+  return  $issue->{type} . "/" . $issue->{'ref'} . " - " . $issue->{'subject'};
 }
 
 sub _get_api_ids {

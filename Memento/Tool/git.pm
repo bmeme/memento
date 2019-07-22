@@ -362,6 +362,8 @@ sub commit {
   if ($issue) {
     my $issue_tracker = Memento::Tool->instantiate($class->_get_config()->{'issue_tracker'});
     my $name = $issue_tracker->_time_tracker_entry($issue);
+    $name =~ s/"/\\"/g;
+    $name =~ s/'/\\'/g;
     $footer = "refs: $name";
   }
 
