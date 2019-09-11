@@ -118,8 +118,7 @@ sub issue {
   ) or die 'Incorrect usage';
 
   if ($open) {
-    my $config = $class->_get_config();
-    my $settings = $class->_config_load($config->{default});
+    my $settings = $class->_config_load($class->_get_current_api_id());
     my $uri = $settings->{url} . "/browse/$id";
     Daemon::open_default_browser($uri);
   }
@@ -191,10 +190,10 @@ sub search {
 
 sub _pre {
   my ($class) = @_;
-  my $config = $class->_get_config();
+  my $api_id = $class->_get_current_api_id();
 
-  if ($config->{default}) {
-    Daemon::printLabel("[Memento] » Jira: " . $config->{default});
+  if ($api_id) {
+    Daemon::printLabel("[Memento] » Jira: " . $api_id);
   }
 }
 
@@ -229,12 +228,11 @@ sub _on_git_flow_start {
   my $event = shift;
   my $params = shift;
   my $storage = $class->_get_storage();
-  my $config = $class->_get_config();
 
   if ($params->{issue}) {
     $storage->{issues}->{$params->{branch}} = {
       issue_id => $params->{issue}->{id},
-      jira_api_id => $config->{default}
+      jira_api_id => $class->_get_current_api_id()
     };
     $class->_save_storage($storage);
   }
@@ -311,8 +309,7 @@ sub _check_default_api {
   if (!$class->_is_default()) {
     return 0;
   }
-  my $config = $class->_get_config();
-  return ($config->{default} eq $params->{jira_api_id});
+  return ($class->_get_current_api_id() eq $params->{jira_api_id});
 }
 
 sub _actions {
@@ -458,7 +455,7 @@ sub _call_api {
 sub _get_settings {
   my $class = shift;
   my $config = $class->_get_config();
-  my $api_id = $config->{default};
+  my $api_id = $class->_get_current_api_id();
   my $settings = $class->_config_load($api_id);
   my ($username, $password) = split(':', decode_base64($settings->{key}));
   $settings->{username} = $username;
@@ -513,30 +510,6 @@ sub _time_tracker_entry {
   my $class = shift;
   my $issue = shift;
   return  "#" . $issue->{'key'} . " - " . $issue->{'fields'}->{'summary'};
-}
-
-sub _get_api_ids {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my $api_ids;
-  my $i = 0;
-
-  foreach my $api (@{$config->{api}}) {
-    $api_ids->{$api->{id}} = $i;
-    $i++;
-  }
-  return $api_ids;
-}
-
-sub _get_api_id_names {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my @api_id_names;
-
-  foreach my $api (@{$config->{api}}) {
-    push(@api_id_names, $api->{id});
-  }
-  return [@api_id_names];
 }
 
 sub _build_search_result {

@@ -121,8 +121,7 @@ sub issue {
   $class->_validate_activity_id($type);
 
   if ($open) {
-    my $config = $class->_get_config();
-    my $settings = $class->_config_load($config->{default});
+    my $settings = $class->_config_load($class->_get_current_api_id());
     my $project = $class->_get_storage_project();
     my $slug = $project->{project_slug};
     my $uri = $settings->{url} . "/project/$slug/$id";
@@ -218,10 +217,10 @@ sub setProject {
 
 sub _pre {
   my ($class) = @_;
-  my $config = $class->_get_config();
+  my $api_id = $class->_get_current_api_id();
 
-  if ($config->{default}) {
-    Daemon::printLabel("[Memento] » Taiga: " . $config->{default});
+  if ($api_id) {
+    Daemon::printLabel("[Memento] » Taiga: " . $api_id);
   }
 }
 
@@ -245,12 +244,11 @@ sub _on_git_flow_start {
   my $event = shift;
   my $params = shift;
   my $storage = $class->_get_storage();
-  my $config = $class->_get_config();
 
   if ($params->{issue}) {
     $storage->{issues}->{$params->{branch}} = {
       issue_id => $params->{issue}->{type} . '/' . $params->{issue}->{'ref'},
-      taiga_api_id => $config->{default}
+      taiga_api_id => $class->_get_current_api_id()
     };
     $class->_save_storage($storage);
   }
@@ -310,8 +308,7 @@ sub _check_default_api {
   if (!$class->_is_default()) {
     return 0;
   }
-  my $config = $class->_get_config();
-  return ($config->{default} eq $params->{taiga_api_id});
+  return ($class->_get_current_api_id() eq $params->{taiga_api_id});
 }
 
 sub _actions {
@@ -492,11 +489,11 @@ sub _call_api {
     die "\n";
   }
 
-  if (!$config->{default}) {
+  my $api_id = $class->_get_current_api_id();
+  if (!$api_id) {
     die "Please configure (switch to) a default Taiga Api configuration\n";
   }
 
-  my $api_id = $config->{default};
   my $settings = $class->_config_load($api_id);
   my $username = $settings->{username};
   my $password = $settings->{password};
@@ -531,7 +528,7 @@ sub _call_api {
 sub _get_settings {
   my $class = shift;
   my $config = $class->_get_config();
-  my $api_id = $config->{default};
+  my $api_id = $class->_get_current_api_id();
   my $settings = $class->_config_load($api_id);
   return $settings;
 }
@@ -566,30 +563,6 @@ sub _time_tracker_entry {
   my $class = shift;
   my $issue = shift;
   return  $issue->{type} . "/" . $issue->{'ref'} . " - " . $issue->{'subject'};
-}
-
-sub _get_api_ids {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my $api_ids;
-  my $i = 0;
-
-  foreach my $api (@{$config->{api}}) {
-    $api_ids->{$api->{id}} = $i;
-    $i++;
-  }
-  return $api_ids;
-}
-
-sub _get_api_id_names {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my @api_id_names;
-
-  foreach my $api (@{$config->{api}}) {
-    push(@api_id_names, $api->{id});
-  }
-  return [@api_id_names];
 }
 
 sub _build_search_result {

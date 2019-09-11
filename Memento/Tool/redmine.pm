@@ -107,7 +107,7 @@ sub issue {
 
   if ($open) {
     my $config = $class->_get_config();
-    my $settings = $class->_config_load($config->{default});
+    my $settings = $class->_config_load($class->_get_current_api_id());
     my $uri = $settings->{url} . "/issues/$id";
     Daemon::open_default_browser($uri);
   }
@@ -149,10 +149,10 @@ sub user {
 
 sub _pre {
   my ($class) = @_;
-  my $config = $class->_get_config();
+  my $api_id = $class->_get_current_api_id();
 
-  if ($config->{default}) {
-    Daemon::printLabel("[Memento] » Redmine: " . $config->{default});
+  if ($api_id) {
+    Daemon::printLabel("[Memento] » Redmine: " . $api_id);
   }
 }
 
@@ -181,12 +181,11 @@ sub _on_git_flow_start {
   my $event = shift;
   my $params = shift;
   my $storage = $class->_get_storage();
-  my $config = $class->_get_config();
 
   if ($params->{issue}) {
     $storage->{issues}->{$params->{branch}} = {
       issue_id => $params->{issue}->{id},
-      redmine_api_id => $config->{default}
+      redmine_api_id => $class->_get_current_api_id()
     };
     $class->_save_storage($storage);
   }
@@ -252,7 +251,7 @@ sub _check_default_api {
     return 0;
   }
   my $config = $class->_get_config();
-  return ($config->{default} eq $params->{redmine_api_id});
+  return ($class->_get_current_api_id() eq $params->{redmine_api_id});
 }
 
 sub _actions {
@@ -404,11 +403,11 @@ sub _call_api {
     die "\n";
   }
 
-  if (!$config->{default}) {
+  my $api_id = $class->_get_current_api_id();
+  if (!$api_id) {
     die "Please configure (switch to) a default Redmine Api configuration\n";
   }
 
-  my $api_id = $config->{default};
   my $settings = $class->_config_load($api_id);
   my $key = $settings->{key};
   my $redmine_url = $settings->{url};
@@ -536,30 +535,6 @@ sub _time_tracker_entry {
   my $class = shift;
   my $issue = shift;
   return  "#" . $issue->{'id'} . " - " . $issue->{'subject'};
-}
-
-sub _get_api_ids {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my $api_ids;
-  my $i = 0;
-
-  foreach my $api (@{$config->{api}}) {
-    $api_ids->{$api->{id}} = $i;
-    $i++;
-  }
-  return $api_ids;
-}
-
-sub _get_api_id_names {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my @api_id_names;
-
-  foreach my $api (@{$config->{api}}) {
-    push(@api_id_names, $api->{id});
-  }
-  return [@api_id_names];
 }
 
 1;

@@ -73,4 +73,36 @@ sub _fix_branch_name {
   return $branch;
 }
 
+sub _get_api_ids {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my $api_ids;
+  my $i = 0;
+
+  foreach my $api (@{$config->{api}}) {
+    $api_ids->{$api->{id}} = $i;
+    $i++;
+  }
+  return $api_ids;
+}
+
+sub _get_api_id_names {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my @api_id_names;
+
+  foreach my $api (@{$config->{api}}) {
+    push(@api_id_names, $api->{id});
+  }
+  return [@api_id_names];
+}
+
+sub _get_current_api_id {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my $git = Memento::Tool->instantiate('git');
+  my $git_config = $git->_get_config(1);
+  return $git_config->{issue_tracker_id} ? $git_config->{issue_tracker_id} : $config->{default};
+}
+
 1;

@@ -148,10 +148,10 @@ sub user {
 
 sub _pre {
   my ($class) = @_;
-  my $config = $class->_get_config();
+  my $api_id = $class->_get_current_api_id();
 
-  if ($config->{default}) {
-    Daemon::printLabel("[Memento] » Gitlab: " . $config->{default});
+  if ($api_id) {
+    Daemon::printLabel("[Memento] » Gitlab: " . $api_id);
   }
 }
 
@@ -190,12 +190,11 @@ sub _on_git_flow_start {
   my $event = shift;
   my $params = shift;
   my $storage = $class->_get_storage();
-  my $config = $class->_get_config();
 
   if ($params->{issue}) {
     $storage->{issues}->{$params->{branch}} = {
       issue_id => $params->{issue}->{iid},
-      gitlab_api_id => $config->{default}
+      gitlab_api_id => $class->_get_current_api_id()
     };
     $class->_save_storage($storage);
   }
@@ -250,8 +249,7 @@ sub _check_default_api {
   if (!$class->_is_default()) {
     return 0;
   }
-  my $config = $class->_get_config();
-  return ($config->{default} eq $params->{gitlab_api_id});
+  return ($class->_get_current_api_id() eq $params->{gitlab_api_id});
 }
 
 sub _actions {
@@ -426,11 +424,11 @@ sub _call_api {
     die "\n";
   }
 
-  if (!$config->{default}) {
+  my $api_id = $class->_get_current_api_id();
+  if (!$api_id) {
     die "Please configure (switch to) a default Gitlab Api configuration\n";
   }
 
-  my $api_id = $config->{default};
   my $settings = $class->_config_load($api_id);
   my $token = $settings->{token};
   my $gitlab_url = $settings->{url};
@@ -448,7 +446,7 @@ sub _call_api {
 sub _get_settings {
   my $class = shift;
   my $config = $class->_get_config();
-  my $api_id = $config->{default};
+  my $api_id = $class->_get_current_api_id();
   return $class->_config_load($api_id);
 }
 
@@ -483,30 +481,6 @@ sub _time_tracker_entry {
   my $class = shift;
   my $issue = shift;
   return  "#" . $issue->{'iid'} . " - " . $issue->{'title'};
-}
-
-sub _get_api_ids {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my $api_ids;
-  my $i = 0;
-
-  foreach my $api (@{$config->{api}}) {
-    $api_ids->{$api->{id}} = $i;
-    $i++;
-  }
-  return $api_ids;
-}
-
-sub _get_api_id_names {
-  my $class = shift;
-  my $config = $class->_get_config();
-  my @api_id_names;
-
-  foreach my $api (@{$config->{api}}) {
-    push(@api_id_names, $api->{id});
-  }
-  return [@api_id_names];
 }
 
 1;

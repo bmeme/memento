@@ -53,12 +53,18 @@ sub config {
       $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
 
       my $issue_tracker = 0;
+      my $tracker_id = 0;
       if (Daemon::prompt('Do you want to enable Issue Tracker support?', 'yes', ['yes', 'no']) eq 'yes') {
         $issue_tracker = Daemon::prompt('Choose an Issue Tracker', $default->{issue_tracker}, $class->_get_issue_trackers());
+        my $tracker = Memento::Tool->instantiate($issue_tracker);
+
         if (!$default->{branch}->{pattern}) {
-          my $tracker = Memento::Tool->instantiate($issue_tracker);
           $default->{branch}->{pattern} = $tracker->_branch_pattern();
         }
+
+        my @api_id_names = $tracker->_get_api_id_names();
+        my $tracker_config = $tracker->_get_config();
+        $tracker_id = Daemon::prompt('Select an account', $tracker_config->{default}, @api_id_names);
       }
       my $pattern = $issue_tracker ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', $default->{branch}->{pattern}) : 0;
 
@@ -97,6 +103,7 @@ sub config {
           post_commit => $post_commit_notify
         },
         issue_tracker => $issue_tracker,
+        issue_tracker_id => $tracker_id,
         time_tracker => $time_tracker
       };
 
@@ -398,7 +405,7 @@ sub _dependencies {
 
 sub _def_config {
   my $class = shift;
-  my $source = $class->_get_current_branch();
+  my $source = _is_configured() ? $class->_get_current_branch() : 0;
 
   return {
     project => undef,
@@ -432,6 +439,7 @@ sub _get_config {
     my $pre_commit = `git config memento.hooks.pre-commit`;
     my $post_commit = `git config memento.hooks.post-commit`;
     my $issue_tracker = `git config memento.issue-tracker`;
+    my $issue_tracker_id = `git config memento.issue-tracker-id`;
     my $time_tracker = `git config memento.time-tracker`;
 
     chomp($source);
@@ -442,6 +450,7 @@ sub _get_config {
     chomp($pre_commit);
     chomp($post_commit);
     chomp($issue_tracker);
+    chomp($issue_tracker_id);
     chomp($time_tracker);
 
     $config = {
@@ -458,6 +467,7 @@ sub _get_config {
         post_commit => $post_commit
       },
       issue_tracker => $issue_tracker,
+      issue_tracker_id => $issue_tracker_id,
       time_tracker => $time_tracker
     };
   }
@@ -509,6 +519,7 @@ sub _save_config {
   system("git config memento.hooks.pre-commit " . $config->{hooks}->{pre_commit});
   system("git config memento.hooks.post-commit " . $config->{hooks}->{post_commit});
   system("git config memento.issue-tracker " . $config->{issue_tracker});
+  system("git config memento.issue-tracker-id " . $config->{issue_tracker_id});
   system("git config memento.time-tracker " . $config->{time_tracker});
 
   # Enable Git Hooks.
