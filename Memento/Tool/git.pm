@@ -181,7 +181,8 @@ sub start {
       die "You have specified an invalid issue id.";
     }
 
-    say "You are going to create a new branch for the following issue:\n";
+    my $source_branch = Daemon::printColor($source, "black on_bright_yellow");
+    say "You are going to create a new branch, starting from $source_branch, for the following issue:\n";
     $class->{$issue_tracker}->_render_issue($issue);
     if (Daemon::prompt("Do you confirm?", 'yes', ['yes', 'no']) eq 'no') {
       die "Aborting...\n";

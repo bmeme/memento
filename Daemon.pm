@@ -258,6 +258,14 @@ sub printLabel {
   say colored([$color], " $label ");
 }
 
+sub printColor {
+  my $label = shift;
+  my $color = shift || "bold white on_rgb015";
+  my $upper = shift;
+  $label = $upper ? uc $label : $label;
+  return colored([$color], " $label ");
+}
+
 sub in_array {
   my ($arr, $search_for) = @_;
   my %items = map {$_ => 1} @$arr;
