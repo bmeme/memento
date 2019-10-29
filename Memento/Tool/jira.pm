@@ -401,7 +401,7 @@ sub _get_issue_transitions {
   my %transitions;
 
   foreach my $transition (@{$data->{transitions}}) {
-    $transitions{$transition->{name}} = $transition->{id};
+    $transitions{$transition->{to}->{name}} = $transition->{id};
   }
 
   return %transitions;
