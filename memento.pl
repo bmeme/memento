@@ -102,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 1.3.1
+version 1.3.2
 
 =head1 SYNOPSIS
 

@@ -191,7 +191,8 @@ sub start {
     $branch = trim $config->{branch}->{pattern};
     $branch =~ s/:(\w+):/$issue->{$1}/g;
     $branch =~ s/:(\w+)-(\w+):/$issue->{$1}->{$2}/;
-    $branch = "$branch";
+    $branch =~ s/:(\w+)-(\w+)-(\w+):/$issue->{$1}->{$2}->{$3}/;
+    $branch = lc "$branch";
   }
   else {
     $branch = Daemon::prompt("Enter the branch name");

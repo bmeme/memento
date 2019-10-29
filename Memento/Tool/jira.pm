@@ -503,7 +503,7 @@ sub _name {
 }
 
 sub _branch_pattern {
-  return 'feature/:key:-:fields-summary:';
+  return ':fields-issuetype-name:/:key:-:fields-summary:';
 }
 
 sub _time_tracker_entry {
