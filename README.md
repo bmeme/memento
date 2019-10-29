@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 1.3.2
+    version 1.3.3
 
 SYNOPSIS
     memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
@@ -210,8 +210,14 @@ GIT
     *log*
       Show the git log tree in a pretty format.
 
-    *rebaseFromSource*
-      Rebases current branch with the source branch.
+    *rebase*
+      `memento git rebase'
+
+      Rebases current branch with the configured source branch.
+
+      `memento git rebase <branch_name>'
+
+      Rebases current branch with the provided one.
 
     *commit*
       Allows you to commit your code by using conventional commits.

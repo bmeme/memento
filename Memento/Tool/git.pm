@@ -223,6 +223,12 @@ sub start {
       say "Configured upstream for branch '$branch'";
     }
   }
+
+  # Store source branch.
+  my $storage = $class->_get_storage();
+  $storage->{$branch}->{source} = $source;
+  $class->_save_storage($storage);
+
   $class->_on('git_flow_start', {branch => $branch, issue => $issue});
 }
 
@@ -287,13 +293,27 @@ sub finish {
   }
 }
 
-sub rebaseFromSource {
+sub rebase {
   my $class = shift;
-  my $config = $class->_get_config();
-  my $source = $config->{branch}->{source};
+  my $rebase_source = shift || 0;
+  my $source = $class->_get_source();
   my $branch = $class->_get_current_branch();
   my $remote = $class->_get_origin_url() ? $class->_get_remote() : 0;
   my $modified_files = $class->_get_modified_files();
+  my $source_branch = Daemon::printColor($source, "black on_bright_yellow");
+
+  if ($rebase_source && ($rebase_source ne $source)) {
+    say "The configured source branch $source_branch diverges from the one you provided: $rebase_source";
+    if (Daemon::prompt("Do you want to continue anyway?", 'no', ['yes', 'no']) eq 'no') {
+      die "Aborting...\n";
+    }
+
+    $source = $rebase_source;
+    $class->_set_source($source);
+    $source_branch = Daemon::printColor($source, "black on_bright_yellow");
+  }
+
+  say "Now rebasing from $source_branch";
 
   if (length($modified_files)) {
     system("git stash");
@@ -309,6 +329,14 @@ sub rebaseFromSource {
   if (length($modified_files)) {
     system("git stash apply");
   }
+}
+
+sub source {
+  my $class = shift;
+  my $source = $class->_get_source();
+  my $branch = $class->_get_current_branch();
+  my $source_branch = Daemon::printColor($source, "black on_bright_yellow");
+  say "Branch $branch has been created starting from $source_branch";
 }
 
 sub commit {
@@ -781,6 +809,9 @@ sub _get_branches {
 sub _get_current_branch {
   my $branch = `git rev-parse --abbrev-ref HEAD`;
   chomp($branch);
+  if (!$branch) {
+    die "Cannot get current branch.\n";
+  }
   return $branch;
 }
 
@@ -899,6 +930,45 @@ sub _get_modified_files {
   my $files = `git ls-files --other --modified --exclude-standard`;
   chomp($files);
   return $files;
+}
+
+sub _get_source {
+  my $class = shift;
+  my $config = $class->_get_config();
+  my $source = $config->{branch}->{source};
+  my $branch = $class->_get_current_branch();
+  my $storage = $class->_get_storage();
+  my $source_branch = Daemon::printColor($source, "black on_bright_yellow");
+
+  if (!$storage->{$branch}->{source}) {
+    say "No source branch has been configured for $branch";
+    if (Daemon::prompt("Do you want to configure $source_branch as source branch for $branch?", 'yes', ['yes', 'no']) eq 'no') {
+      die "Aborting...\n";
+    }
+    $class->_set_source($source);
+  }
+  else {
+    $source = $storage->{$branch}->{source};
+  }
+
+  return $source;
+}
+
+sub _set_source {
+  my $class = shift;
+  my $source = shift || 0;
+  my $storage = $class->_get_storage();
+  my $branch = $class->_get_current_branch();
+
+  if (!$source) {
+    die "Missing source argument parameter.\n";
+  }
+
+  say "Updating your branch configurations...";
+  my $source_branch = Daemon::printColor($source, "black on_bright_yellow");
+  $storage->{$branch}->{source} = $source;
+  $class->_save_storage($storage);
+  say "Branch $source_branch has been configured as source branch for $branch";
 }
 
 1;

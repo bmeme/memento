@@ -102,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 1.3.2
+version 1.3.3
 
 =head1 SYNOPSIS
 
@@ -349,9 +349,15 @@ this command.
 
 Show the git log tree in a pretty format.
 
-=item I<rebaseFromSource>
+=item I<rebase>
 
-Rebases current branch with the source branch.
+C<< memento git rebase >>
+
+Rebases current branch with the configured source branch.
+
+C<< memento git rebase <branch_name> >>
+
+Rebases current branch with the provided one.
 
 =item I<commit>
 
