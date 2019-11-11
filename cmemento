@@ -11,4 +11,18 @@ then
   CMD="bash"
 fi
 
-docker run -v /home/$(whoami)/.memento:/home/memento/.memento -v $(pwd):/usr/src/app -w /usr/src/app -it memento /bin/bash -c "memento ${CMD}"
+PWD=$(pwd -P)
+
+if [ -f .git ]; then
+	SOURCE="${PWD}/.."
+	DEST="/usr/src/app"
+	CURRDIR=$(basename ${PWD})
+	WORKDIR="${DEST}/${CURRDIR}"
+else
+	SOURCE="${PWD}"
+	DEST="/usr/src/app"
+	WORKDIR="/usr/src/app"
+fi
+
+docker run -v /home/$(whoami)/.memento:/home/memento/.memento -v ${SOURCE}:${DEST} -w ${WORKDIR} -it memento /bin/bash -c "memento ${CMD}"
+
