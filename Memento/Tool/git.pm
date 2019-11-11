@@ -79,7 +79,7 @@ sub config {
       my $commit_validation = 0;
       if (Daemon::prompt("Do you want to set a validation for your commit messages?", 'no', ['yes', 'no']) eq 'yes') {
         $commit_validation = Daemon::prompt('Enter regex to be used as commit validation (without leading and trailing slashes)', $default->{hooks}->{commit_msg});
-        $commit_validation =~ s/\\/\\\\/g;
+        $commit_validation = quotemeta($commit_validation);
       }
 
       my $pre_commit = (Daemon::prompt("Do you want to enable 'pre commit' events for this project?", 'no', ['yes', 'no']) eq 'yes') ? 1 : 0;
