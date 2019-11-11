@@ -204,6 +204,21 @@ sub _def_config {
   };
 }
 
+sub _fix_branch_prefix {
+  my $class = shift;
+  my $prefix = shift;
+  my $issue = shift;
+  my $type = lc $issue->{fields}->{issuetype}->{name};
+
+  if ($issue->{fields}->{issuetype}->{subtask} && ($type eq 'sub-task')) {
+    my $parent_type = lc $issue->{fields}->{parent}->{fields}->{issuetype}->{name};
+    my $parent_key = $issue->{fields}->{parent}->{key};
+    $prefix = "$parent_type/$parent_key/$type";
+  }
+
+  return $prefix;
+}
+
 sub _fix_branch_name {
   my $class = shift;
   my $branch = shift;

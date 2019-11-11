@@ -66,6 +66,13 @@ sub _is_default {
   return ($git_config->{issue_tracker} eq $class->_name());
 }
 
+sub _fix_branch_prefix {
+  my $class = shift;
+  my $prefix = shift;
+  my $issue = shift;
+  return $prefix;
+}
+
 sub _fix_branch_name {
   my $class = shift;
   my $branch = shift;

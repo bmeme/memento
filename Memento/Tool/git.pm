@@ -755,7 +755,7 @@ sub _check_branch_name {
   my $issue = shift;
   my $config = $class->_get_config();
 
-  $branch =~ /^(feature|\w+)\//;
+  $branch =~ /^(feature|[\w-]+)\//;
   my $prefix = $1 ? $1 : "feature";
 
   $branch =~ s/^$prefix\///g;
@@ -763,6 +763,7 @@ sub _check_branch_name {
 
   if ($config->{issue_tracker}) {
     my $issue_tracker = $config->{issue_tracker};
+    $prefix = $class->{$issue_tracker}->_fix_branch_prefix($prefix, $issue);
     $branch = $class->{$issue_tracker}->_fix_branch_name($branch, $issue);
   }
 
