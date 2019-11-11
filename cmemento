@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+QUOTEDCMD=()
+for token in "$@"; do
+  QUOTEDCMD+=($(printf "%q" "$token"))
+done
+CMD="${QUOTEDCMD[*]}"
+if [[ -z "$CMD" ]]
+then
+  CMD="bash"
+fi
+
+docker run -v /home/$(whoami)/.memento:/home/memento/.memento -v $(pwd):/usr/src/app -w /usr/src/app -it memento /bin/bash -c "memento ${CMD}"
