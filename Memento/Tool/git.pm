@@ -755,11 +755,14 @@ sub _check_branch_name {
   my $issue = shift;
   my $config = $class->_get_config();
 
-  $branch =~ /^(feature|[\w-]+)\//;
+  $branch =~ /^(feature|[\w\-\s]+)\//;
   my $prefix = $1 ? $1 : "feature";
 
   $branch =~ s/^$prefix\///g;
   $branch = Daemon::machine_name($branch);
+
+  # since whitespaces can be used, converts anything different from the pattern.
+  $prefix =~ s/[^\w\-]+/-/g;
 
   if ($config->{issue_tracker}) {
     my $issue_tracker = $config->{issue_tracker};
