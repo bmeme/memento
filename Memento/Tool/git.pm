@@ -128,7 +128,7 @@ sub config {
 }
 
 sub log {
-  system("git log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=short");
+  Daemon::system("git log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=short");
 }
 
 sub root {
@@ -207,15 +207,15 @@ sub start {
 
   if (Daemon::in_array([@branches], $branch)) {
     # Checkout to existing branch.
-    system("git checkout $branch");
+    Daemon::system("git checkout $branch");
   }
   else {
     # Update source branch.
     my $remote = $class->_get_remote();
-    system("git checkout $source");
-    system("git pull $remote $source --rebase");
+    Daemon::system("git checkout $source");
+    Daemon::system("git pull $remote $source --rebase");
     # Create a new branch from the specified source.
-    system("git checkout -b $branch $source");
+    Daemon::system("git checkout -b $branch $source");
 
     # Set upstream for the new branch if a remote origin exists.
     if ($upstream && $class->_get_origin_url() && !$class->_get_tracked_branch()) {
@@ -272,16 +272,26 @@ sub finish {
     $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
   }
 
-  system("git push $remote $branch") if ($remote);
+  if ($remote) {
+    Daemon::system("git push $remote $branch");
+  };
 
   if ($destination ne '0') {
     if ($destination ne $branch) {
-      system("git checkout $destination");
-      system("git reset --hard $remote/$destination") if ($remote);
-      system("git merge $branch");
-      system("git push $remote $destination") if ($remote);
-      system("git branch -D $branch") if ($delete);
-      system("git push $remote :$branch") if ($remote && ($delete == 2));
+      Daemon::system("git checkout $destination");
+      if ($remote) {
+        Daemon::system("git reset --hard $remote/$destination");
+      }
+      Daemon::system("git merge $branch");
+      if ($remote) {
+        Daemon::system("git push $remote $destination");
+      }
+      if ($delete) {
+        Daemon::system("git branch -D $branch");
+      }
+      if ($remote && ($delete == 2)) {
+        Daemon::system("git push $remote :$branch");
+      }
     }
     else {
       die "Current branch and destination branch are the same. Cannot proceed.\n";
@@ -316,18 +326,18 @@ sub rebase {
   say "Now rebasing from $source_branch";
 
   if (length($modified_files)) {
-    system("git stash");
+    Daemon::system("git stash");
   }
 
   if ($remote) {
-    system("git checkout $source");
-    system("git pull $remote $source --rebase");
-    system("git checkout $branch");
+    Daemon::system("git checkout $source");
+    Daemon::system("git pull $remote $source --rebase");
+    Daemon::system("git checkout $branch");
   }
-  system("git rebase $source");
+  Daemon::system("git rebase $source");
 
   if (length($modified_files)) {
-    system("git stash apply");
+    Daemon::system("git stash apply");
   }
 }
 
@@ -415,7 +425,7 @@ sub commit {
     $footer = "$footer\n@footer_content";
   }
 
-  system("git commit -m \"$type$scope: $description\n\n$breaking$body\n\n$footer\"");
+  Daemon::system("git commit -m \"$type$scope: $description\n\n$breaking$body\n\n$footer\"");
 }
 
 # OVERRIDDEN METHODS ###########################################################
@@ -541,24 +551,24 @@ sub _save_config {
   my $git_dir = $class->_get_git_dir();
   Daemon::write("$git_dir/description", $config->{project}, 1, '>');
 
-  system("git config memento.branch.source " . $config->{branch}->{source});
-  system("git config memento.branch.destination " . $config->{branch}->{destination});
-  system("git config memento.branch.delete " . $config->{branch}->{delete});
-  system("git config memento.branch.pattern " . $config->{branch}->{pattern});
-  system("git config memento.hooks.commit-msg " . $config->{hooks}->{commit_msg});
-  system("git config memento.hooks.pre-commit " . $config->{hooks}->{pre_commit});
-  system("git config memento.hooks.post-commit " . $config->{hooks}->{post_commit});
-  system("git config memento.issue-tracker " . $config->{issue_tracker});
-  system("git config memento.issue-tracker-id " . $config->{issue_tracker_id});
-  system("git config memento.time-tracker " . $config->{time_tracker});
+  Daemon::system("git config memento.branch.source " . $config->{branch}->{source});
+  Daemon::system("git config memento.branch.destination " . $config->{branch}->{destination});
+  Daemon::system("git config memento.branch.delete " . $config->{branch}->{delete});
+  Daemon::system("git config memento.branch.pattern " . $config->{branch}->{pattern});
+  Daemon::system("git config memento.hooks.commit-msg " . $config->{hooks}->{commit_msg});
+  Daemon::system("git config memento.hooks.pre-commit " . $config->{hooks}->{pre_commit});
+  Daemon::system("git config memento.hooks.post-commit " . $config->{hooks}->{post_commit});
+  Daemon::system("git config memento.issue-tracker " . $config->{issue_tracker});
+  Daemon::system("git config memento.issue-tracker-id " . $config->{issue_tracker_id});
+  Daemon::system("git config memento.time-tracker " . $config->{time_tracker});
 
   # Enable Git Hooks.
   my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";
   my $git_hooks_dir = "$git_dir/hooks";
 
-  system("ln -s $git_hooks $git_hooks_dir/commit-msg")  if (!-f "$git_hooks_dir/commit-msg");
-  system("ln -s $git_hooks $git_hooks_dir/pre-commit") if (!-f "$git_hooks_dir/pre-commit");
-  system("ln -s $git_hooks $git_hooks_dir/post-commit") if (!-f "$git_hooks_dir/post-commit");
+  Daemon::system("ln -s $git_hooks $git_hooks_dir/commit-msg")  if (!-f "$git_hooks_dir/commit-msg");
+  Daemon::system("ln -s $git_hooks $git_hooks_dir/pre-commit") if (!-f "$git_hooks_dir/pre-commit");
+  Daemon::system("ln -s $git_hooks $git_hooks_dir/post-commit") if (!-f "$git_hooks_dir/post-commit");
 
   $class->SUPER::_save_config($config);
   $class->_on('git_config_save', {config => $config});
@@ -736,7 +746,7 @@ sub _check_repository {
 
     if (Daemon::prompt('Do you confirm execution?', 'yes', ['yes', 'no']) eq 'yes') {
       foreach my $git_command (@{$git_commands}) {
-        system($git_command);
+        Daemon::system($git_command);
       }
       say "Git repository initialized.\n";
     }
@@ -781,9 +791,9 @@ sub _delete_config {
 
   # Delete memento git configurations if exist.
   if (&_is_configured()) {
-    system("git config --remove-section memento.branch");
-    system("git config --remove-section memento.hooks");
-    system("git config --remove-section memento");
+    Daemon::system("git config --remove-section memento.branch");
+    Daemon::system("git config --remove-section memento.hooks");
+    Daemon::system("git config --remove-section memento");
   }
 
   # Delete git hooks symlinks if exist.

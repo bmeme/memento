@@ -188,11 +188,13 @@ sub _on_schema_check {
       }
 
       my $remote = $git->_get_remote();
-      system("git reset --hard HEAD");
-      system("git pull $remote $branch");
+      Daemon::system("git reset --hard HEAD");
+      Daemon::system("git pull $remote $branch");
+
       say Memento::splash();
+
       if ($full_install) {
-        system("./install.pl");
+        Daemon::system("./install.pl");
       }
     }
   }

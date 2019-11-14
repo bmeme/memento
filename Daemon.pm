@@ -250,6 +250,15 @@ sub array2table {
   return '';
 }
 
+sub system {
+  my $command = shift;
+  my $retMessage = printColor($command, "white on_red");
+
+  say "▶ $command";
+  0 == system($command)
+      or die "There was an error while trying to execute command $retMessage. Fix the problem and try again\n";
+}
+
 sub printLabel {
   my $label = shift;
   my $color = shift || "bold white on_rgb015";
