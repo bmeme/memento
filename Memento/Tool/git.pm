@@ -173,6 +173,13 @@ sub start {
 
   if ($config->{issue_tracker}) {
     my $issue_tracker = $config->{issue_tracker};
+
+    # Check if the issue tracker has been instantiated. This may happen when
+    # executing a Memento git command before having initialized Memento git.
+    if (!$class->{$issue_tracker}) {
+      $class->{$issue_tracker} = Memento::Tool->instantiate($issue_tracker);
+    }
+
     if (!$id) {
       $id = Daemon::prompt("Enter $issue_tracker issue id");
     }
