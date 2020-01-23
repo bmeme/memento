@@ -33,14 +33,16 @@ sub config {
     case 'add' {
       say "Please provide your Jira info and remember that all values are mandatory";
       my $id = Daemon::prompt('Configuration id');
-      my $username = Daemon::prompt('Jira account email');
-      my $password = Daemon::prompt('Jira API token (https://id.atlassian.com/manage/api-tokens)');
+      my $credentials = $class->_get_credentials();
+      my $username = $credentials->{username};
+      my $password = $credentials->{password};
       my $url = Daemon::prompt('Jira URL');
 
       my $conf = {
         id => $id,
         key => encode_base64("$username:$password"),
-        url => $url
+        url => $url,
+        type => $credentials->{type}
       };
 
       my $is_default = (Daemon::prompt('Set this configuration as your default one?', 'yes', ['yes', 'no']) eq 'yes');
@@ -57,14 +59,16 @@ sub config {
       my $key = Daemon::prompt('Choose an api id', undef, $class->_get_api_ids());
 
       my $id = $config->{api}[$key]->{id};
-      my $username = Daemon::prompt('Jira account email');
-      my $password = Daemon::prompt('Jira API token (https://id.atlassian.com/manage/api-tokens)');
+      my $credentials = $class->_get_credentials();
+      my $username = $credentials->{username};
+      my $password = $credentials->{password};
       my $url = Daemon::prompt('Jira URL', $config->{api}[$key]->{url});
 
       my $conf = {
         id => $id,
         key => encode_base64("$username:$password"),
-        url => $url
+        url => $url,
+        type => $credentials->{type}
       };
 
       $config->{api}[$key] = $conf;
@@ -228,6 +232,30 @@ sub _fix_branch_name {
 
   $branch =~ s/$key_lc/$key/;
   return $branch;
+}
+
+sub _get_credentials {
+  my $class = shift;
+  my $type = Daemon::prompt('Choose an authentication method', undef, ['Basic Authentication', 'Api token']);
+  my $username = "";
+  my $password = "";
+
+  if ($type eq 'Api token') {
+    $type = 'token';
+    $username = Daemon::prompt('Jira account email');
+    $password = Daemon::prompt('Jira API token (https://id.atlassian.com/manage/api-tokens)');
+  }
+  else {
+    $type = 'basic';
+    $username = Daemon::prompt('Jira username');
+    $password = Daemon::prompt('Jira password');
+  }
+
+  return {
+    type => $type,
+    username => $username,
+    password => $password
+  }
 }
 
 # EVENT LISTENERS ##############################################################
