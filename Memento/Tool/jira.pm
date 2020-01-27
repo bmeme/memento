@@ -210,7 +210,7 @@ sub _fix_branch_prefix {
   my $issue = shift;
   my $type = lc $issue->{fields}->{issuetype}->{name};
 
-  if ($issue->{fields}->{issuetype}->{subtask} && ($type eq 'sub-task')) {
+  if ($issue->{fields}->{issuetype}->{subtask} && Daemon::in_array(['sub-task', 'sub-feature'], $type)) {
     my $parent_type = lc $issue->{fields}->{parent}->{fields}->{issuetype}->{name};
     my $parent_key = $issue->{fields}->{parent}->{key};
     $prefix = "$parent_type/$parent_key/$type";
