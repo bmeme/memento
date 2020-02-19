@@ -313,7 +313,7 @@ sub finish {
 sub rebase {
   my $class = shift;
   my $rebase_source = shift || 0;
-  my $source = $class->_get_source();
+  my $source = $class->_get_source($rebase_source);
   my $branch = $class->_get_current_branch();
   my $remote = $class->_get_origin_url() ? $class->_get_remote() : 0;
   my $modified_files = $class->_get_modified_files();
@@ -956,7 +956,7 @@ sub _get_modified_files {
 sub _get_source {
   my $class = shift;
   my $config = $class->_get_config();
-  my $source = $config->{branch}->{source};
+  my $source = shift || $config->{branch}->{source};
   my $branch = $class->_get_current_branch();
   my $storage = $class->_get_storage();
   my $source_branch = Daemon::printColor($source, "black on_bright_yellow");
