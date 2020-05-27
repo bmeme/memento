@@ -354,7 +354,7 @@ sub _change_issue_status {
       my %assignees = $class->_get_assignable_users($issue->{key});
       my $assignee = Daemon::prompt("Choose an assignee", undef, [sort keys %assignees]);
       $data = {
-        name => $assignees{$assignee}
+        accountId => $assignees{$assignee}
       };
       $class->_call_api("issue/" . $issue->{id} . "/assignee", $data, 'PUT');
     }
@@ -397,7 +397,7 @@ sub _get_assignable_users {
   my %users;
 
   foreach my $user (@{$data}) {
-    $users{encode('utf8', $user->{displayName})} = $user->{name};
+    $users{encode('utf8', $user->{displayName})} = $user->{accountId};
   }
 
   return %users;
