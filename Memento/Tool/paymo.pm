@@ -257,6 +257,79 @@ sub _on_git_flow_start {
   $class->_save_storage($storage);
 }
 
+sub _on_activity_start {
+  my $class = shift;
+  my $activity = Memento::Tool->instantiate('activity');
+  my $activity_storage = $activity->_get_storage();
+
+  if (!$activity_storage->{time_tracker} || $activity_storage->{time_tracker} ne $class->_name()) {
+    return;
+  }
+
+  my $storage = $class->_get_storage();
+  my $activity_name = $activity_storage->{activity};
+
+  $storage->{activities}->{$activity_name}->{start} = $class->_get_formatted_time();
+  $class->_save_storage($storage);
+}
+
+sub _on_activity_resume {
+  my $class = shift;
+  $class->_on_activity_start(@_);
+}
+
+sub _on_activity_stop {
+  my $class = shift;
+  my $activity = Memento::Tool->instantiate('activity');
+  my $activity_storage = $activity->_get_storage();
+
+  if (!$activity_storage->{time_tracker} || ($activity_storage->{time_tracker} ne $class->_name())) {
+    return;
+  }
+
+  my $storage = $class->_get_storage();
+  my $activity_name = $activity_storage->{activity};
+
+  say "";
+  my %projects = $class->_get_projects();
+  my $project_name = Daemon::prompt("Please select a Paymo project", undef, [sort keys %projects]);
+  my $project_id = $projects{$project_name};
+
+  say "";
+  my %task_list = $class->_get_task_list($project_id);
+  my $task_name = Daemon::prompt("Choose a task list", undef, [sort keys %task_list]);
+  my $task_list_id = $task_list{$task_name};
+
+  my $issue = $activity_storage->{issue};
+  my $time_entry = {
+    task_id => 0,
+    start_time => $storage->{activities}->{$activity_name}->{start},
+    end_time => $class->_get_formatted_time()
+  };
+
+  my $task_data = {
+    name => $activity_name,
+    tasklist_id => $task_list_id
+  };
+  my $project = {
+    project_id => $project_id
+  };
+  my $task = $class->_retrieve_task($task_data, $project);
+  $task->{'name'} = encode('utf8', $task->{'name'});
+
+  my $task_info = {
+    'name' => $task->{'name'},
+    'start_time' => $storage->{activities}->{$activity_name}->{start},
+    'project_id' => $task->{'project_id'}
+  };
+  say Daemon::array2table("Paymo Time Entry", [$task_info]);
+
+  if ($task && (Daemon::prompt('Do you want to save worked time on Paymo?', 'yes', ['yes', 'no']) eq 'yes')) {
+    $time_entry->{'task_id'} = $task->{'id'};
+    my $response = $class->_call_api("entries", $time_entry, 'POST');
+  }
+}
+
 sub _on_git_flow_pause {
   my $class = shift;
   $class->_on_git_flow_finish(@_);
