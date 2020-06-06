@@ -16,6 +16,7 @@ use Text::Table;
 use POSIX qw(ceil floor);
 use MIME::Base64;
 use JIRA::REST;
+use Data::Dumper;
 
 our ($jira);
 

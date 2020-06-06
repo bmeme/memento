@@ -2,18 +2,16 @@ NAME
     memento
 
 VERSION
-    version 1.5.8
+    version 1.11.0
 
 SYNOPSIS
-    memento [-OPTIONS [-MORE_OPTIONS]] [--] [PROGRAM_ARG1 ...]
-
-    The following single-character options are accepted: Boolean (without
-    arguments): --version --help
+    memento [TOOL [COMMAND [COMMAND_ARG1 ...]]] [--OPTIONS [--MORE_OPTIONS]]
 
 DESCRIPTION
     memento is a modular step by step command line tool. By default it
     provides the following commands:
 
+      - activity
       - bitbucket
       - features
       - git
@@ -37,14 +35,17 @@ DESCRIPTION
 
       $ memento
       Enter the tool name to be used:
+      - activity
       - bitbucket
       - features
       - git
       - gitlab
       - history
       - jira
+      - paymo
       - redmine
       - schema
+      - taiga
       - workflow
       » history
 
@@ -82,6 +83,52 @@ INSTALLATION
       `sudo apt-get install libwww-curl-perl'
 
       `sudo ./install.pl'
+
+ACTIVITY
+    *memento activity* is a configurable tool which will help you keeping
+    track of your activities progression and the time spent on it. If you
+    want you can configure it so that you can use it in conjunction with an
+    issue tracker and a time tracker.
+
+    *memento activity* provides the following operations:
+
+    *config*
+      Manages Memento Activity configurations providing the following
+      operations:
+
+      *init [--project]*
+        Initialize your Activity configurations that will be used for
+        defining which issue tracker and / or time tracker will be used.
+
+      *list*
+        Lists all Memento Activity configurations.
+
+      *delete*
+        Delete all Memento Activity configurations.
+
+    *start [issue-id] [--issue-tracker] [--time-tracker] [--manual]*
+      Starts a new activity. Use --manual option if you don't need to use an
+      Issue Tracker. If during the configuration operation, the Issue
+      Tracker support was enabled, you will be asked to insert an Issue Id,
+      or you can provide it inline *memento activity start [issue-id]*. It
+      will be used to extract the activity name from the issue and to change
+      the its status. Via the *workflow* tool, it's possible to create a
+      rule for updating issue status and done ratio on activity start,
+      automatically assigning it to current user, and optionally add a
+      comment.
+
+    *stop*
+      Use this command when you've to stop working on your activity. Via the
+      *workflow* tool, it's possible to create a rule for updating issue
+      status and done ratio on activity stop and optionally add a comment.
+
+    *resume*
+      If you have previously stopped your activity, you can always resume it
+      by using this command.
+
+    *current [--open]*
+      You can view what's your current activity by using this command. If
+      you wanna open it in your browser, then use the --open option.
 
 BITBUCKET
     Due to its API limitations, Bitbucket issue tracker can only be used for
