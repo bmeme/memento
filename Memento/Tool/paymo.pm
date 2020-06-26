@@ -506,7 +506,7 @@ sub _call_api {
     die "Please configure (switch to) a default Paymo Api configuration\n";
   }
 
-  my $api_id = $config->{default};
+  my $api_id = $class->_get_current_api_id();
   my $settings = $class->_config_load($api_id);
   my $key = $settings->{key};
   my $paymo_url = 'https://app.paymoapp.com/api';

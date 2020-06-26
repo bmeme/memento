@@ -52,27 +52,37 @@ sub config {
       my $delete = Daemon::prompt('Do you want to automatically delete the new branch after "memento git finish"?', 'no', ['no', 'local', 'remote + local']);
       $delete = ($delete eq 'no') ? 0 : (($delete eq 'local') ? 1 : 2);
 
+      my $tracker = 0;
+      my @api_id_names;
+      my $tracker_config;
+
       my $issue_tracker = 0;
-      my $tracker_id = 0;
+      my $issue_tracker_id = 0;
       if (Daemon::prompt('Do you want to enable Issue Tracker support?', 'yes', ['yes', 'no']) eq 'yes') {
         $issue_tracker = Daemon::prompt('Choose an Issue Tracker', $default->{issue_tracker}, $class->_get_issue_trackers());
-        my $tracker = Memento::Tool->instantiate($issue_tracker);
+        $tracker = Memento::Tool->instantiate($issue_tracker);
 
         if (!$default->{branch}->{pattern}) {
           $default->{branch}->{pattern} = $tracker->_branch_pattern();
         }
 
-        my @api_id_names = $tracker->_get_api_id_names();
-        my $tracker_config = $tracker->_get_config();
-        $tracker_id = Daemon::prompt('Select an account', $tracker_config->{default}, @api_id_names);
+        @api_id_names = $tracker->_get_api_id_names();
+        $tracker_config = $tracker->_get_config();
+        $issue_tracker_id = Daemon::prompt('Select an account', $tracker_config->{default}, @api_id_names);
       }
       my $pattern = $issue_tracker ? Daemon::prompt('Please specify your branch naming convention (you can use issue properties as tokens)', $default->{branch}->{pattern}) : 0;
 
       say "";
       my $time_tracker = 0;
+      my $time_tracker_id = 0;
       if (Daemon::prompt('Do you want to enable Time Tracker support?', 'yes', ['yes', 'no']) eq 'yes') {
         $time_tracker = Daemon::prompt('Choose a Time Tracker', $default->{time_tracker}, $class->_get_time_trackers());
       }
+
+      $tracker = Memento::Tool->instantiate($time_tracker);
+      @api_id_names = $tracker->_get_api_id_names();
+      $tracker_config = $tracker->_get_config();
+      $time_tracker_id = Daemon::prompt('Select an account', $tracker_config->{default}, @api_id_names);
 
       say "";
       Daemon::printLabel("Git Hooks");
@@ -103,8 +113,9 @@ sub config {
           post_commit => $post_commit_notify
         },
         issue_tracker => $issue_tracker,
-        issue_tracker_id => $tracker_id,
-        time_tracker => $time_tracker
+        issue_tracker_id => $issue_tracker_id,
+        time_tracker => $time_tracker,
+        time_tracker_id => $time_tracker_id
       };
 
       say Daemon::array2table('Memento Git configurations', [$config], {full_nested => 1});
@@ -468,7 +479,9 @@ sub _def_config {
       post_commit => 0
     },
     issue_tracker => 0,
-    time_tracker => 0
+    issue_tracker_id => 0,
+    time_tracker => 0,
+    time_tracker_id => 0
   };
 }
 
@@ -488,6 +501,7 @@ sub _get_config {
     my $issue_tracker = `git config memento.issue-tracker`;
     my $issue_tracker_id = `git config memento.issue-tracker-id`;
     my $time_tracker = `git config memento.time-tracker`;
+    my $time_tracker_id = `git config memento.time-tracker-id`;
 
     chomp($source);
     chomp($destination);
@@ -499,6 +513,7 @@ sub _get_config {
     chomp($issue_tracker);
     chomp($issue_tracker_id);
     chomp($time_tracker);
+    chomp($time_tracker_id);
 
     $config = {
       project => $class->_get_project_name,
@@ -515,7 +530,8 @@ sub _get_config {
       },
       issue_tracker => $issue_tracker,
       issue_tracker_id => $issue_tracker_id,
-      time_tracker => $time_tracker
+      time_tracker => $time_tracker,
+      time_tracker_id => $time_tracker_id
     };
   }
   elsif (!&_is_configured && $optional) {
@@ -568,6 +584,7 @@ sub _save_config {
   Daemon::system("git config memento.issue-tracker " . $config->{issue_tracker});
   Daemon::system("git config memento.issue-tracker-id " . $config->{issue_tracker_id});
   Daemon::system("git config memento.time-tracker " . $config->{time_tracker});
+  Daemon::system("git config memento.time-tracker-id " . $config->{time_tracker_id});
 
   # Enable Git Hooks.
   my $git_hooks = Memento::Tool->root() . "/misc/git-hooks.pl";

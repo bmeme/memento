@@ -102,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 1.11.0
+version 1.12.0
 
 =head1 SYNOPSIS
 
@@ -124,6 +124,7 @@ By default it provides the following commands:
   - redmine
   - schema
   - taiga
+  - tempo
   - workflow
 
 Memento, for each command, provides by default a fallback helper if a
@@ -148,6 +149,7 @@ or via progressive input:
   - redmine
   - schema
   - taiga
+  - tempo
   - workflow
   » history
 
@@ -718,6 +720,54 @@ Renders a table containing info about all available Paymo users.
 =item I<user>
 
 Renders a table containing info about current user referring to the active api.
+
+=back
+
+
+
+=head1 TEMPO
+
+You can easily integrate Memento with multiple instances of Tempo, with the
+I<memento tempo config add> command, and switch from one to another simply by
+using the I<memento tempo config switch [tempo_api_id]> command.
+
+I<memento tempo> provides the following operations:
+
+=over 2
+
+=item I<config>
+
+Manages Tempo API configurations providing the following options:
+
+=over 2
+
+=item I<add>
+
+Adds a new configurations set for a Tempo instance.
+
+=item I<delete [tempo_api_id]>
+
+Deletes a configurations set for a Tempo instance.
+
+=item I<list>
+
+Lists all Tempo configurations.
+
+=item I<switch [tempo_api_id]>
+
+Sets a Tempo instance as the default one. All queries will be executed to the
+default one. Otherwise, you can change on the fly the active Tempo instance by
+using the B<--api-id> option, for each memento tempo command.
+
+=back
+
+=item I<members>
+
+Renders a table containing info about all available team members.
+
+=item I<teams>
+
+Renders a table containing info about all available teams.
 
 =back
 
