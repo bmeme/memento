@@ -102,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 1.12.0
+version 1.12.1
 
 =head1 SYNOPSIS
 
@@ -191,6 +191,15 @@ C<< sudo ./install.pl >>
 
 =back
 
+
+=head1 AFTER INSTALL
+
+After install process has ended please add the lines shown by the install script
+to your .bashrc or .zshrc file:
+
+memento schema check
+
+<memento-install-dir>/misc/completion.sh
 
 
 =head1 ACTIVITY

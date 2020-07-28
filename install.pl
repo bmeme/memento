@@ -105,8 +105,12 @@ if (!-f "$bin_dir/memento") {
 }
 
 say "\nMemento installation finished.";
-say "Please add the following line to your .bashrc or .zshrc file:\n";
+say "Please add the following lines to your .bashrc or .zshrc file:\n";
 say "\tmemento schema check\n";
+
+my $memento_dir = `memento schema root`;
+chomp($memento_dir);
+say "$memento_dir/misc/completion.sh";
 
 1;
 
@@ -140,3 +144,4 @@ be used as the default one.
 =back
 
 =cut
+

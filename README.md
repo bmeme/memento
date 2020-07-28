@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 1.12.0
+    version 1.12.1
 
 SYNOPSIS
     memento [TOOL [COMMAND [COMMAND_ARG1 ...]]] [--OPTIONS [--MORE_OPTIONS]]
@@ -85,6 +85,14 @@ INSTALLATION
       `sudo apt-get install libwww-curl-perl'
 
       `sudo ./install.pl'
+
+AFTER INSTALL
+    After install process has ended please add the lines shown by the
+    install script to your .bashrc or .zshrc file:
+
+    memento schema check
+
+    <memento-install-dir>/misc/completion.sh
 
 ACTIVITY
     *memento activity* is a configurable tool which will help you keeping
