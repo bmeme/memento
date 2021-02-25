@@ -218,6 +218,10 @@ sub _fix_branch_prefix {
   if ($issue->{fields}->{issuetype}->{subtask}) {
     my $parent_type = lc $issue->{fields}->{parent}->{fields}->{issuetype}->{name};
     my $parent_key = $issue->{fields}->{parent}->{key};
+
+    # since whitespaces can be used, converts anything different from the pattern.
+    $parent_type =~ s/[^\w\-]+/-/g;
+
     $prefix = "$parent_type/$parent_key/$type";
   }
 

@@ -2,7 +2,7 @@ NAME
     memento
 
 VERSION
-    version 1.12.1
+    version 1.12.2
 
 SYNOPSIS
     memento [TOOL [COMMAND [COMMAND_ARG1 ...]]] [--OPTIONS [--MORE_OPTIONS]]
