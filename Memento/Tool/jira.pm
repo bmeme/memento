@@ -528,7 +528,8 @@ sub _render_issue {
   my $full = shift;
   my $fields = $issue->{'fields'};
   my $title = sprintf("[%s] #%s - %s", $fields->{'project'}->{'name'}, $issue->{'key'}, $fields->{'summary'});
-  my ($bg_color) = split('-', $fields->{'status'}->{'statusCategory'}->{'colorName'});
+  my @color = split('-', $fields->{'status'}->{'statusCategory'}->{'colorName'});
+  my $bg_color = $class->_get_issue_color($color[-1]);
 
   Daemon::printLabel($title, "bold white on_$bg_color");
   say sprintf("|- %s: %s", encode('utf8', $fields->{'issuetype'}->{'name'}), $fields->{'status'}->{'name'});
@@ -544,6 +545,19 @@ sub _render_issue {
     Daemon::printLabel("Description");
     say encode('utf8', $fields->{'description'});
   }
+}
+
+sub _get_issue_color {
+  my $class = shift;
+  my $color = shift;
+  my $basic_colors = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'];
+
+  if (!Daemon::in_array($basic_colors, $color)) {
+    $color =~ s/gray/grey/g;
+    $color = $color . "10";
+  }
+
+  return $color;
 }
 
 sub _name {
