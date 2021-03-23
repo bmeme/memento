@@ -232,7 +232,6 @@ sub start {
     Daemon::system("git pull $remote $source --rebase");
     # Create a new branch from the specified source.
     Daemon::system("git checkout -b $branch $source");
-    Daemon::system("git branch --set-upstream-to=$remote/$branch $branch");
   }
 
   # Store source branch.
