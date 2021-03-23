@@ -253,8 +253,8 @@ sub array2table {
 sub system {
   my $command = shift;
   my $retMessage = printColor($command, "white on_red");
-
-  say "▶ $command";
+  my $color = $ENV{MEMENTO_SYSTEM_COLOR} || 'bold black';
+  say Daemon::printColor("▶ $command", $color);
   0 == system($command)
       or die "There was an error while trying to execute command $retMessage. Fix the problem and try again\n";
 }

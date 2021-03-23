@@ -163,12 +163,10 @@ sub start {
   my $branch;
   my @branches = $class->_get_branches();
   my $source = $config->{branch}->{source};
-  my $upstream = 0;
   chomp($source);
 
   GetOptions(
-    'source=s' => \$source,
-    'set-upstream!' => \$upstream
+    'source=s' => \$source
   ) or die 'Incorrect usage';
 
   # Reset $id to 0 if an option has been passed but not an ID.
@@ -234,12 +232,7 @@ sub start {
     Daemon::system("git pull $remote $source --rebase");
     # Create a new branch from the specified source.
     Daemon::system("git checkout -b $branch $source");
-
-    # Set upstream for the new branch if a remote origin exists.
-    if ($upstream && $class->_get_origin_url() && !$class->_get_tracked_branch()) {
-      `git push --set-upstream $remote $branch`;
-      say "Configured upstream for branch '$branch'";
-    }
+    Daemon::system("git branch --set-upstream-to=$remote/$branch $branch");
   }
 
   # Store source branch.

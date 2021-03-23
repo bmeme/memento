@@ -102,7 +102,7 @@ memento
 
 =head1 VERSION
 
-version 1.12.3
+version 1.12.4
 
 =head1 SYNOPSIS
 
@@ -194,13 +194,26 @@ C<< sudo ./install.pl >>
 
 =head1 AFTER INSTALL
 
-After install process has ended please add the lines shown by the install script
-to your .bashrc or .zshrc file:
+After install process has ended please add the following lines, also shown by
+the install script to your .bashrc or .zshrc file:
 
-memento schema check
+C<< memento schema check >>
 
-<memento-install-dir>/misc/completion.sh
+C<< source <memento-install-dir>/misc/completion.sh >>
 
+=head2 ENVIRONMENT VARIABLES
+
+Memento uses the following environment variables which can be used following
+your needs:
+
+  - MEMENTO_HTTP_TIMEOUT: a number which defines the HTTP request timeout.
+  - MEMENTO_SYSTEM_COLOR: the text color used to highlight system commands.
+  Please take a look at https://metacpan.org/pod/Term::ANSIColor for correct
+  usage.
+
+C<< export MEMENTO_HTTP_TIMEOUT="20" >>
+
+C<< export MEMENTO_HTTP_TIMEOUT="bold magenta" >>
 
 =head1 ACTIVITY
 
