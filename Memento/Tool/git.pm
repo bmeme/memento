@@ -77,12 +77,12 @@ sub config {
       my $time_tracker_id = 0;
       if (Daemon::prompt('Do you want to enable Time Tracker support?', 'yes', ['yes', 'no']) eq 'yes') {
         $time_tracker = Daemon::prompt('Choose a Time Tracker', $default->{time_tracker}, $class->_get_time_trackers());
-      }
 
-      $tracker = Memento::Tool->instantiate($time_tracker);
-      @api_id_names = $tracker->_get_api_id_names();
-      $tracker_config = $tracker->_get_config();
-      $time_tracker_id = Daemon::prompt('Select an account', $tracker_config->{default}, @api_id_names);
+        $tracker = Memento::Tool->instantiate($time_tracker);
+        @api_id_names = $tracker->_get_api_id_names();
+        $tracker_config = $tracker->_get_config();
+        $time_tracker_id = Daemon::prompt('Select an account', $tracker_config->{default}, @api_id_names);
+      }
 
       say "";
       Daemon::printLabel("Git Hooks");
@@ -229,7 +229,9 @@ sub start {
     # Update source branch.
     my $remote = $class->_get_remote();
     Daemon::system("git checkout $source");
-    Daemon::system("git pull $remote $source --rebase");
+    if ($remote) {
+      Daemon::system("git pull $remote $source --rebase");
+    }
     # Create a new branch from the specified source.
     Daemon::system("git checkout -b $branch $source");
   }
