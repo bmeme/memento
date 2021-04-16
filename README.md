@@ -4,7 +4,7 @@ NAME
 
 VERSION
 
-    version 1.12.4
+    version 1.12.5
 
 SYNOPSIS
 
@@ -54,7 +54,7 @@ DESCRIPTION
       - taiga
       - tempo
       - workflow
-      » history
+      ï¿½ history
     
       Choose a command:
       - bookmark
@@ -64,7 +64,7 @@ DESCRIPTION
       - last
       - list
       - unbookmark
-      » last
+      ï¿½ last
     
       memento git status
 
