@@ -174,8 +174,21 @@ sub start {
     $id = 0;
   }
 
+  my $current_branch = $class->_get_current_branch();
+
   if (!Daemon::in_array([@branches], $source)) {
-    die "You have specified an invalid source branch: $source\n";
+    # Let's try checking among remote branches before saying that the specified
+    # source branch is not valid.
+    @branches = $class->_get_branches(1);
+    my $remote_source = 'remotes/' . $class->_get_remote() . '/' . $source;
+    if (!Daemon::in_array([@branches], $remote_source)) {
+      die "You have specified an invalid source branch: $source\n";
+    }
+
+    # Checkout to source branch in order to sync the local repo.
+    Daemon::system("git checkout $source");
+    # Go back to previous branch.
+    Daemon::system("git checkout $current_branch");
   }
 
   my $issue;
@@ -215,7 +228,6 @@ sub start {
   }
 
   $branch = $class->_check_branch_name($branch, $issue);
-  my $current_branch = $class->_get_current_branch();
 
   if (($branch eq $current_branch) && (Daemon::prompt("New branch and current branch are the same. Continue anyway?", 'no', ['yes', 'no']) eq 'no')) {
     die "Now exiting.\n";
@@ -831,7 +843,8 @@ sub _delete_config {
 
 sub _get_branches {
   my $class = shift;
-  my $branch_list = trim `git branch`;
+  my $all = shift || 0;
+  my $branch_list = $all ? trim `git branch -a` : trim `git branch`;
   $branch_list =~ s/\* //;
   my @branches = split(' ', $branch_list);
   unshift @branches, '<none>';
