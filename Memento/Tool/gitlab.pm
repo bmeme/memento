@@ -480,7 +480,8 @@ sub _branch_pattern {
 sub _time_tracker_entry {
   my $class = shift;
   my $issue = shift;
-  return  "#" . $issue->{'iid'} . " - " . $issue->{'title'};
+  my $project = $class->_get_project($issue->{'project_id'});
+  return  "#" . $issue->{'iid'} . " - " . $issue->{'title'} . "\nProject: " . $project->{'name'};
 }
 
 1;

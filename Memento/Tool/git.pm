@@ -396,7 +396,7 @@ sub commit {
   my $color = "black on_bright_yellow";
 
   Daemon::printLabel("A scope MAY be provided to a commit’s type, to provide additional contextual information. Eg: $type(login): ", $color, 1);
-  if (Daemon::prompt("Do you want to add a scope?", 'no', ['no', 'yes']) eq 'yes') {
+  if (Daemon::prompt("Do you want to add a scope?", 'yes', ['no', 'yes']) eq 'yes') {
     $scope = trim lc Daemon::prompt("Commit scope");
   }
 
