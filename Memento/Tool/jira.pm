@@ -571,7 +571,7 @@ sub _branch_pattern {
 sub _time_tracker_entry {
   my $class = shift;
   my $issue = shift;
-  return  "#" . $issue->{'key'} . " - " . $issue->{'fields'}->{'summary'};
+  return "#" . $issue->{'key'} . " - " . $issue->{'fields'}->{'summary'} . "\nProject: " . $issue->{'fields'}->{'project'}->{'name'};
 }
 
 sub _build_search_result {
