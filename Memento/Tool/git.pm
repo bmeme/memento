@@ -354,6 +354,7 @@ sub rebase {
   }
 
   if ($remote) {
+    Daemon::system("git fetch");
     Daemon::system("git checkout $source");
     Daemon::system("git pull $remote $source --rebase");
     Daemon::system("git checkout $branch");
