@@ -4,7 +4,7 @@ NAME
 
 VERSION
 
-    version 1.12.6
+    version 1.13.0
 
 SYNOPSIS
 
@@ -758,4 +758,3 @@ COPYRIGHT AND LICENSE
     This is free software, licensed under:
 
       The GPL2 License
-
