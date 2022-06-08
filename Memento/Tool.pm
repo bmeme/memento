@@ -9,8 +9,18 @@ $root = Memento::Tool->root();
 sub commands {
   my @list;
   my $i = 0;
-  my @commands_dir = ("Memento/Tool", "Memento/Tool/custom");
+  my $custom_commands_dir = "Memento/Tool/custom";
+  my @commands_dir = ("Memento/Tool", $custom_commands_dir);
   my $commands = {};
+
+  if (-d "$root/$custom_commands_dir" and opendir(DIR, "$root/$custom_commands_dir") && `ls -A $root/$custom_commands_dir`) {
+    my @custom_commands_dirs = `cd $root/$custom_commands_dir; ls -d */`;
+    foreach my $custom_dir (@custom_commands_dirs) {
+        chomp $custom_dir;
+        $custom_dir =~ s/\/?$//;
+        push(@commands_dir, "$custom_commands_dir/$custom_dir");
+    }
+  }
 
   foreach my $commands_dir (@commands_dir) {
     if (-d "$root/$commands_dir") {
