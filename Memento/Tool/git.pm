@@ -45,6 +45,7 @@ sub config {
       my @branches = $class->_get_branches();
       my @source_branches = @branches;
       shift @source_branches;
+      unshift @source_branches, '@self';
       my $source = Daemon::prompt('Specify source branch for "memento git start"', $default->{branch}->{source}, [@source_branches]);
       my $destination = Daemon::prompt('Specify destination branch for "memento git finish"', $default->{branch}->{destination}, [@branches]);
       $destination = ($destination eq '<none>') ? 0 : $destination;
@@ -175,8 +176,12 @@ sub start {
   }
 
   my $current_branch = $class->_get_current_branch();
+  if ($source eq '@self') {
+    $source = $current_branch;
+  }
 
   if (!Daemon::in_array([@branches], $source)) {
+    Daemon::system("git fetch");
     # Let's try checking among remote branches before saying that the specified
     # source branch is not valid.
     @branches = $class->_get_branches(1);
