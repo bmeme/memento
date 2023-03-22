@@ -179,6 +179,7 @@ sub start {
   if ($source eq '@self') {
     $source = $current_branch;
   }
+  my $modified_files = $class->_get_modified_files();
 
   if (!Daemon::in_array([@branches], $source)) {
     Daemon::system("git fetch");
@@ -189,11 +190,6 @@ sub start {
     if (!Daemon::in_array([@branches], $remote_source)) {
       die "You have specified an invalid source branch: $source\n";
     }
-
-    # Checkout to source branch in order to sync the local repo.
-    Daemon::system("git checkout $source");
-    # Go back to previous branch.
-    Daemon::system("git checkout $current_branch");
   }
 
   my $issue;
@@ -238,6 +234,10 @@ sub start {
     die "Now exiting.\n";
   }
 
+  if (length($modified_files)) {
+    Daemon::system("git stash");
+  }
+
   if (Daemon::in_array([@branches], $branch)) {
     # Checkout to existing branch.
     Daemon::system("git checkout $branch");
@@ -251,6 +251,10 @@ sub start {
     }
     # Create a new branch from the specified source.
     Daemon::system("git checkout -b $branch $source");
+  }
+
+  if (length($modified_files)) {
+    Daemon::system("git stash apply");
   }
 
   # Store source branch.
