@@ -929,7 +929,7 @@ Bonsaimeme S.r.l. <http://www.bmeme.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2105 - 2023 by Adriano Cori and Bonsaimeme S.r.l.
+This software is Copyright (c) 2015 - 2023 by Adriano Cori and Bonsaimeme S.r.l.
 
 This is free software, licensed under:
 
