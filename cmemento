@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+QUOTEDCMD=()
+for token in "$@"; do
+  QUOTEDCMD+=($(printf "%q" "$token"))
+done
+CMD="${QUOTEDCMD[*]}"
+if [[ -z "$CMD" ]]
+then
+  CMD="bash"
+fi
+
+PWD=$(pwd -P)
+
+if [ -f .git ]; then
+	SOURCE="${PWD}/.."
+	DEST="/usr/src/app"
+	CURRDIR=$(basename ${PWD})
+	WORKDIR="${DEST}/${CURRDIR}"
+else
+	SOURCE="${PWD}"
+	DEST="/usr/src/app"
+	WORKDIR="/usr/src/app"
+fi
+
+docker run --rm \
+	-v /home/$(whoami)/.memento:/home/memento/.memento \
+	-v ${SOURCE}:${DEST} \
+	-v ~/.ssh:/home/memento/.ssh \
+	-v $(dirname $SSH_AUTH_SOCK):$(dirname $SSH_AUTH_SOCK) \
+	-e SSH_AUTH_SOCK=$SSH_AUTH_SOCK \
+	-w ${WORKDIR} -it memento /bin/bash -c "memento ${CMD}"
+
