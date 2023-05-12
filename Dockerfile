@@ -10,6 +10,12 @@ COPY ./ /opt/memento
 
 RUN cd /opt/memento && ./install.pl
 
+RUN mkdir -p /opt/memento/Memento/Tool/custom && \ 
+    cd /opt/memento/Memento/Tool/custom && \
+    git clone https://github.com/bmeme/memento-plugins.git && \
+    git clone https://github.com/bmeme/memento-docker.git && \
+    git clone https://github.com/bmeme/memento-kickstarter.git
+
 RUN groupadd --gid 1000 memento && \
     useradd \
       --uid 1000 \

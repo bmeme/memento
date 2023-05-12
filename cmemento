@@ -24,7 +24,7 @@ else
 	WORKDIR="/usr/src/app"
 fi
 
-docker run \
+docker run --rm \
 	-v /home/$(whoami)/.memento:/home/memento/.memento \
 	-v ${SOURCE}:${DEST} \
 	-v ~/.ssh:/home/memento/.ssh \
