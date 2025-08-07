@@ -90,7 +90,7 @@ sub open_default_editor {
     die "Cannot find $filename! $!\n";
   }
   my $editor = $ENV{EDITOR} || 'vim';
-  system $editor => $filename;
+  Daemon::system("$editor $filename");
 }
 
 sub prompt {
