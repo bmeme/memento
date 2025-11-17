@@ -7,7 +7,12 @@ use Pod::Usage;
 use Data::Dumper;
 
 our $cwd = getcwd();
-my $cpan_path = `which cpan`;
+my $cpan_path = `which cpan 2>/dev/null`;
+chomp $cpan_path if $cpan_path;
+if (!$cpan_path) {
+  my @cpan_candidates = qw(/usr/bin/core_perl/cpan);
+  ($cpan_path) = grep { -x $_ } @cpan_candidates;
+}
 my $bin_dir = "/usr/local/bin";
 
 if (!$cpan_path) {
@@ -54,8 +59,9 @@ my @vendors = get_vendors();
 foreach my $vendor (@vendors) {
   say "\n>> Installing [$vendor]";
   my $options = ($^V lt 'v5.18.0') ? '-i -f' : '-i -T';
-  say "▶ cpan $options $vendor";
-  system("cpan $options $vendor");
+  my @cpan_args = split /\s+/, $options;
+  say "▶ $cpan_path $options $vendor";
+  system($cpan_path, @cpan_args, $vendor);
 }
 
 say "\n>> Applying patches:";
@@ -86,8 +92,7 @@ foreach my $vendor (@vendors) {
 
 print "\n>> Generating Memento man page: ";
 my $man_dir = $cpan_path;
-chomp($man_dir);
-$man_dir =~ s/\/bin\/cpan$//;
+$man_dir =~ s{/bin/(?:core_perl/)?cpan$}{};
 my $man = `pod2man -s 1 -c Memento memento.pl | sudo tee -a $man_dir/share/man/man1/memento.1`;
 say "ok!";
 
@@ -144,4 +149,3 @@ be used as the default one.
 =back
 
 =cut
-
